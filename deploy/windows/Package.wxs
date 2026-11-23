@@ -1,0 +1,80 @@
+<!--
+  Invy.msi: installs Invy into Program Files and runs it as the Invy Windows service, which starts at boot and
+  keeps its data (database, sign-in keys, certificate, backups, settings.json) in C:\ProgramData\Invy. A newer MSI
+  upgrades in place; uninstalling leaves the data folder, so reinstalling brings everything back.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:fire="http://wixtoolset.org/schemas/v4/wxs/firewall"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Package Name="Invy" Manufacturer="Invy" Version="$(var.ProductVersion)" Scope="perMachine"
+           UpgradeCode="{26ADBC0C-7403-49CA-850D-F9C9FBA811F0}">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Invy is already installed. To go back to this one, uninstall it first: your data is kept." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Property Id="ARPHELPLINK" Value="https://freereins.github.io/invy/getting-started/install-windows/" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/FreeReins/invy" />
+
+    <!-- One page with the licence and Install, then a finish page that can open Invy. -->
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Open Invy in your browser" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="Invy is running and starts with Windows. Open it at http://localhost:8080 on this PC, or http://&lt;this PC's name&gt;:8080 from a phone on the same network. Your data is in C:\ProgramData\Invy." />
+    <Property Id="WixShellExecTarget" Value="http://localhost:8080" />
+    <CustomAction Id="OpenInvy" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" DllEntry="WixShellExec" Impersonate="yes" />
+    <UI>
+      <ui:WixUI Id="WixUI_Minimal" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="OpenInvy"
+               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT REMOVE" />
+    </UI>
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Invy">
+        <Component Id="InvyService">
+          <File Id="InvyExe" Source="$(var.AppFolder)\Invy.exe" KeyPath="yes" />
+          <!-- A virtual account: no password, no administrator rights, which PostgreSQL refuses to run with. -->
+          <ServiceInstall Name="Invy" DisplayName="Invy"
+                          Description="Self-hosted home inventory. Open http://localhost:8080 to use it."
+                          Type="ownProcess" Start="auto" ErrorControl="normal" Account="NT SERVICE\Invy"
+                          Arguments="--Data:Root=&quot;[CommonAppDataFolder]Invy&quot;">
+            <ServiceConfig DelayedAutoStart="yes" OnInstall="yes" OnReinstall="yes" />
+            <util:ServiceConfig FirstFailureActionType="restart" SecondFailureActionType="restart"
+                                ThirdFailureActionType="restart" RestartServiceDelayInSeconds="10" ResetPeriodInDays="1" />
+          </ServiceInstall>
+          <ServiceControl Id="InvyServiceControl" Name="Invy" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+          <!-- Phones and other computers on a private network (home or work) can reach it; public networks can't. -->
+          <fire:FirewallException Id="InvyHttp" Name="Invy (HTTP)" Port="8080" Protocol="tcp" Scope="any" Profile="private" />
+          <fire:FirewallException Id="InvyHttps" Name="Invy (HTTPS)" Port="8443" Protocol="tcp" Scope="any" Profile="private" />
+          <!-- The service's warnings and errors go to the Application event log (WindowsEventLog). -->
+          <util:EventSource Name="Invy" Log="Application"
+                            EventMessageFile="[WindowsFolder]Microsoft.NET\Framework64\v4.0.30319\EventLogMessages.dll" />
+          <!-- Start menu shortcuts for everyone. They belong to this component (kept in Program Files) rather than one
+               of their own in the Start menu folder, which ICE38 would want keyed to the installing user's HKCU. -->
+          <util:InternetShortcut Id="OpenInvyShortcut" Directory="ProgramMenuFolder" Name="Invy"
+                                 Target="http://localhost:8080" Type="url" />
+          <util:InternetShortcut Id="InvyDataShortcut" Directory="ProgramMenuFolder" Name="Invy data folder"
+                                 Target="[DATAFOLDER]" Type="link" />
+        </Component>
+        <Files Include="$(var.AppFolder)\**">
+          <Exclude Files="$(var.AppFolder)\Invy.exe" />
+        </Files>
+      </Directory>
+    </StandardDirectory>
+
+    <!-- Kept on uninstall and upgrade. The service account may change everything in it. -->
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="DATAFOLDER" Name="Invy">
+        <Component Id="DataFolder" Permanent="yes" Guid="{7E75C63E-BEBD-46C9-A1FA-62E9AE6D0A4A}">
+          <CreateFolder>
+            <util:PermissionEx User="NT SERVICE\Invy" GenericAll="yes" />
+            <util:PermissionEx User="Administrators" GenericAll="yes" />
+            <util:PermissionEx User="SYSTEM" GenericAll="yes" />
+          </CreateFolder>
+        </Component>
+      </Directory>
+    </StandardDirectory>
+
+    <!-- The all-users Start menu, for the shortcuts above. -->
+    <StandardDirectory Id="ProgramMenuFolder" />
+  </Package>
+</Wix>

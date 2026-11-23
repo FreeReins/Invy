@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Everything below the API: public contracts (Contracts/), and the internal managers, engines, resource
+    accessors and utilities behind them. Only Contracts/ and CoreRegistration are public.
+  -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <!-- Talks to Claude for the AI features, when an admin sets up an Anthropic model. -->
+    <PackageReference Include="Anthropic" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <!-- Only for `dotnet ef migrations add`: the migrations themselves need nothing from it at run time. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+    <PackageReference Include="WolverineFx.EntityFrameworkCore" />
+    <PackageReference Include="WolverineFx.Postgresql" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Invy.Core.Tests" />
+  </ItemGroup>
+</Project>

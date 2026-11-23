@@ -1,0 +1,272 @@
+# Contributing to Invy
+
+Thanks for helping. This page covers how the code is organized and what a change needs. The
+[developer guide](docs/developers/index.md) explains the design behind it: the layers, messaging, the data model and
+security.
+
+## Build and test
+
+Everything runs in containers, so only Podman is required (`docker build` works the same for the image):
+
+```sh
+podman build --target test .      # restore, build and run the tests
+deploy/podman/install.sh --build  # build the image and run it as a Quadlet service
+deploy/podman/uninstall.sh        # stop and remove it again, keeping the data (--delete-data removes it)
+```
+
+Invy ships as one container, running its own PostgreSQL ([the bundled database](docs/developers/building-and-releasing.md#the-bundled-database)),
+and as a Windows installer and portable exe built by `deploy/windows/build.ps1`. A new setting that people should
+be able to change goes in `invy.env.example` and the [settings reference](docs/admin/settings.md); a new port
+goes in the unit `install.sh` writes, `deploy/compose/compose.yaml` and `deploy/windows/Package.wxs` (its firewall
+rules), with a note in the install guides under `docs/getting-started/`. Anything Invy writes goes under
+`Data:Root` (`CoreRegistration.StoragePath`), never in a new volume.
+
+To see changes as you make them, with the .NET 10 SDK and Podman installed:
+
+```sh
+./dev.sh             # dev database in a container, app on this machine with hot reload
+./dev.sh test        # rerun the tests on every save
+./dev.sh fresh       # like ./dev.sh, but deletes the dev database first, so setup runs again
+```
+
+The dev copy uses its own database (`invy-dev-db`) and never touches an installed Invy. It runs on
+<http://localhost:8080> and <https://localhost:8443> with its own self-signed certificate, or on 5080 and 5443
+when those ports are taken. The web page also runs on <http://localhost:5173>, where it reloads as you save;
+use that address while working on the page. `./dev.sh help` lists the other commands. After changing
+an entity, add a migration (see "Database changes"); the dev copy applies it when it next starts.
+
+With the .NET 10 SDK installed you can also work directly:
+
+```sh
+dotnet build Invy.slnx
+dotnet run --project tests/Invy.Core.Tests     # TUnit tests are an executable
+dotnet test --solution Invy.slnx               # the same tests through dotnet test
+```
+
+## Where things go
+
+| Project | Holds | May depend on |
+|---|---|---|
+| `Invy.Core` | Everything below the API, in layers (see below). Only `Managers/Contracts/` and `CoreRegistration` are public | ASP.NET Core, Npgsql EF Core, Wolverine's EF Core and PostgreSQL storage |
+| `Invy.Api` | The clients of the core: Wolverine HTTP endpoints (`Endpoints/`), message handlers and the startup step that schedules the timed jobs (`Messaging/`), the live updates stream (`Live/`), the MCP server's tools (`Mcp/`, each calling one manager method like an endpoint), sign-in (cookies, and API tokens for `/mcp`), HTTPS (`Https/`, with its own request and response records, since HTTPS belongs to the host rather than the core), startup wiring; serves the web page | `Invy.Core`'s public contracts |
+| `Invy.Web` | The web page: Svelte 5 components built with Vite into `Invy.Web/dist`, which `Invy.Api` serves | The HTTP API |
+
+`Invy.Core` is split by what changes for different reasons. Calls only go down; nothing calls sideways:
+
+```
+Clients (Api endpoints and message handlers)     see only Managers/Contracts/
+   ▼
+Managers/          one per area of use: orchestrate a use case, own the transaction, publish messages
+   ▼          ▼
+Engines/  ─►  ResourceAccess/   engines do the work (verbs); accessors read and save
+                 ▼
+            PostgreSQL (EF Core), the webhook, AI models, the backup folder
+
+Utilities/   text, clock, daily times, password hashing: any layer
+```
+
+Each layer keeps what its callers use in its own `Contracts/` folder: `Contracts/Services/` holds the interfaces
+that are its entry points, and `Contracts/Messages/` the plain records and enums passed through them. Only the
+managers' contracts are public; the engines' and accessors' are internal.
+
+| Folder | Holds | Rules |
+|---|---|---|
+| `Managers/Contracts/Services/` | The public manager interfaces: `IAccountManager`, `IMaintenanceManager`, and one per area as features arrive | Clients depend on these and nothing else in Core |
+| `Managers/Contracts/Messages/` | The managers' requests and responses (these are the HTTP JSON bodies), the commands and events sent through the message bus, and the enums they use | Plain records. Changing one changes the API |
+| `Managers/Contracts/` | `InvyException` and the exceptions built on it (`NotFoundException`, `RuleViolationException`, ...), which the API turns into problem responses; `ContractJsonContext` | |
+| `Managers/` | The manager classes and `Mapping.cs` (data contracts to messages) | Call engines and accessors, never another manager. Commit once through `IMessageAccess.CommitAsync`, which also sends what they published |
+| `Engines/` | `ValidationEngine`, `SecurityEngine`, `NotificationEngine`, `TransformationEngine` (AI answers and other outside data, in `Transformation/`), and later `QueryEngine`. Calculations several engines share are plain functions and value types, not engines, so using one doesn't make one engine call another | Never call a manager or another engine. Only `ValidationEngine` reads through accessors, for rules that depend on what is stored; the others take everything as arguments and can be tested without a database |
+| `Engines/Contracts/Messages/` | The records engines take and return: `NewApiToken`, `NewLink`, ... | Plain records |
+| `ResourceAccess/Contracts/Services/` | The accessor interfaces: `IAccountAccess`, `ISettingsAccess`, ..., `IMessageAccess` (the Wolverine outbox that publishes messages and commits) | |
+| `ResourceAccess/Contracts/Messages/` | The plain data contracts the accessors take and return (`UserAccount`, `AiSettings`, `InboxEntry`, ...) | Plain data, no EF Core |
+| `ResourceAccess/` | The accessor implementations, and the EF Core entities and `InvyDbContext` (`Persistence/`) | Return copies, never tracked entities. Never call each other. The entities don't leave this folder. The database accessors read through the change tracker, so a row saved earlier in the same request is seen before the commit. Backups are the entities serialized as JSON, so renaming an entity property changes the backup format: keep old names readable |
+| `Utilities/` | `TextNormalizer`, `DailyTime`, `Usernames`, `ImageFormat`, `AiTasks`, password hashing | Depend on no layer |
+
+`tests/Invy.Core.Tests/ArchitectureTests.cs` checks these rules, so a call in the wrong direction fails the
+tests.
+
+Rules of thumb:
+
+- An endpoint or handler binds the request, calls one manager method and returns what it gives back. Admin-only
+  endpoints carry `[Authorize(Policy = Sessions.AdminPolicy)]`; nothing checks for admins inside the core.
+- A manager loads through accessors, hands the data to engines, saves through accessors and commits once.
+  Managers that need to react to each other do it with messages: one publishes an event or command through
+  `IMessageAccess.PublishAsync`, and a handler in `Invy.Api/Messaging/` calls the other.
+- Messages are kept in PostgreSQL (the `wolverine` schema) and only sent once the transaction that published
+  them commits. Managers publish events, facts that already happened (`InboxChanged`, `SecuritySettingsChanged`),
+  and each subscriber runs on its own: an event with three handlers is handled three times, each on its handler's
+  queue (`MessageQueues`, set by `[StickyHandler]`). Queues that must not overlap run one message at a time
+  (`inbox`, `maintenance`, `ai`).
+- A message can arrive twice, so every handler must be safe to repeat: work things out again from what is saved
+  (the daily reminders), or check a marker (inbox entries keep the message they came from). Handlers log
+  expected problems, such as a photo that can't be downloaded, rather than throwing. Retries are never written by
+  hand: `CoreRegistration` retries database hiccups and unreachable outside services (throw
+  `TransientDeliveryException` for those), and sends anything else to the `wolverine_dead_letters` table.
+- Messages are stored, so their shapes are a contract: each has `[MessageIdentity("invy.<name>.v1")]` and a line
+  in `ContractJsonContext`, and only gains fields. A breaking change gets a new `.v2` identity.
+- Timed jobs schedule their own next run (`IMessageAccess.ScheduleAsync`) and save when it is due; a scheduled
+  message due at another time is stale and does nothing, so only one is ever waiting. `StartupJobs` asks each job
+  to look once at startup.
+- Some state lives in this one process, which is fine for one Invy per database: `LiveUpdates` (the `/api/live`
+  stream) and `HttpsPolicy`. A second server would need LISTEN/NOTIFY and a broadcast respectively; don't add
+  more such state without listing it here.
+- Anything downloaded from an address someone else chose goes through `PublicWeb.Handler`, which refuses
+  private network addresses, so a link can't reach the database or the home network.
+- Something new to store: add the entity in `ResourceAccess/Persistence/`, the data contract in
+  `ResourceAccess/Contracts/Messages/`, map them in a new `EntityMapping.<Name>.cs`, and add a line to
+  `BackupAccess.Tables` (in `BackupAccess.Tables.cs`) so backups include it. `SchemaTests` fails when a table is
+  neither backed up nor listed as left out, or an enum column isn't stored by name.
+- No source file is over 400 lines; `FileSizeTests` checks, and lists the few files still allowed over. A class
+  that outgrows it is split into partial files by area, `<Type>.<Area>.cs` beside `<Type>.cs` (`AccountManager.Inbox.cs`,
+  `ValidationEngine.Accounts.cs`). `<Type>.cs` keeps the constructor, the class's summary and helpers several areas
+  share; each other part starts with a `/// <content>` line saying what it covers.
+
+## Tests
+
+Tests use [TUnit](https://tunit.dev). New logic in `Invy.Core` needs tests next to the existing ones.
+Assertions are awaited: `await Assert.That(actual).IsEqualTo(expected);`.
+
+- Engines are tested directly, with the shared values in `TestData.cs`.
+- Managers are tested with the in-memory accessors (`FakeAccounts`, `FakeSettings`, ..., `NoBackups`), wired up by
+  `TestCore` (`new TestCore().AccountManager()`). They hand out copies the way the real ones do, and
+  `FakeMessages` records what was published.
+- The test project can see Core's internal types (`InternalsVisibleTo`).
+
+## Database changes
+
+The schema comes from EF Core migrations in `src/Invy.Core/ResourceAccess/Persistence/Migrations/`.
+`InitializeInvyDatabaseAsync` applies them through `DatabaseUpgrade` (from `InvyStartup`, registered before
+the message bus), so no handler meets an old schema, and the message bus then creates its own tables in the
+`wolverine` schema. The first migration, `Baseline`, also turns on the `ltree` and `pg_trgm` extensions
+(`HasPostgresExtension` in `InvyDbContext`), which both the image's and the Windows app's PostgreSQL ship.
+
+After changing an entity:
+
+```sh
+dotnet tool restore            # once: dotnet-ef, pinned in dotnet-tools.json
+dotnet ef migrations add <WhatChanged> --project src/Invy.Core --output-dir ResourceAccess/Persistence/Migrations
+```
+
+Then change the new migration class from `public` to `internal` (`ArchitectureTests` checks it). Read its `Up`
+before committing. `MigrationTests` fails while the model has changes no migration covers. Never edit, rename or
+delete a migration that has been released: fix it with a new one. The generated files are left out of the analyzers
+(`.editorconfig`) and of `FileSizeTests`.
+
+## Code made at build time
+
+Invy doesn't use reflection-based JSON or compile code while running. That keeps startup quick and is the
+groundwork for Native AOT.
+
+**JSON.** Every JSON body, message and file is read and written through a source-generated `JsonSerializerContext`:
+
+- `ContractJsonContext` (`Invy.Core/Managers/Contracts/ContractJsonContext.cs`) covers the records in
+  `Managers/Contracts/Messages/`.
+  The API uses it for request and response bodies, and the message bus uses it for the commands and events it stores.
+- `ApiJsonContext` (`Invy.Api/ApiJsonContext.cs`) covers the bodies defined in the API project.
+- `McpJsonContext` (`Invy.Api/Mcp/McpJsonContext.cs`) covers the MCP tools' own parameters; their results are
+  `ContractJsonContext` records.
+- Each accessor that reads a file or talks to another service has its own private context next to its JSON types:
+  backups and the webhook.
+
+A new request, response, command or event needs a `[JsonSerializable]` line in its context. Records used inside a
+listed one are included automatically. `JsonShapeTests` fails when something in `Managers/Contracts/Messages/` is missing.
+It also checks that every shape reads JSON the way reflection does. Two things behave differently from reflection:
+
+- When a type has `init` properties, the generator sets all of them, so a field the JSON leaves out loses its
+  `= ...` default and becomes null or zero. Prefer positional records. For a list that may be missing, write
+  `{ get; init => field = value ?? []; } = [];`, as the backup outline in `BackupAccess` does.
+- The values in `Notification.Data` must be types listed on `NotificationAccess.WebhookJson`.
+
+**Wolverine's generated code.** Wolverine generates the code that calls each endpoint and handler. Debug builds
+generate and compile it at startup with Roslyn, so changing an endpoint or handler needs no extra step. Release
+builds compile in code written beforehand to `src/Invy.Api/Internal/Generated/` and leave Roslyn out. That
+folder isn't in git, and the image build writes it from the source. To run a Release build on your own machine:
+
+```sh
+rm -rf src/Invy.Api/Internal/Generated           # codegen write never deletes files for removed endpoints
+dotnet run --project src/Invy.Api -- codegen write   # starts the app far enough to write the code; no database needed
+dotnet build Invy.slnx -c Release
+```
+
+If a Release build is missing the code for an endpoint or handler, it stops at startup with an error that names
+it. Run the commands above again to fix it.
+
+## The web page
+
+`src/Invy.Web` is a [Svelte 5](https://svelte.dev) page, written in plain JavaScript and built with Vite.
+Node is only needed to build it: `./dev.sh` and the image build use Node from a container when this machine
+has none.
+
+- `src/lib/state.svelte.js` holds everything the page shows (`app`), with `run()`, toasts and the confirmation
+  dialog. The actions that load or change it are in one module per area: `plan`, `shopping`, `recipes`, `setup`,
+  `settings` and `session` (`src/lib/<area>.svelte.js`). `app.svelte.js` re-exports them all, so components
+  import from it; the modules in `src/lib/` import from each other directly. Svelte redraws what changed.
+- Offline mode: `public/sw.js` is a service worker that keeps the page itself (index.html and `/assets`, never
+  `/api`). `src/lib/offline.svelte.js` saves what the Shopping and Pantry tabs show in localStorage and shows it
+  when Invy can't be reached (`app.offline`). `src/lib/outbox.svelte.js` queues the shopping changes made
+  meanwhile and sends them in order once Invy answers. `api()` fails with `error.offline` when a request never
+  reached Invy. An action that should work offline catches that and makes its change through the outbox, as
+  the actions in `shopping.svelte.js` do. `tests/offline.spec.js` covers it, using `api.offline` in the stub.
+- Every view has its own address (`/recipes/{id}`, `/settings/backups`, ...) so it can be bookmarked. The list
+  is at the top of `src/lib/addresses.js`. Move between views with plain `<a href>` links or `go(path)` from
+  there, not by setting `app.tab`; the server answers any path that isn't a file or `/api` with `index.html`.
+- `src/App.svelte` is the header, tabs and footer. Each screen is a component: `screens/` for setup and
+  sign-in, `tabs/` for the tabs, `settings/` for the Settings sections, and `components/` for pieces used in
+  more than one place (the sample picker, file import, setup progress bar).
+- `src/styles.css` holds the colours and the shared building blocks: buttons, cards, rows, chips, forms and
+  lists. Styles only one component uses go in that component's `<style>` block, where Svelte scopes them.
+- Each colour in `styles.css` is a token written as `light-dark(light, dark)`, so it is defined once for both
+  themes. The page follows the device until someone picks a theme with the sun and moon button
+  (`lib/theme.svelte.js`), which sets `data-theme` on `<html>`. Use the tokens rather than new hex values:
+  `--good`/`--warn`/`--bad`/`--info` with their `-bg` tints for status, `--accent-2` for small warm highlights,
+  and `--area-<tab>` for a tab's own colour on icons and borders, never on body text.
+- Settings save by themselves rather than with a Save button: `autosave()` from `lib/autosave.svelte.js` debounces
+  the save, checks it can be sent, and saves anything waiting when the section closes; `components/SaveStatus.svelte`
+  says how it went. Forms that send something once, such as signing in or adding an item, keep their button and
+  wrap the work in `pending(event, ...)` from `lib/pending.js`, so a second click doesn't send it again.
+- `./dev.sh web` builds the page once into `src/Invy.Web/dist`, which is build output and not in git.
+  Use it before a plain `dotnet run`, and to check that the page still builds. Run from the source tree, the API
+  serves the page from that folder; the image copies it into the app's `wwwroot` (`WebPage.cs` in `Invy.Api`).
+  The page's files are compressed with Brotli or gzip; API answers aren't.
+
+### Accessibility tests
+
+`./dev.sh web-test` checks every screen of the page with [axe](https://github.com/dequelabs/axe-core) (WCAG 2.2
+A and AA, plus axe's best practices) in real Chromium, in light mode, dark mode and at phone width, and tests
+the keyboard behaviour axe can't see. It takes about a minute and a half, prints a dot per test, and exits.
+Arguments go to `playwright test`: `./dev.sh web-test --project desktop-dark -g schedule`, or `--reporter=list` to
+see each test's name.
+
+`./dev.sh web-shot /history` screenshots one address of the page, answered from the same stubs, in each project
+into `src/Invy.Web/shots/` (`tests/screenshot.spec.js`, which normal runs skip).
+
+- The tests are in `src/Invy.Web/tests/`: `a11y.spec.js` has one row per screen or state in `VIEWS`, and
+  `keyboard.spec.js` checks focus and keys. To cover a new screen, add a row to `VIEWS`.
+- No Invy or database runs. `fixtures.js` answers every `/api` request from `data.js`, one realistic
+  household whose shapes match the C# response records. Use `api.set({ 'POST /api/invites': ... })` in a
+  test to change an answer, and `reply(status, body)` for a failure. A request with no answer fails the test,
+  so when the page starts calling a new endpoint, add a default answer for it.
+- Colour contrast is checked, so fade things with the muted colours, not `opacity`: text under `opacity` loses
+  contrast. Don't turn axe rules off. If one is genuinely wrong for an element, pass `disable` at that one call
+  and say why.
+- The tests always run in Playwright's container, whose version must match the exact `@playwright/test`
+  version pinned in `package.json`. Bump both together. The container is Ubuntu, and `node_modules` in the
+  source folder may come from the Alpine Node container, so the tests keep their own copy in the
+  `invy-web-test-modules` volume. `podman volume rm invy-web-test-modules` starts it afresh.
+
+## Documentation
+
+User and developer documentation lives in `docs/` as Markdown, and is published to the
+[documentation site](https://freereins.github.io/invy/) and built into the image at `/help`. A
+change people will notice needs a docs change in the same pull request. [docs/AGENTS.md](docs/AGENTS.md) has the
+writing rules and says which page covers what.
+
+## Style
+
+- File-scoped namespaces, nullable reference types on, `var` where the type is obvious.
+- One top-level type per file, named after the type: `PlanStatus.cs` holds `PlanStatus`, `IPlanAccess.cs` holds
+  `IPlanAccess`. This goes for small records, enums and test fakes too; nested types stay inside their parent.
+  Put a comment that covers several types on each of them, or in this guide. The build enforces this:
+  `.editorconfig` makes StyleCop's SA1402 (one type per file) and SA1649 (file name matches the type) errors.
+- Public types get an XML summary that says what they are for, not how they work.
+- User-facing messages are plain sentences that say what happened and what to do next.

@@ -1,0 +1,4 @@
+namespace Invy.Core.Managers.Contracts.Messages;
+
+/// <summary>A backup file.</summary>
+public sealed record BackupFile(string Name, DateTimeOffset CreatedAt, long SizeBytes);

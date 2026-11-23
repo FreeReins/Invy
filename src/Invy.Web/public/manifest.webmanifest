@@ -1,0 +1,13 @@
+{
+  "name": "Invy",
+  "short_name": "Invy",
+  "description": "Everything you own, and where it is.",
+  "start_url": "/find",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f6f8",
+  "theme_color": "#9a5200",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

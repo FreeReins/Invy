@@ -1,0 +1,8 @@
+id: entity-change
+name: Adds a migration after changing an entity
+tags: [rules]
+inputs:
+  prompt: "I added a property to an Invy entity. What must I do so the database schema matches? Answer in one or two sentences."
+expected:
+  output_contains:
+    - "migrations add"

@@ -1,0 +1,231 @@
+# Publishes a release when a version tag (v1.2.3) is pushed: the container image for amd64 and arm64 on GHCR, tagged
+# 1.2.3, 1.2 and latest; the Windows installer and portable app; and a GitHub release with notes, the Windows
+# downloads and the documentation as a zip to read offline.
+# Each architecture builds on its own native runner, since the .NET build is slow and unreliable under emulation.
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Name the image
+        run: |
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+          echo "PLATFORM_PAIR=${PLATFORM//\//-}" >> "$GITHUB_ENV"
+        env:
+          PLATFORM: ${{ matrix.platform }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run the tests
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: test
+          platforms: ${{ matrix.platform }}
+          cache-from: type=gha,scope=${{ env.PLATFORM_PAIR }}
+          cache-to: type=gha,mode=max,scope=${{ env.PLATFORM_PAIR }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+      - id: build
+        name: Build and push by digest
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ env.PLATFORM_PAIR }}
+          cache-to: type=gha,mode=max,scope=${{ env.PLATFORM_PAIR }}
+      - name: Keep the digest
+        run: |
+          mkdir -p "${{ runner.temp }}/digests"
+          touch "${{ runner.temp }}/digests/${DIGEST#sha256:}"
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  manifest:
+    needs: image
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-') }}
+      - name: Join the architectures into one image
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          mapfile -t tags < <(jq -r '.tags[] | "-t", .' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          sources=()
+          for digest in *; do sources+=("$IMAGE@sha256:$digest"); done
+          docker buildx imagetools create "${tags[@]}" "${sources[@]}"
+      - run: docker buildx imagetools inspect "$IMAGE:${{ steps.meta.outputs.version }}"
+
+  # Invy.msi and the portable Invy.exe (deploy/windows/build.ps1), each started and checked before release.
+  windows:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: src/Invy.Web/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+      - name: Name the version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then version="${GITHUB_REF_NAME#v}"; else version="0.0.0-dev"; fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - name: Build the web page
+        working-directory: src/Invy.Web
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+      - name: Build the documentation for /help
+        shell: bash
+        run: |
+          pip install -r docs/requirements.txt
+          SITE_URL= mkdocs build --strict --site-dir site
+      - name: Run the tests
+        run: dotnet run --project tests/Invy.Core.Tests
+      - uses: actions/cache@v4
+        with:
+          path: artifacts/windows/work/cache
+          key: postgres-${{ hashFiles('deploy/windows/postgres.json') }}
+      - name: Build the installer and the portable app
+        run: pwsh deploy/windows/build.ps1 -Version $env:VERSION
+      - name: Check the portable app starts, and starts again after being killed
+        shell: pwsh
+        run: |
+          $exe = Resolve-Path "artifacts/windows/Invy-$env:VERSION-win-x64-portable.exe"
+          function Wait-Healthy {
+            foreach ($i in 1..90) {
+              try { if ((Invoke-RestMethod http://localhost:8080/health).status -eq "ok") { return } } catch { }
+              Start-Sleep 2
+            }
+            Get-Content (Join-Path (Split-Path $exe) "Invy-data/database/postgres.log") -ErrorAction SilentlyContinue
+            throw "The portable Invy didn't answer /health."
+          }
+          foreach ($run in 1..2) {
+            $process = Start-Process $exe -PassThru -RedirectStandardOutput "portable-$run.log"
+            Wait-Healthy
+            Stop-Process $process -Force
+            Start-Sleep 3
+          }
+          Get-Process postgres -ErrorAction SilentlyContinue | Stop-Process -Force
+      - name: Check the installer installs a running service, and uninstalls
+        shell: pwsh
+        run: |
+          $msi = Resolve-Path "artifacts/windows/Invy-$env:VERSION-win-x64.msi"
+          $install = Start-Process msiexec -ArgumentList "/i `"$msi`" /qn /l*v install.log" -Wait -PassThru
+          if ($install.ExitCode -ne 0) { Get-Content install.log -Tail 80; throw "msiexec /i failed with $($install.ExitCode)." }
+          $healthy = $false
+          foreach ($i in 1..90) {
+            try { if ((Invoke-RestMethod http://localhost:8080/health).status -eq "ok") { $healthy = $true; break } } catch { }
+            Start-Sleep 2
+          }
+          if (-not $healthy) {
+            Get-Service Invy | Format-List
+            Get-Content "$env:ProgramData/Invy/database/postgres.log" -ErrorAction SilentlyContinue
+            Get-EventLog -LogName Application -Source Invy -Newest 20 -ErrorAction SilentlyContinue | Format-List
+            throw "The Invy service didn't answer /health."
+          }
+          $remove = Start-Process msiexec -ArgumentList "/x `"$msi`" /qn" -Wait -PassThru
+          if ($remove.ExitCode -ne 0) { throw "msiexec /x failed with $($remove.ExitCode)." }
+          if (Get-Service Invy -ErrorAction SilentlyContinue) { throw "The Invy service is still there after uninstalling." }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            artifacts/windows/*.msi
+            artifacts/windows/*.exe
+          if-no-files-found: error
+
+  release:
+    needs: [manifest, windows]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+      - name: Build the documentation to read offline
+        run: |
+          pip install -r docs/requirements.txt
+          SITE_URL='' USE_DIRECTORY_URLS=false mkdocs build --strict --site-dir invy-docs
+          zip -qr "invy-docs-${GITHUB_REF_NAME}.zip" invy-docs
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: windows
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            invy-docs-*.zip
+            windows/*

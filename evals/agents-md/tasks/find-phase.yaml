@@ -1,0 +1,9 @@
+id: find-phase
+name: Finds the next piece of roadmap work cheaply
+tags: [reading]
+inputs:
+  prompt: "In the Invy repo, how do I find and start the next piece of planned work? Answer in one or two sentences."
+expected:
+  output_contains:
+    - "docs/roadmap"
+    - "/phase"

@@ -1,0 +1,31 @@
+name: Idea or feature request
+description: Suggest something that would make Invy better for your kitchen.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: Describe what you're trying to do and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How could Invy help?
+      description: Your idea, if you have one. Rough is fine.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Finding things (search and views)
+        - Items, places and containers
+        - Item types and fields
+        - Labels, barcodes and scanning
+        - AI and assistants (MCP)
+        - Spaces and people
+        - Notifications or integrations
+        - Installing or running Invy
+        - Documentation
+        - Something else

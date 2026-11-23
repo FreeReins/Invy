@@ -1,0 +1,16 @@
+id: move-container
+name: Moves a container without touching what's inside
+tags: [rules]
+inputs:
+  prompt: "In Invy, moving box F (which holds 10,000 items) to another shelf should write what to the database? Answer in two sentences."
+expected:
+  output_contains:
+    - "Moved"
+    - "path"
+graders:
+  - name: no-per-item-events
+    type: text
+    config:
+      not_contains:
+        - "an event for each item"
+        - "event per item"

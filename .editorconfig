@@ -1,0 +1,29 @@
+root = true
+
+[*.cs]
+# StyleCop.Analyzers is only here to enforce one type per file. Its other rules are off.
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.DocumentationRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.LayoutRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.MaintainabilityRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.NamingRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.OrderingRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.ReadabilityRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.SpacingRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.SpecialRules.severity = none
+
+# One top-level type per file (stylecop.json lists which kinds of type count).
+dotnet_diagnostic.SA1402.severity = error
+# The file is named after the type it holds.
+dotnet_diagnostic.SA1649.severity = error
+# Says XML comment checks are off in projects without documentation files; nothing to fix.
+dotnet_diagnostic.SA0001.severity = none
+
+# Unused usings are warnings, so the build reports them and `dotnet format` removes them.
+dotnet_diagnostic.IDE0005.severity = warning
+# A file's namespace matches its folder (the project's root namespace plus the folder path).
+dotnet_style_namespace_match_folder = true
+dotnet_diagnostic.IDE0130.severity = warning
+
+# EF Core migrations are written by `dotnet ef migrations add`: analyzers and the style rules leave them alone.
+[src/Invy.Core/ResourceAccess/Persistence/Migrations/*.cs]
+generated_code = true

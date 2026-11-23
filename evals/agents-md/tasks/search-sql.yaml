@@ -1,0 +1,8 @@
+id: search-sql
+name: Keeps search text out of SQL
+tags: [rules]
+inputs:
+  prompt: "In Invy, how should a new search operator like 'colour:red' reach the database? Answer in two sentences."
+expected:
+  output_contains:
+    - "QueryEngine"

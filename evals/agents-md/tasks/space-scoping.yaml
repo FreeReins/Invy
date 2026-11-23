@@ -1,0 +1,9 @@
+id: space-scoping
+name: Scopes every query to the space
+tags: [rules]
+inputs:
+  prompt: "I'm adding an Invy accessor method that lists items. What must every query in it filter by, and where is the caller's access checked? Answer in two sentences."
+expected:
+  output_contains:
+    - "space_id"
+    - "ValidationEngine"

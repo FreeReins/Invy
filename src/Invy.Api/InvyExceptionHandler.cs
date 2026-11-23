@@ -1,0 +1,37 @@
+using Invy.Core.Managers.Contracts;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Invy.Api;
+
+/// <summary>Turns Invy's own exceptions into problem responses with a readable message.</summary>
+internal sealed class InvyExceptionHandler(IProblemDetailsService problemDetails) : IExceptionHandler
+{
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
+    {
+        var (status, title) = exception switch
+        {
+            NotFoundException => (StatusCodes.Status404NotFound, "Not found"),
+            ConflictException => (StatusCodes.Status409Conflict, "Conflict"),
+            RuleViolationException => (StatusCodes.Status400BadRequest, "Invalid request"),
+            WebSourceException => (StatusCodes.Status502BadGateway, "Web source unavailable"),
+            AiUnavailableException => (StatusCodes.Status502BadGateway, "AI model unavailable"),
+            NotSignedInException => (StatusCodes.Status401Unauthorized, "Not signed in"),
+            NotAllowedException => (StatusCodes.Status403Forbidden, "Not allowed"),
+            _ => (0, string.Empty),
+        };
+
+        if (status == 0)
+        {
+            return false; // Anything unexpected falls through to the default 500 response.
+        }
+
+        httpContext.Response.StatusCode = status;
+        return await problemDetails.TryWriteAsync(new ProblemDetailsContext
+        {
+            HttpContext = httpContext,
+            Exception = exception,
+            ProblemDetails = new ProblemDetails { Status = status, Title = title, Detail = exception.Message },
+        });
+    }
+}

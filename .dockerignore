@@ -1,0 +1,21 @@
+# Keeps local build output and other clutter out of the image build. Podman and Docker both read this file.
+**/bin/
+**/obj/
+**/TestResults/
+.git/
+.vs/
+.vscode/
+.idea/
+*.user
+deploy/
+.claude/
+evals/
+results/
+.waza-cache/
+.waza.yaml
+AGENTS.md
+# The web page's packages and build output: the image installs and builds its own.
+**/node_modules/
+src/Invy.Web/dist/
+# Wolverine's generated code: the image generates its own from the source.
+src/Invy.Api/Internal/Generated/

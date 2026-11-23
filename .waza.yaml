@@ -1,0 +1,27 @@
+# Microsoft waza settings (https://microsoft.github.io/waza/). Used by .claude/skills/tune-agents-md.
+# Telemetry is turned off with WAZA_TELEMETRY_OPTOUT=1 in evals/Containerfile. Don't add a `telemetry:`
+# section here: waza 0.41.0 then silently ignores this whole file.
+paths:
+  evals: evals/
+  results: results/
+tokens:
+  limits:
+    overrides:
+      # AGENTS.md is loaded into every agent session, so every token in it is paid for on every task.
+      "AGENTS.md": 1200
+      # Loaded only when working in the web page or the docs.
+      "src/Invy.Web/AGENTS.md": 400
+      "docs/AGENTS.md": 1200
+      # Loaded only when the skill is used. Waza's default for SKILL.md is 500.
+      ".claude/skills/tune-agents-md/SKILL.md": 1500
+      # Checklists loaded only for their task. Each replaces reading 5-10 files to rediscover where things go.
+      ".claude/skills/add-stored-entity/SKILL.md": 700
+      ".claude/skills/add-core-operation/SKILL.md": 700
+      ".claude/skills/add-web-screen/SKILL.md": 700
+      ".claude/skills/add-field-kind/SKILL.md": 700
+      ".claude/skills/add-mcp-tool/SKILL.md": 600
+      ".claude/skills/add-ai-task/SKILL.md": 600
+      # Loaded at the start of every roadmap session.
+      ".claude/skills/phase/SKILL.md": 600
+      # Roadmap index read by every /phase session.
+      "docs/roadmap/README.md": 600
