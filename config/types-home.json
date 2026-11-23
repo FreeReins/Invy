@@ -1,0 +1,56 @@
+{
+  "name": "Home",
+  "description": "Rooms, furniture and boxes, with types for appliances, tools, electronics, clothes, books, documents and the pantry.",
+  "position": 1,
+  "types": [
+    { "name": "Room", "icon": "door", "colour": "#64748b", "holdsItems": true, "fields": [
+      { "key": "floor", "label": "Floor", "kind": "Text" }
+    ] },
+    { "name": "Furniture", "icon": "cabinet", "colour": "#a16207", "holdsItems": true, "fields": [] },
+    { "name": "Box", "icon": "box", "colour": "#b45309", "holdsItems": true, "fields": [
+      { "key": "size", "label": "Size", "kind": "Select", "options": ["Small", "Medium", "Large"] }
+    ] },
+    { "name": "Appliance", "icon": "plug", "colour": "#0284c7", "fields": [
+      { "key": "brand", "label": "Brand", "kind": "Text", "sortable": true },
+      { "key": "model", "label": "Model", "kind": "Text" },
+      { "key": "serial", "label": "Serial number", "kind": "Text" },
+      { "key": "purchased", "label": "Purchased", "kind": "Date", "sortable": true },
+      { "key": "price", "label": "Price", "kind": "Money", "sortable": true },
+      { "key": "warranty", "label": "Warranty until", "kind": "Date", "sortable": true },
+      { "key": "manual", "label": "Manual", "kind": "Url" }
+    ] },
+    { "name": "Tool", "icon": "wrench", "colour": "#dc2626", "fields": [
+      { "key": "brand", "label": "Brand", "kind": "Text", "sortable": true },
+      { "key": "model", "label": "Model", "kind": "Text" },
+      { "key": "power", "label": "Power", "kind": "Select", "options": ["Hand", "Corded", "Cordless"] },
+      { "key": "purchased", "label": "Purchased", "kind": "Date", "sortable": true },
+      { "key": "price", "label": "Price", "kind": "Money", "sortable": true }
+    ] },
+    { "name": "Electronics", "icon": "laptop", "colour": "#7c3aed", "fields": [
+      { "key": "brand", "label": "Brand", "kind": "Text", "sortable": true },
+      { "key": "model", "label": "Model", "kind": "Text" },
+      { "key": "serial", "label": "Serial number", "kind": "Text" },
+      { "key": "purchased", "label": "Purchased", "kind": "Date", "sortable": true },
+      { "key": "price", "label": "Price", "kind": "Money", "sortable": true },
+      { "key": "warranty", "label": "Warranty until", "kind": "Date", "sortable": true }
+    ] },
+    { "name": "Clothing", "icon": "shirt", "colour": "#db2777", "fields": [
+      { "key": "size", "label": "Size", "kind": "Text" },
+      { "key": "colour", "label": "Colour", "kind": "Text" },
+      { "key": "season", "label": "Season", "kind": "MultiSelect", "options": ["Spring", "Summer", "Autumn", "Winter"] }
+    ] },
+    { "name": "Book", "icon": "book", "colour": "#059669", "fields": [
+      { "key": "author", "label": "Author", "kind": "Person", "sortable": true },
+      { "key": "isbn", "label": "ISBN", "kind": "Barcode" },
+      { "key": "read", "label": "Read", "kind": "Bool" }
+    ] },
+    { "name": "Document", "icon": "file", "colour": "#475569", "fields": [
+      { "key": "kind", "label": "Kind", "kind": "Select", "options": ["Passport", "Certificate", "Warranty", "Insurance", "Receipt", "Other"] },
+      { "key": "expires", "label": "Expires", "kind": "Date", "sortable": true }
+    ] },
+    { "name": "Pantry item", "icon": "jar", "colour": "#ca8a04", "fields": [
+      { "key": "barcode", "label": "Barcode", "kind": "Barcode" },
+      { "key": "best_before", "label": "Best before", "kind": "Date", "sortable": true }
+    ] }
+  ]
+}

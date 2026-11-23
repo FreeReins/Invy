@@ -32,6 +32,46 @@ function defaults() {
     // No AI model is set up unless a test says so.
     'GET /api/ai/features': data.aiFeatures(),
     'GET /api/ai/settings': data.aiSettings(false),
+    // Spaces: the shop, where Alex is a viewer, answers the same as Home.
+    'GET /api/spaces': data.spaces(),
+    'GET /api/starter-packs': data.starterPacks(),
+    'POST /api/spaces': (request) => ({ ...data.spaces()[0], id: '00000000-0000-4000-8000-000000000c09', ...request.postDataJSON(), role: 'Owner' }),
+    'PUT /api/spaces/*': (request) => ({ ...data.spaces()[0], ...request.postDataJSON() }),
+    'DELETE /api/spaces/*': null,
+    'GET /api/spaces/*/types': data.itemTypes(),
+    'POST /api/spaces/*/types': (request) => ({ ...request.postDataJSON(), id: '00000000-0000-4000-8000-000000000d09', version: 1 }),
+    'PUT /api/spaces/*/types/*': (request) => ({ ...request.postDataJSON(), id: new URL(request.url()).pathname.split('/').pop(), version: request.postDataJSON().version + 1 }),
+    'DELETE /api/spaces/*/types/*': null,
+    'GET /api/spaces/*/members': data.spaceMembers(),
+    'POST /api/spaces/*/members': (request) => [...data.spaceMembers(), { userId: '00000000-0000-4000-8000-000000000004', username: request.postDataJSON().username, displayName: request.postDataJSON().username, role: request.postDataJSON().role }],
+    'PUT /api/spaces/*/members/*': data.spaceMembers(),
+    'DELETE /api/spaces/*/members/*': data.spaceMembers().slice(0, 2),
+    // Items: the shed and garage at the top, Box F in the garage with a baseball, screws and a drill in it.
+    'GET /api/spaces/*/items': (request) => (new URL(request.url()).searchParams.get('parent')
+      ? (new URL(request.url()).searchParams.get('after') ? { items: [], next: null } : data.boxContents())
+      : data.topItems()),
+    'GET /api/spaces/*/inbox': data.inboxItems(),
+    'GET /api/spaces/*/items/*': (request) => data.itemDetail(new URL(request.url()).pathname.split('/').pop()) ?? reply(404, { detail: 'That item no longer exists.' }),
+    'GET /api/spaces/*/items/*/history': data.itemHistory(),
+    'GET /api/spaces/*/activity': (request) => (new URL(request.url()).searchParams.get('before') ? { events: [], next: null } : data.activity()),
+    'POST /api/spaces/*/items': (request) => ({ ...data.itemDetail(data.itemIds.f).item, ...request.postDataJSON(), id: '00000000-0000-4000-8000-000000000f99' }),
+    'PUT /api/spaces/*/items/*': (request) => ({ ...request.postDataJSON(), id: new URL(request.url()).pathname.split('/').pop() }),
+    'POST /api/spaces/*/items/*/move': (request) => ({ ...data.itemDetail(data.itemIds.f).item, parentId: request.postDataJSON().parentId }),
+    'POST /api/spaces/*/items/*/quantity': data.itemDetail(data.itemIds.screws).item,
+    'POST /api/spaces/*/items/*/dispose': data.itemDetail(data.itemIds.f).item,
+    'POST /api/spaces/*/items/*/restore': data.itemDetail(data.itemIds.f).item,
+    'POST /api/spaces/*/quick-add': [],
+    // Search: "baseball" finds two, "type:" can't be read, "nothing" finds none, "part" finds 120 (for scrolling),
+    // and an empty box gives the recently changed items.
+    'GET /api/spaces/*/search': (request) => {
+      const params = new URL(request.url()).searchParams;
+      const q = params.get('q') ?? '';
+      if (q === 'type:' || q.startsWith('type:car')) return reply(400, { detail: 'There is no type called car. The types are Box, Thing, Tool.' });
+      if (q.startsWith('nothing')) return { results: [], total: 0, totalIsEstimate: false, next: null };
+      if (q.startsWith('baseball')) return data.baseballResults();
+      if (q.startsWith('part')) return data.searchResults(120, Number(params.get('after') ?? 0));
+      return data.searchResults(5);
+    },
     ...inbox(),
   };
 }

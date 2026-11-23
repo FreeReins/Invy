@@ -1,4 +1,4 @@
-<!-- Invy's page: first-run setup, sign-in, then the tabs (Find and Settings for now; the rest come with their phases in
+<!-- Invy's page: first-run setup, sign-in, then the space picker and the tabs (Find, Browse, Activity, Types, People and Settings for now; the rest come with their phases in
      docs/roadmap/). State and actions live in lib/app.svelte.js. -->
 <script>
   import { app, run, start, signOut } from './lib/app.svelte.js';
@@ -9,6 +9,11 @@
   import Reset from './screens/Reset.svelte';
   import Find from './tabs/Find.svelte';
   import Settings from './tabs/Settings.svelte';
+  import Types from './tabs/Types.svelte';
+  import Browse from './tabs/Browse.svelte';
+  import Activity from './tabs/Activity.svelte';
+  import People from './tabs/People.svelte';
+  import SpacePicker from './components/SpacePicker.svelte';
   import Toasts from './components/Toasts.svelte';
   import Inbox from './components/Inbox.svelte';
   import ConfirmDialog from './components/ConfirmDialog.svelte';
@@ -18,16 +23,24 @@
   import Boxes from '@lucide/svelte/icons/boxes';
   import Search from '@lucide/svelte/icons/search';
   import SettingsIcon from '@lucide/svelte/icons/settings';
+  import Shapes from '@lucide/svelte/icons/shapes';
+  import FolderTree from '@lucide/svelte/icons/folder-tree';
+  import ActivityIcon from '@lucide/svelte/icons/activity';
+  import Users from '@lucide/svelte/icons/users';
   import CircleHelp from '@lucide/svelte/icons/circle-help';
   import LogOut from '@lucide/svelte/icons/log-out';
   import Sprout from '@lucide/svelte/icons/sprout';
 
   const TABS = [
     { key: 'find', label: 'Find', icon: Search },
+    { key: 'browse', label: 'Browse', icon: FolderTree },
+    { key: 'activity', label: 'Activity', icon: ActivityIcon },
+    { key: 'types', label: 'Types', icon: Shapes },
+    { key: 'people', label: 'People', icon: Users },
     { key: 'settings', label: 'Settings', icon: SettingsIcon },
   ].map((tab) => ({ ...tab, area: `var(--area-${tab.key})` }));
   const GATES = { 'setup-account': SetupAccount, 'setup-https': SetupHttps, 'sign-in': SignIn, join: Join, reset: Reset };
-  const TAB_VIEWS = { find: Find, settings: Settings };
+  const TAB_VIEWS = { find: Find, browse: Browse, activity: Activity, types: Types, people: People, settings: Settings };
 
   const inApp = $derived(app.screen === 'app');
   const Gate = $derived(GATES[app.screen]);
@@ -81,6 +94,7 @@
 <ConfirmDialog />
 
 {#if inApp}
+  <SpacePicker />
   <nav class="tabs" aria-label="Views">
     {#each TABS as tab (tab.key)}
       <a href="/{tab.key}" style="--area: {tab.area}" aria-current={app.tab === tab.key ? 'page' : undefined}><tab.icon size={18} /><span class="tab-label">{tab.label}</span></a>

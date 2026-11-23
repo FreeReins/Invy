@@ -23,6 +23,11 @@ export const app = $state({
   busy: 0,             // actions run() has started and not finished; App.svelte shows a progress bar while above 0
   setupDirection: 1,   // which way the last setup move went: 1 forward, -1 back, so the steps slide the right way
   offline: false,      // true while Invy can't be reached
+  spaces: [],          // SpaceResponse[]: the spaces the signed-in person is in (spaces.svelte.js)
+  spaceId: null,       // the space the page shows
+  starterPacks: [],    // StarterPackResponse[]: offered when making a space
+  newSpaceOpen: false, // true while the New space dialog is open
+  itemId: null,        // the item page open on Browse (/browse/{id}), or null for the top of the space
 });
 
 export const isAdmin = () => app.session?.user?.isAdmin === true;

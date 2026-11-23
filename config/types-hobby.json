@@ -1,0 +1,40 @@
+{
+  "name": "Hobby",
+  "description": "Bins and drawers for a workshop or craft room, with types for parts, materials, kits, collectibles and tools.",
+  "position": 2,
+  "types": [
+    { "name": "Workspace", "icon": "table", "colour": "#64748b", "holdsItems": true, "fields": [] },
+    { "name": "Bin", "icon": "box", "colour": "#b45309", "holdsItems": true, "fields": [
+      { "key": "size", "label": "Size", "kind": "Select", "options": ["Small", "Medium", "Large"] }
+    ] },
+    { "name": "Drawer unit", "icon": "cabinet", "colour": "#a16207", "holdsItems": true, "fields": [] },
+    { "name": "Part", "icon": "cog", "colour": "#0284c7", "fields": [
+      { "key": "part_number", "label": "Part number", "kind": "Text", "sortable": true },
+      { "key": "supplier", "label": "Supplier", "kind": "Text" },
+      { "key": "unit_price", "label": "Price each", "kind": "Money", "sortable": true },
+      { "key": "link", "label": "Where to buy", "kind": "Url" }
+    ] },
+    { "name": "Material", "icon": "layers", "colour": "#059669", "fields": [
+      { "key": "material", "label": "Material", "kind": "Text", "sortable": true },
+      { "key": "colour", "label": "Colour", "kind": "Text" },
+      { "key": "weight", "label": "Weight", "kind": "Number", "unit": "g", "sortable": true },
+      { "key": "price", "label": "Price", "kind": "Money", "sortable": true }
+    ] },
+    { "name": "Kit", "icon": "puzzle", "colour": "#7c3aed", "fields": [
+      { "key": "maker", "label": "Maker", "kind": "Text", "sortable": true },
+      { "key": "scale", "label": "Scale", "kind": "Text" },
+      { "key": "build", "label": "Build", "kind": "Select", "options": ["Not started", "In progress", "Done"] }
+    ] },
+    { "name": "Collectible", "icon": "star", "colour": "#db2777", "fields": [
+      { "key": "series", "label": "Series", "kind": "Text", "sortable": true },
+      { "key": "year", "label": "Year", "kind": "Number", "sortable": true },
+      { "key": "condition", "label": "Condition", "kind": "Select", "options": ["Mint", "Good", "Fair", "Poor"] },
+      { "key": "value", "label": "Value", "kind": "Money", "sortable": true }
+    ] },
+    { "name": "Tool", "icon": "wrench", "colour": "#dc2626", "fields": [
+      { "key": "brand", "label": "Brand", "kind": "Text", "sortable": true },
+      { "key": "model", "label": "Model", "kind": "Text" },
+      { "key": "purchased", "label": "Purchased", "kind": "Date", "sortable": true }
+    ] }
+  ]
+}

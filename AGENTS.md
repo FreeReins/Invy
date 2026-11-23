@@ -58,6 +58,7 @@ A new table, manager operation, web screen, field kind, MCP tool, AI task or doc
 
 TUnit, in `tests/Invy.Core.Tests/`: engines directly, managers with the `Fake*` accessors through `TestCore`
 (`new TestCore().ItemManager()`). Assertions are awaited: `await Assert.That(actual).IsEqualTo(expected);`.
+Ids made in the same millisecond have no order, so assert lists sorted by name, never by id or tied ranks.
 
 ## Reading the code cheaply
 

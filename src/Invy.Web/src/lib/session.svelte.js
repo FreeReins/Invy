@@ -2,6 +2,7 @@ import { listenForAddresses, showAddress } from './addresses.js';
 import { api } from './api.js';
 import { forgetInbox, loadInbox } from './inbox.svelte.js';
 import { loadAiFeatures, loadSystem } from './settings.svelte.js';
+import { forgetSpaces, loadSpaces } from './spaces.svelte.js';
 import { app, run, toast } from './state.svelte.js';
 
 // ---------- signing in and out ----------
@@ -13,7 +14,7 @@ export async function enterApp() {
     app.linkToken = null;
   }
   app.offline = false;
-  await Promise.all([loadSystem(), loadAiFeatures(), loadInbox()]);
+  await Promise.all([loadSystem(), loadAiFeatures(), loadInbox(), loadSpaces()]);
   await showAddress();
 }
 
@@ -23,6 +24,7 @@ export function signOut() {
     app.session.user = null;
     app.toasts = [];
     forgetInbox();
+    forgetSpaces();
     app.screen = 'sign-in';
   });
 }

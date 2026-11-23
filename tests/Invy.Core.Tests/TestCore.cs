@@ -25,6 +25,12 @@ internal sealed class TestCore
 
     public FakeInbox Inbox { get; } = new();
 
+    public FakeSpaces Spaces { get; } = new();
+
+    public FakeTypes Types { get; } = new();
+
+    public FakeItems Items { get; } = new();
+
     public FakeWebhook Webhook { get; } = new();
 
     public FakeSettings Settings { get; } = new();
@@ -37,6 +43,12 @@ internal sealed class TestCore
 
     public MaintenanceManager MaintenanceManager() => Make<MaintenanceManager>();
 
+    public SpaceManager SpaceManager() => Make<SpaceManager>();
+
+    public TypeManager TypeManager() => Make<TypeManager>();
+
+    public ItemManager ItemManager() => Make<ItemManager>();
+
     /// <summary>A new manager each call, as each request gets in the app; the fakes and engines are shared.</summary>
     private T Make<T>()
         where T : notnull => services.Value.GetRequiredService<T>();
@@ -48,6 +60,10 @@ internal sealed class TestCore
         // Fakes for every accessor.
         services.AddSingleton<IAccountAccess>(Accounts);
         services.AddSingleton<IInboxAccess>(Inbox);
+        services.AddSingleton<ISpaceAccess>(Spaces);
+        services.AddSingleton<ITypeAccess>(Types);
+        services.AddSingleton<IItemAccess>(Items);
+        services.AddSingleton<IStarterPackAccess>(TestData.StarterPacks);
         services.AddSingleton<INotificationAccess>(Webhook);
         services.AddSingleton<ISettingsAccess>(Settings);
         services.AddSingleton<IAiAccess>(Ai);
@@ -59,11 +75,18 @@ internal sealed class TestCore
         services.AddSingleton<IPasswordHasher>(new PlainHasher());
         services.AddSingleton(TestData.Notifications);
         services.AddSingleton<SecurityEngine>();
+        services.AddSingleton<ItemEngine>();
+        services.AddSingleton<TimelineEngine>();
+        services.AddSingleton<QuickAddEngine>();
+        services.AddSingleton<QueryEngine>();
         services.AddTransient<ValidationEngine>();
 
         // The managers under test.
         services.AddTransient<MaintenanceManager>();
         services.AddTransient<AccountManager>();
+        services.AddTransient<SpaceManager>();
+        services.AddTransient<TypeManager>();
+        services.AddTransient<ItemManager>();
 
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
     }

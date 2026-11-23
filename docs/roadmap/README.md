@@ -10,7 +10,7 @@ and one phase file. Run a phase with `/phase <id>` (`.claude/skills/phase/SKILL.
 | 0b Backend skeleton | [phase-0-scaffold.md](phase-0-scaffold.md#0b-backend-skeleton) | Done |
 | 0c Web skeleton | [phase-0-scaffold.md](phase-0-scaffold.md#0c-web-skeleton) | Done |
 | 0d Deploy and CI | [phase-0-scaffold.md](phase-0-scaffold.md#0d-deploy-and-ci) | Done |
-| 1 Core inventory | [phase-1-core-inventory.md](phase-1-core-inventory.md) | Not started |
+| 1 Core inventory | [phase-1-core-inventory.md](phase-1-core-inventory.md) | Done |
 | 2 Capture | [phase-2-capture.md](phase-2-capture.md) | Not started |
 | 3 AI and MCP | [phase-3-ai-and-mcp.md](phase-3-ai-and-mcp.md) | Not started |
 | 4 Views and reports | [phase-4-views-and-reports.md](phase-4-views-and-reports.md) | Not started |
@@ -25,3 +25,4 @@ into sessions (1a, 1b, …) in their file.
 Add one line per decision that changes `design.md`, newest last, and update `design.md` in the same commit.
 
 - 2026-11-22: one install, many spaces; unique and counted items; v1 capture by labels, AI photos, barcodes and MCP.
+- 2026-11-23: an item's value is its type's first Money field times its amount (1 when unique); a container's rollup is the count and value total of everything inside it at any depth, currencies not converted.

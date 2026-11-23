@@ -40,11 +40,15 @@ public static class CoreRegistration
 
         // Utilities.
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
+        services.AddSingleton<IStarterPackAccess>(new StarterPackAccess(DataPath(configuration, "Data:StarterPacks", "config")));
 
         // Resource access: PostgreSQL, the webhook, the AI models and the backup folder.
         services.AddDbContext<InvyDbContext>(options => options.UseNpgsql(ConnectionString(configuration)));
         services.AddScoped<IAccountAccess, AccountAccess>();
         services.AddScoped<IInboxAccess, InboxAccess>();
+        services.AddScoped<ISpaceAccess, SpaceAccess>();
+        services.AddScoped<ITypeAccess, TypeAccess>();
+        services.AddScoped<IItemAccess, ItemAccess>();
         services.AddScoped<ISettingsAccess, SettingsAccess>();
         services.AddScoped<IMessageAccess, MessageAccess>();
         var backupFolder = StoragePath(configuration, "Data:Backups", "backups");
@@ -58,11 +62,18 @@ public static class CoreRegistration
         services.AddSingleton<TransformationEngine>();
         services.AddSingleton<SecurityEngine>();
         services.AddSingleton<NotificationEngine>();
+        services.AddSingleton<ItemEngine>();
+        services.AddSingleton<TimelineEngine>();
+        services.AddSingleton<QuickAddEngine>();
+        services.AddSingleton<QueryEngine>();
         services.AddScoped<ValidationEngine>();
 
         // Managers: one per request or message, sharing one database transaction.
         services.AddScoped<IAccountManager, AccountManager>();
         services.AddScoped<IMaintenanceManager, MaintenanceManager>();
+        services.AddScoped<ISpaceManager, SpaceManager>();
+        services.AddScoped<ITypeManager, TypeManager>();
+        services.AddScoped<IItemManager, ItemManager>();
 
         return services;
     }
@@ -97,6 +108,7 @@ public static class CoreRegistration
         wolverine.LocalQueue(MessageQueues.Images).UseDurableInbox().MaximumParallelMessages(2);
         wolverine.LocalQueue(MessageQueues.Notifications).UseDurableInbox().MaximumParallelMessages(2);
         wolverine.LocalQueue(MessageQueues.Inbox).UseDurableInbox().Sequential();
+        wolverine.LocalQueue(MessageQueues.Rollups).UseDurableInbox().Sequential();
         wolverine.LocalQueue(MessageQueues.Live).BufferedInMemory();
     }
 

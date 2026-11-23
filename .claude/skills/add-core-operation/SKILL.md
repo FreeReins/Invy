@@ -28,9 +28,8 @@ description: "Add a Invy use case end to end: manager method, request/response r
 
 ## Example
 
-`GET /api/spaces/{spaceId}/items/{id}/history`: `ItemHistoryRequest`/`ItemHistoryResponse`, `TimelineEngine`,
-`IItemManager.GetHistoryAsync`, `Endpoints/ItemEndpoints.cs`, `TimelineTests.cs`. Until phase 1b adds it, follow
-ChefBot's `GET /api/history` in `../chef-bot` (`HistoryEngine.Tell`, `IRecipeManager.GetHistoryAsync`).
+`GET /api/spaces/{spaceId}/items/{id}/history`: `ItemHistoryResponse`, `TimelineEngine`,
+`IItemManager.GetHistoryAsync` in `ItemManager.History.cs`, `Endpoints/ItemEndpoints.cs`, `TimelineTests.cs`.
 
 Every space-owned operation takes `spaceId` from the route and checks the caller's role in `ValidationEngine`
 before anything else.
@@ -39,3 +38,7 @@ before anything else.
 
 - `JsonShapeTests` fails: a record from step 1 is missing in step 2.
 - `ArchitectureTests` fails: something calls sideways. Move the logic down a layer.
+- TestCore calls managers directly, so an endpoint can pass every test and still fail at runtime (Wolverine builds
+  its code on first call). Check new endpoints once against a real database: start a throwaway
+  `postgres:17-alpine` container on a spare port and run Invy.Api with `Database__Mode=External`, `Https__Mode=Off`
+  and `ConnectionStrings__Invy` pointing at it; it listens on 8080.

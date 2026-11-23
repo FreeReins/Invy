@@ -130,6 +130,11 @@ internal sealed partial class BackupAccess(InvyDbContext db, string folder) : IB
     [JsonSerializable(typeof(List<AiModelEntity>))]
     [JsonSerializable(typeof(List<AiRouteEntity>))]
     [JsonSerializable(typeof(List<InboxEntryEntity>))]
+    [JsonSerializable(typeof(List<SpaceEntity>))]
+    [JsonSerializable(typeof(List<ItemTypeEntity>))]
+    [JsonSerializable(typeof(List<ItemEntity>))]
+    [JsonSerializable(typeof(List<ItemEventEntity>))]
+    [JsonSerializable(typeof(List<ItemValueEntity>))]
     [JsonSerializable(typeof(BackupOutline))]
     private sealed partial class BackupJson : JsonSerializerContext;
 }

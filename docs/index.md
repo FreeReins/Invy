@@ -5,8 +5,8 @@ on a computer in your home, keeps your data there, and works for one person, a h
 the place to learn how to install it, keep it running and fix it when something goes wrong.
 
 > [!NOTE]
-> Invy is at an early stage. It installs, signs people in and keeps its settings, but it can't hold items yet. Items,
-> search, labels and the rest arrive over the next versions; [the design](developers/design.md) describes them.
+> Invy is at an early stage. It has spaces, item types, items nested in containers with their history, and search.
+> Labels, scanning, AI and the rest arrive over the next versions; [the design](developers/design.md) describes them.
 
 These pages are plain Markdown in the [`docs/` folder](https://github.com/FreeReins/invy/tree/main/docs)
 of the repository. Read them on GitHub, on the [documentation site](https://freereins.github.io/invy/),
@@ -22,6 +22,14 @@ in any text editor, or inside Invy itself: press the **?** button at the top of 
   [with Docker](getting-started/install-docker-compose.md), [on Windows](getting-started/install-windows.md), or
   [on a NAS, macOS or a Raspberry Pi](getting-started/install-other-platforms.md)
 - [Set it up the first time](getting-started/first-run.md)
+
+### Use Invy
+
+- [Make a space and share it with people](using/spaces.md)
+- [Set up the types of things I keep, and their fields](using/types-and-fields.md)
+- [Add things, put them in boxes and move them](using/items.md)
+- [See where something has been](using/timeline.md)
+- [Find anything](using/search.md)
 
 ### Run Invy
 

@@ -148,7 +148,9 @@ drill type:tool in:"Shed" brand:dewalt price>50 seen>1y qty<5 is:container has:p
 | `is:` / `has:` | container, counted, missing, lent, disposed / photo, barcode, label | partial indexes |
 
 Results use keyset paging (never OFFSET). Totals above 10,000 are shown as estimates. Per-container counts and value
-totals are kept up to date by a handler on the `rollups` queue, not counted on every page load.
+totals are kept up to date by a handler on the `rollups` queue, not counted on every page load. An item's value is its
+type's first Money field times its amount (1 for a unique item); a container's count and total cover everything inside
+it at any depth. Currencies aren't converted: a total is a plain sum.
 
 ### Views
 

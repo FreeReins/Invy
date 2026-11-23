@@ -27,6 +27,16 @@ internal sealed partial class BackupAccess
 
         // Each person's inbox, the messages behind the bell.
         new BackupTable<InboxEntryEntity>("inboxEntries", BackupJson.Default.ListInboxEntryEntity),
+
+        // Spaces, with their members inside. Empty in backups made before phase 1.
+        new BackupTable<SpaceEntity>("spaces", BackupJson.Default.ListSpaceEntity, query: rows => rows.Include(space => space.Members)),
+        new BackupTable<ItemTypeEntity>("itemTypes", BackupJson.Default.ListItemTypeEntity),
+
+        // Items (containers before what is in them), their timelines and sortable values. Empty in backups made
+        // before phase 1b.
+        new BackupTable<ItemEntity>("items", BackupJson.Default.ListItemEntity, query: rows => rows.OrderBy(item => item.Depth)),
+        new BackupTable<ItemEventEntity>("itemEvents", BackupJson.Default.ListItemEventEntity),
+        new BackupTable<ItemValueEntity>("itemValues", BackupJson.Default.ListItemValueEntity),
     ];
 
     /// <summary>

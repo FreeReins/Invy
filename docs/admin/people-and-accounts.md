@@ -4,8 +4,9 @@ This page is for the admin: the person who set Invy up. It covers inviting peopl
 and unlocking accounts, and getting back in if you lose the admin password.
 
 > [!NOTE]
-> The **People** tab, where an admin invites people, resets their passwords and unlocks accounts, comes in a later
-> version with spaces and roles. Until then those jobs are in the HTTP API only: open `/docs` on Invy's address for
+> The **People** tab is for the people in a space, not for accounts: see
+> [Spaces, people and roles](../using/spaces.md). Making accounts is the admin's job, and for now it is in the HTTP
+> API only: open `/docs` on Invy's address for
 > the API reference. `POST /api/invites` makes an invite link, `POST /api/users/{id}/password-reset` a reset link,
 > `POST /api/users/{id}/unlock` unlocks an account and `DELETE /api/users/{id}` removes one.
 

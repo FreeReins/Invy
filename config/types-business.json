@@ -1,0 +1,36 @@
+{
+  "name": "Business",
+  "description": "Sites, rooms, racks and bins, with types for stock you sell, equipment you own and the documents behind them.",
+  "position": 3,
+  "types": [
+    { "name": "Site", "icon": "building", "colour": "#64748b", "holdsItems": true, "fields": [
+      { "key": "address", "label": "Address", "kind": "LongText" }
+    ] },
+    { "name": "Room", "icon": "door", "colour": "#475569", "holdsItems": true, "fields": [] },
+    { "name": "Rack", "icon": "rack", "colour": "#a16207", "holdsItems": true, "fields": [
+      { "key": "aisle", "label": "Aisle", "kind": "Text", "sortable": true }
+    ] },
+    { "name": "Bin", "icon": "box", "colour": "#b45309", "holdsItems": true, "fields": [] },
+    { "name": "Product", "icon": "tag", "colour": "#0284c7", "fields": [
+      { "key": "sku", "label": "SKU", "kind": "Text", "sortable": true },
+      { "key": "barcode", "label": "Barcode", "kind": "Barcode" },
+      { "key": "supplier", "label": "Supplier", "kind": "Text", "sortable": true },
+      { "key": "cost", "label": "Cost", "kind": "Money", "sortable": true },
+      { "key": "price", "label": "Sale price", "kind": "Money", "sortable": true },
+      { "key": "reorder_at", "label": "Reorder at", "kind": "Number", "sortable": true }
+    ] },
+    { "name": "Equipment", "icon": "laptop", "colour": "#7c3aed", "fields": [
+      { "key": "asset_tag", "label": "Asset tag", "kind": "Text", "sortable": true },
+      { "key": "serial", "label": "Serial number", "kind": "Text" },
+      { "key": "assigned_to", "label": "Assigned to", "kind": "Person", "sortable": true },
+      { "key": "purchased", "label": "Purchased", "kind": "Date", "sortable": true },
+      { "key": "cost", "label": "Cost", "kind": "Money", "sortable": true },
+      { "key": "warranty", "label": "Warranty until", "kind": "Date", "sortable": true },
+      { "key": "condition", "label": "Condition", "kind": "Select", "options": ["New", "Good", "Worn", "Broken"] }
+    ] },
+    { "name": "Document", "icon": "file", "colour": "#059669", "fields": [
+      { "key": "kind", "label": "Kind", "kind": "Select", "options": ["Invoice", "Contract", "Warranty", "Licence", "Other"] },
+      { "key": "expires", "label": "Expires", "kind": "Date", "sortable": true }
+    ] }
+  ]
+}

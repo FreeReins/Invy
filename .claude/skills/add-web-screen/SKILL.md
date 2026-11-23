@@ -21,7 +21,8 @@ All paths are under `src/Invy.Web/`.
 
 ## Example
 
-`src/tabs/Find.svelte` (an empty state); for a list with stubs, ChefBot's `tabs/History.svelte`.
+`src/tabs/Activity.svelte`: loads per space, an empty state, a list with "Show older", stubs in `tests/fixtures.js`.
+A screen with an address below the tab: `tabs/Browse.svelte` (`/browse/{id}`). A long list: `components/VirtualList.svelte`.
 
 ## Screenshot
 
@@ -39,3 +40,5 @@ its guide; elsewhere use `<HelpLink page="…">` from `src/components/HelpLink.s
 - Svelte drops a space before `{#if}`; put the separator inside an expression: ``{` · ${text}`}``.
 - A keyed `{#each}` throws on duplicate keys when older pages repeat items.
 - Entrance animations are fine (axe waits). Respect `prefers-reduced-motion`.
+- A screen that loads in `$effect` (to follow `app.spaceId`) hangs the page: `run()` reads `app.busy`, so the effect
+  re-runs forever. Read the id, then do the work inside `untrack(() => ...)` (see `tabs/Types.svelte`).

@@ -18,8 +18,43 @@ const VIEWS = [
   { name: 'setup: create the account', path: '/', answers: { 'GET /api/session': { setupRequired: true, user: null } } },
 
   // Find
-  { name: 'find, nothing yet', path: '/find' },
+  { name: 'find: recently changed', path: '/find', act: (page) => page.getByText('Recently changed').waitFor() },
+  { name: 'find: nothing in the space yet', path: '/find',
+    answers: { 'GET /api/spaces/*/search': { results: [], total: 0, totalIsEstimate: false, next: null } } },
+  { name: 'find: no space yet', path: '/find', answers: { 'GET /api/spaces': [] } },
   { name: 'find for a member', path: '/find', answers: asMember },
+  { name: 'find: results from the address', path: '/find?q=baseball', act: (page) => page.getByText('2 items found').waitFor() },
+  {
+    name: 'find: typing a search', path: '/find',
+    act: async (page) => {
+      await page.getByRole('searchbox').fill('baseball');
+      await page.getByText('2 items found').waitFor();
+    },
+  },
+  {
+    name: 'find: a search that cannot be read yet', path: '/find',
+    act: async (page) => {
+      await page.getByRole('searchbox').fill('type:car');
+      await page.getByText('There is no type called car.').waitFor();
+    },
+  },
+  {
+    name: 'find: nothing found', path: '/find',
+    act: async (page) => { await page.getByRole('searchbox').fill('nothing here'); await page.getByText('Nothing found').waitFor(); },
+  },
+  {
+    name: 'find: scrolled down a long list', path: '/find?q=part',
+    act: async (page) => {
+      await page.getByText('120 items found').waitFor();
+      // Each scroll to the end asks for the next page, as a person scrolling would.
+      for (let page2 = 0; page2 < 6 && !await page.getByText('Part 120').isVisible(); page2++) {
+        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+        await page.waitForTimeout(250);
+      }
+      await page.getByText('Part 120').waitFor();
+      await expect(page.getByRole('listitem').filter({ hasText: 'Part 001' })).toHaveCount(0);
+    },
+  },
   {
     name: 'dark mode chosen with the sun and moon button', path: '/find',
     act: async (page) => {
@@ -27,6 +62,59 @@ const VIEWS = [
       // In the dark project this picks light, so both themes are also checked when chosen rather than followed.
       await page.getByRole('button', { name: before ? 'Switch to light mode' : 'Switch to dark mode' }).click();
     },
+  },
+
+  // Spaces
+  { name: 'space picker: new space dialog', path: '/find', act: (page) => page.getByRole('button', { name: 'New space' }).click() },
+  { name: 'types: no space yet', path: '/types', answers: { 'GET /api/spaces': [] } },
+  { name: 'people: no space yet', path: '/people', answers: { 'GET /api/spaces': [] } },
+
+  // Browse and items
+  { name: 'browse: the top of a space', path: '/browse', act: (page) => page.getByText('Mystery cable').waitFor() },
+  { name: 'browse: nothing yet', path: '/browse',
+    answers: { 'GET /api/spaces/*/items': { items: [], next: null }, 'GET /api/spaces/*/inbox': { items: [], next: null } } },
+  { name: 'browse: a new item', path: '/browse', act: (page) => page.getByRole('button', { name: 'New item' }).click() },
+  { name: 'item: a box with things inside', path: `/browse/${data.itemIds.f}`, act: (page) => page.getByText('Where it has been').waitFor() },
+  { name: 'item: a tool with fields', path: `/browse/${data.itemIds.drill}`, act: (page) => page.getByText('DeWalt').first().waitFor() },
+  { name: 'item: a counted thing', path: `/browse/${data.itemIds.screws}`, act: (page) => page.getByRole('button', { name: 'One more' }).waitFor() },
+  { name: 'item: editing', path: `/browse/${data.itemIds.drill}`, act: (page) => page.getByRole('button', { name: 'Edit' }).click() },
+  { name: 'item: moving', path: `/browse/${data.itemIds.f}`,
+    act: async (page) => { await page.getByRole('button', { name: 'Move' }).click(); await page.getByRole('button', { name: /^Move to|^Already in/ }).waitFor(); } },
+  { name: 'item: as a viewer', path: `/browse/${data.itemIds.f}`,
+    answers: { 'GET /api/spaces': data.spaces().map((space) => ({ ...space, role: 'Viewer' })) },
+    act: (page) => page.getByText('Where it has been').waitFor() },
+
+  // Activity
+  { name: 'activity: the feed', path: '/activity', act: (page) => page.getByText('took 15 from').waitFor() },
+  { name: 'activity: nothing yet', path: '/activity', answers: { 'GET /api/spaces/*/activity': { events: [], next: null } } },
+
+  // Types
+  { name: 'types: the list', path: '/types', act: (page) => page.getByRole('heading', { name: 'Tool' }).waitFor() },
+  { name: 'types: none yet', path: '/types', answers: { 'GET /api/spaces/*/types': [] } },
+  {
+    name: 'types: editing a type', path: '/types',
+    act: (page) => page.getByRole('button', { name: 'Edit Tool' }).click(),
+  },
+  {
+    name: 'types: a new type with a choice field', path: '/types',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'New type' }).click();
+      await page.getByRole('button', { name: 'Add a field' }).click();
+      await page.getByLabel('Kind').selectOption('Select');
+    },
+  },
+  {
+    name: 'types: as a viewer', path: '/types',
+    answers: { 'GET /api/spaces': data.spaces().map((space) => ({ ...space, role: 'Viewer' })) },
+    act: (page) => page.getByRole('button', { name: 'View Tool' }).click(),
+  },
+
+  // People
+  { name: 'people: as an owner', path: '/people', act: (page) => page.getByText('Jo Park', { exact: true }).waitFor() },
+  {
+    name: 'people: as a viewer', path: '/people',
+    answers: { 'GET /api/spaces': data.spaces().map((space) => ({ ...space, role: 'Viewer' })) },
+    act: (page) => page.getByText('Jo Park', { exact: true }).waitFor(),
   },
 
   // Settings
@@ -153,6 +241,8 @@ test('setup wizard, every step', async ({ page, api }) => {
   api.set({
     'GET /api/session': { setupRequired: true, user: null },
     'POST /api/setup/account': data.admin(),
+    // A new install has no spaces yet.
+    'GET /api/spaces': [],
   });
   await open(page, '/');
   await page.getByLabel('Your name').fill('Alex Rivera');
@@ -169,9 +259,9 @@ test('setup wizard, every step', async ({ page, api }) => {
   await expect(page.getByRole('heading', { name: 'Secure connection' })).toBeFocused();
   await expectAccessible(page);
 
-  // The last step finishes setup and opens Find.
+  // The last step finishes setup and opens Find, which offers the first space.
   await page.getByRole('button', { name: 'Finish' }).click();
-  await page.getByRole('heading', { name: 'Nothing to find yet' }).waitFor();
+  await page.getByRole('heading', { name: 'Make your first space' }).waitFor();
   await expect(page).toHaveURL(/\/find$/);
   await expectAccessible(page);
 });

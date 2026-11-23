@@ -1,9 +1,9 @@
 // Each view has its own address, so it can be bookmarked, reloaded or opened in a new tab:
-//   /find  /settings/{section}
+//   /find  /browse  /browse/{item id}  /activity  /types  /people  /settings/{section}
 // The address is the source of truth: links and buttons call go(path), and showAddress() shows what it names.
 import { app, run, clearErrors } from './state.svelte.js';
 
-const TAB_KEYS = ['find', 'settings'];
+const TAB_KEYS = ['find', 'browse', 'activity', 'types', 'people', 'settings'];
 
 /** Moves to an address inside the page and shows it. */
 export async function go(path, { replace = false } = {}) {
@@ -35,6 +35,7 @@ export async function showAddress() {
   }
   app.tab = first;
   if (first === 'settings' && second) app.settingsSection = second;
+  if (first === 'browse') app.itemId = second;
   app.screen = 'app';
 }
 

@@ -29,6 +29,12 @@ public static class MessageQueues
     public const string Ai = "ai";
 
     /// <summary>
+    /// Recounts containers' contents and value totals after items change: one at a time, so two recounts of the same
+    /// container never race.
+    /// </summary>
+    public const string Rollups = "rollups";
+
+    /// <summary>
     /// Tells open pages what changed. Kept in memory only: a page that misses a nudge loads everything again when it
     /// reconnects, so these messages are not worth storing.
     /// </summary>

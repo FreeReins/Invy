@@ -100,6 +100,12 @@ nav:
       - Install on Windows: getting-started/install-windows.md
       - Other platforms: getting-started/install-other-platforms.md
       - First run: getting-started/first-run.md
+  - Using Invy:
+      - Spaces, people and roles: using/spaces.md
+      - Types and fields: using/types-and-fields.md
+      - Items, containers and moves: using/items.md
+      - Timeline and activity: using/timeline.md
+      - Search: using/search.md
   - Running it:
       - People and accounts: admin/people-and-accounts.md
       - HTTPS and certificates: admin/https-and-certificates.md
@@ -122,3 +128,4 @@ nav:
       - Backups: troubleshooting/backups.md
   - Developers:
       - The design: developers/design.md
+      - HTTP API: reference/api.md

@@ -38,13 +38,25 @@ public static class ServiceRegistration
 
     /// <summary>
     /// Wolverine generates the code that calls endpoints and handlers. The managers are built by the container
-    /// (they need the database context and HTTP clients), so Wolverine is told to ask the container for them.
+    /// (they are internal, and need the database context and HTTP clients), so Wolverine is told to ask the container
+    /// for every manager interface in Managers/Contracts/Services. A new manager is picked up without a line here.
     /// </summary>
     public static void ResolveInvyServicesFromContainer(this WolverineOptions wolverine)
     {
-        wolverine.CodeGeneration.AlwaysUseServiceLocationFor<IAccountManager>();
-        wolverine.CodeGeneration.AlwaysUseServiceLocationFor<IMaintenanceManager>();
+        foreach (var manager in ManagerInterfaces)
+        {
+            AlwaysLocate.MakeGenericMethod(manager).Invoke(wolverine.CodeGeneration, null);
+        }
     }
+
+    /// <summary>The public manager interfaces endpoints and handlers call.</summary>
+    internal static IReadOnlyList<Type> ManagerInterfaces { get; } = typeof(IAccountManager).Assembly.GetExportedTypes()
+        .Where(type => type.IsInterface && type.Namespace == typeof(IAccountManager).Namespace && type.Name.EndsWith("Manager", StringComparison.Ordinal))
+        .ToList();
+
+    private static readonly System.Reflection.MethodInfo AlwaysLocate =
+        typeof(JasperFx.CodeGeneration.GenerationRules).GetMethod(nameof(JasperFx.CodeGeneration.GenerationRules.AlwaysUseServiceLocationFor), Type.EmptyTypes)
+        ?? throw new InvalidOperationException("Wolverine no longer has AlwaysUseServiceLocationFor<T>().");
 
     /// <summary>
     /// Where the code that calls endpoints and handlers comes from. Debug builds generate and compile it at startup

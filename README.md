@@ -17,7 +17,7 @@ Windows. Free and open source.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/find-desktop-dark.png">
-  <img alt="Invy's Find tab, waiting for the first items" src="docs/images/find-desktop-light.png" width="900">
+  <img alt="Invy's Find tab, finding a baseball in Garage › Box F" src="docs/images/find-desktop-light.png" width="900">
 </picture>
 
 </div>
