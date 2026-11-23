@@ -1,8 +1,9 @@
 <!-- Settings, Labels and printing: make sheets of blank QR labels for the space shown, before anything exists, or print
-     the unclaimed ones again. Scanning one later makes the box it's stuck on (the Scan tab). -->
+     the unclaimed ones again. Scanning one later makes the box it's stuck on (the Scan tab). Admins also turn on looking
+     up product barcodes online, which fills in what a scanned product is. -->
 <script>
   import { untrack } from 'svelte';
-  import { app, run, currentSpace, canEdit, toast } from '../lib/app.svelte.js';
+  import { app, run, currentSpace, canEdit, toast, isAdmin, saveSecurity } from '../lib/app.svelte.js';
   import { api } from '../lib/api.js';
   import { pending, pendingClick } from '../lib/pending.js';
   import { plural } from '../lib/format.js';
@@ -51,6 +52,13 @@
     }));
   }
 
+  async function setLookup(event) {
+    const box = event.currentTarget;
+    await run(() => saveSecurity({ barcodeLookup: box.checked }));
+    box.checked = app.security.barcodeLookup; // back to the saved value if saving failed
+    if (box.checked) toast('Scanning a product barcode in Add mode now fills in what it is.');
+  }
+
   const reprint = () => run(async () => {
     const found = [];
     let after = null;
@@ -96,6 +104,20 @@
     <button type="button" class="with-icon" onclick={pendingClick(reprint)}><Printer size={16} aria-hidden="true" />Print the unclaimed labels again</button>
   </div>
 
+  {#if isAdmin() && app.security}
+    <h3>Product barcodes</h3>
+    <div class="card">
+      <label class="check">
+        <input id="barcode-lookup" type="checkbox" class="switch" checked={app.security.barcodeLookup} onchange={setLookup}>
+        <span>
+          Look up product barcodes online
+          <span class="muted" style="display:block">Scanning a UPC or EAN barcode in Scan's Add mode fills in the name, brand and photo.
+            Invy sends the barcode, and nothing else, to Open Food Facts, then UPCitemdb (about 100 lookups a day).</span>
+        </span>
+      </label>
+    </div>
+  {/if}
+
   {#if labels}
     <div class="ready">
       <p><strong>{what}</strong>, on {plural(Math.ceil(labels.length / perSheet(layout)), 'sheet')}.</p>
@@ -108,6 +130,8 @@
 
 <style>
   .intro { margin-top: 0; }
+  h3 { margin: 1.25rem 0 .4rem; font-size: 1.05rem; }
+  .card label.check { display: flex; gap: .6rem; align-items: flex-start; }
   .card { display: grid; gap: .75rem; justify-items: start; }
   .card label { display: grid; gap: .25rem; }
   .make { display: flex; flex-wrap: wrap; gap: .5rem; align-items: end; }

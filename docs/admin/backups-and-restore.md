@@ -8,7 +8,11 @@ restore one.
 - Writes a backup every day at **03:00** and keeps the newest **14**.
 - An admin changes the time, how many to keep, and a maximum age under **Settings → Backups**.
 - Backups are compressed JSON files with all of Invy's own data: accounts, settings, AI
-  models with their API keys, and the bell's messages. API tokens for AI assistants aren't included.
+  models with their API keys, spaces and everything in them, and the bell's messages. API tokens for AI assistants
+  aren't included.
+- Photos and PDFs attached to items aren't inside the backup file. As each backup is made, any attached file not
+  copied before is copied into `files` inside the backups folder. Each file is copied once and kept there, even after
+  it is removed from Invy or old backups are deleted, so any backup can be restored with its files.
 
 ## Make, download and delete backups
 
@@ -21,7 +25,8 @@ Under **Settings → Backups**:
 
 A backup on the same disk doesn't help if that disk fails. Either:
 
-- download a backup now and then, and keep it somewhere safe; or
+- download a backup now and then, and keep it somewhere safe, along with the `files` folder inside the backups
+  folder if you attach photos; or
 - keep the backups in a folder that is itself backed up, as below.
 
 Backups contain password hashes and AI API keys, so keep downloaded copies private.
@@ -70,12 +75,15 @@ After a restore:
 - **Everyone signs in again,** the admin who restored included.
 - **Passwords go back** to what they were when the backup was made. Sessions from before the restore stop working.
 - **AI assistants need new tokens.**
+- **Attached files come back** from `files` in the backups folder, when they are missing from Invy's own `files`
+  folder.
 
 ## Move Invy to another machine
 
 1. On the old machine, **Back up now** and download the backup.
 2. Install Invy on the new machine and create a temporary account in the setup wizard.
-3. Copy the backup into the new backups folder and restore it.
+3. Copy the backup into the new backups folder, and the old backups folder's `files` folder next to it, then
+   restore it.
 4. Sign in with your old account.
 
 Devices that trusted the old certificate need the new one. Or copy the keys volume across too, to keep it.

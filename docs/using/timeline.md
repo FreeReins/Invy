@@ -3,7 +3,8 @@
 This page is for anyone using Invy. It explains how Invy remembers what happened to each item and where it has been.
 
 Invy writes down everything that happens to an item: when it was added and where, each move, each change to its
-details (what it was before and after), each change to a counted amount, and when it was disposed of or restored.
+details (what it was before and after), each change to a counted amount, photos added, when it was seen, marked
+missing or found again by an [audit](audits.md), and when it was disposed of or restored.
 Nothing is ever taken out of the timeline.
 
 ## An item's timeline

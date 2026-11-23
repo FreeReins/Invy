@@ -79,3 +79,36 @@ test('a new label sheet asks for whole sheets and shows them to print', async ({
   expect((await made).postDataJSON()).toEqual({ count: 60 });
   await expect(page.getByRole('img', { name: /^Sheet 2 of 2: 30 labels/ })).toBeVisible();
 });
+
+test('opening a box marks it seen, and an audit sends what was ticked or scanned', async ({ page }) => {
+  const seen = page.waitForRequest((request) => request.method() === 'POST' && request.url().endsWith(`/items/${data.itemIds.f}/seen`));
+  await open(page, '/scan');
+  await page.getByRole('radio', { name: 'Audit' }).check();
+  await scan(page, data.labelCodes.onBoxF);
+  await seen;
+  await expect(page).toHaveURL(new RegExp(`/browse/${data.itemIds.f}$`));
+  await expect(page.getByText('Last seen: Just now')).toBeVisible();
+
+  const dialog = page.getByRole('dialog', { name: 'Audit Box F' });
+  await dialog.getByRole('checkbox', { name: 'Baseball' }).check();
+  await expect(dialog.getByText('1 of 3 ticked')).toBeVisible();
+  const audited = page.waitForRequest((request) => request.url().endsWith(`/items/${data.itemIds.f}/audit`));
+  await dialog.getByRole('button', { name: 'Finish the audit' }).click();
+  expect((await audited).postDataJSON()).toEqual({ present: [data.itemIds.ball] });
+  await expect(dialog.getByText('Missing (1)')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Move into Box F' }).click();
+  await expect(dialog.getByText('Moved here')).toBeVisible();
+});
+
+test('Add mode looks a product barcode up and adds it with its photo', async ({ page }) => {
+  await open(page, '/scan');
+  await page.getByRole('radio', { name: 'Add' }).check();
+  await scan(page, data.product().barcode);
+  await expect(page.getByRole('heading', { name: 'DeWalt: 20V cordless drill' })).toBeVisible();
+  await page.getByRole('button', { name: 'Add it at the top' }).click();
+  const dialog = page.getByRole('dialog', { name: 'New item' });
+  await expect(dialog.getByLabel('Name')).toHaveValue('DeWalt 20V cordless drill');
+  const photo = page.waitForRequest((request) => request.url().endsWith('/attachments/from-web'));
+  await dialog.getByRole('button', { name: /^Add|^Save/ }).click();
+  expect((await photo).postDataJSON()).toEqual({ url: data.product().imageUrl, name: null });
+});

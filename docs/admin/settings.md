@@ -32,6 +32,14 @@ covers (admin), and **Always use HTTPS** (admin). See [HTTPS and certificates](h
 For admins, the AI models Invy can use and which model does each task. For everyone, the MCP address and your own
 tokens for AI assistants. See [AI assistants](ai-assistants.md).
 
+### Labels and printing
+
+Sticker sheets and making labels; see [Labels and scanning](../using/labels-and-scanning.md).
+
+| Setting | Default | Who |
+|---|---|---|
+| **Look up product barcodes online**: scanning a product's barcode in Scan's Add mode fills in its name, brand and photo from Open Food Facts, then UPCitemdb. Only the barcode is sent | Off | Admin |
+
 ### Notifications (admin)
 
 | Setting | Default | Meaning |
@@ -76,7 +84,7 @@ one level per part of the name; environment variables win over it. Restart Invy 
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `Data__Root` | `/data` in the container; `C:\ProgramData\Invy` for the Windows service; `Invy-data` next to the portable app | The folder that holds everything Invy keeps: `database`, `keys`, `backups` and `settings.json` |
+| `Data__Root` | `/data` in the container; `C:\ProgramData\Invy` for the Windows service; `Invy-data` next to the portable app | The folder that holds everything Invy keeps: `database`, `keys`, `backups`, `files` (attached photos and PDFs) and `settings.json` |
 | `Database__Port` | `54339` | The port Invy's own PostgreSQL listens on. It only listens on 127.0.0.1, so nothing outside the computer or container can reach it. Change it if something else on the computer uses it |
 | `TZ` | the host's, with Podman | Your time zone, such as `Europe/London`. Reminders and backups follow local time |
 | `Https__Mode` | `SelfSigned` | `SelfSigned`, `Certificate` or `Off`. See [HTTPS](https-and-certificates.md) |
@@ -86,5 +94,5 @@ one level per part of the name; environment variables win over it. Restart Invy 
 | `Https__CertificatePath`, `Https__KeyPath`, `Https__CertificatePassword` | empty | Your own certificate, in `Certificate` mode. See [Your own certificate](own-certificate.md) |
 | `Https__TrustedProxies` | empty | Reverse proxies whose forwarded headers are believed. See [Behind a reverse proxy](reverse-proxy.md) |
 | `Accounts__RecoverUsername` | empty | Logs a password reset link for this account at startup. See [Lost the admin password](people-and-accounts.md#lost-the-admin-password) |
-| `Data__Backups`, `Data__SessionKeys` | `backups`, `keys` | The backup and keys folders, inside `Data__Root` unless a full path is given |
+| `Data__Backups`, `Data__SessionKeys`, `Data__Files` | `backups`, `keys`, `files` | The backup, keys and attached-files folders, inside `Data__Root` unless a full path is given |
 | `Logging__LogLevel__Default` | `Information` | `Debug` for more detail when tracking down a problem, `Warning` for less |

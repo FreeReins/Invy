@@ -30,6 +30,8 @@ internal sealed class InvyDbContext(DbContextOptions<InvyDbContext> options) : D
 
     public DbSet<LabelEntity> Labels => Set<LabelEntity>();
 
+    public DbSet<AttachmentEntity> Attachments => Set<AttachmentEntity>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<decimal>().HavePrecision(12, 3);
@@ -172,6 +174,21 @@ internal sealed class InvyDbContext(DbContextOptions<InvyDbContext> options) : D
             label.HasOne<ItemEntity>().WithMany().HasForeignKey(l => l.ItemId).OnDelete(DeleteBehavior.SetNull);
             label.HasIndex(l => new { l.SpaceId, l.Code });
             label.HasIndex(l => l.ItemId);
+        });
+
+        // Files attached to items. The bytes are on disk under Data:Root/files, named by their SHA-256; the row goes
+        // with its item and its space.
+        modelBuilder.Entity<AttachmentEntity>(attachment =>
+        {
+            attachment.ToTable("Attachments");
+            attachment.HasOne<SpaceEntity>().WithMany().HasForeignKey(a => a.SpaceId).OnDelete(DeleteBehavior.Cascade);
+            attachment.HasOne<ItemEntity>().WithMany().HasForeignKey(a => a.ItemId).OnDelete(DeleteBehavior.Cascade);
+            attachment.Property(a => a.Name).HasMaxLength(200);
+            attachment.Property(a => a.ContentType).HasMaxLength(100);
+            attachment.Property(a => a.Path).HasMaxLength(200);
+            attachment.Property(a => a.Sha256).HasMaxLength(64);
+            attachment.HasIndex(a => new { a.SpaceId, a.ItemId, a.CreatedAt });
+            attachment.HasIndex(a => new { a.SpaceId, a.Path });
         });
 
         StoreEnumsByName(modelBuilder);

@@ -66,7 +66,16 @@ namespace Invy.Core.Managers.Contracts;
 [JsonSerializable(typeof(ItemHistoryResponse))]
 [JsonSerializable(typeof(ActivityResponse))]
 [JsonSerializable(typeof(SearchResponse))]
+[JsonSerializable(typeof(AuditRequest))]
+[JsonSerializable(typeof(AuditResponse))]
 [JsonSerializable(typeof(ItemsChanged))]
+// Attachments
+[JsonSerializable(typeof(AddAttachmentRequest))]
+[JsonSerializable(typeof(AttachmentResponse))]
+[JsonSerializable(typeof(IReadOnlyList<AttachmentResponse>))]
+[JsonSerializable(typeof(MakeThumbnail))]
+[JsonSerializable(typeof(AttachFromWebRequest))]
+[JsonSerializable(typeof(ProductResponse))]
 // Labels
 [JsonSerializable(typeof(CreateLabelsRequest))]
 [JsonSerializable(typeof(IReadOnlyList<LabelResponse>))]

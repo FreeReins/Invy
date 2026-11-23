@@ -76,7 +76,7 @@ Every space-owned table carries `space_id`. Ids are `Guid.CreateVersion7()`.
 | `item_events` | id, space_id, item_id, at, actor, kind, from_parent, to_parent, qty_delta, data (jsonb) | Append-only timeline |
 | `labels` | code, space_id, item_id (null until claimed), printed_at | QR labels |
 | `views` | id, space_id, owner_id (null = shared), name, query (jsonb), display, columns, sort, pinned | Saved searches |
-| `attachments` | id, space_id, item_id, kind, path, sha256, bytes | Files go under `Data:Root/files/<space>/`, not in the database |
+| `attachments` | id, space_id, item_id, kind, name, content_type, path, sha256, bytes, has_thumbnail, created_by, created_at | Files go under `Data:Root/files/<space>/<sha256>.<ext>`, not in the database, with a `.thumb.jpg` beside photos. Backups copy each file once into `<backups>/files/` |
 | From ChefBot | accounts, API tokens, AI models and routes, settings, schedule state, the Wolverine schema | |
 
 **Unique and counted items.** `quantity` is null for a unique item (a baseball, a drill with a serial number). For a
@@ -179,10 +179,10 @@ Views are personal or shared with the space. Pinned views appear on **Find**. Li
 | Sticky place | "Adding to Box F" stays until changed, on every capture screen |
 | Photo with AI | Photograph an open box. AI lists what it sees, matched to the space's types and fields. You tick what to keep |
 | Nameplate photo | Photograph a label or nameplate to fill in brand, model and serial |
-| Barcode | Scan a UPC or EAN and fill in name, brand and image from an online lookup that you turn on |
+| Barcode | Scan a UPC or EAN and fill in name, brand and image from an online lookup that an admin turns on: Open Food Facts, then UPCitemdb's free trial. Only the barcode is sent |
 | Inbox | Anything captured without a place or type goes to the Inbox to tidy later |
 | Assistant | "Where's my baseball?" or "Put the glove in box F" through MCP, by voice or text |
-| Last seen | Opening or scanning a container marks it and what's directly in it as seen |
+| Last seen | Opening or scanning a container marks it and what's directly in it as seen: one `Seen` event on the container, the contents' `last_seen_at` set in one statement, nothing again within 10 minutes |
 | Audit walk | Scan a container, tick what's there, and the rest becomes missing. Gives a discrepancy list |
 
 Scanning uses the browser's `BarcodeDetector`, with a bundled `zxing-wasm` fallback. Nothing is loaded from a CDN.

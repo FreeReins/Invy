@@ -139,6 +139,65 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                     b.ToTable("ApiTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.AttachmentEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("Bytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("HasThumbnail")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("SpaceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("SpaceId", "Path");
+
+                    b.HasIndex("SpaceId", "ItemId", "CreatedAt");
+
+                    b.ToTable("Attachments", (string)null);
+                });
+
             modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.BackupSettingsEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -525,6 +584,9 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("BarcodeLookup")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("LockoutMinutes")
                         .HasColumnType("integer");
 
@@ -617,6 +679,21 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.AttachmentEntity", b =>
+                {
+                    b.HasOne("Invy.Core.ResourceAccess.Persistence.ItemEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Invy.Core.ResourceAccess.Persistence.SpaceEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SpaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.ItemEntity", b =>

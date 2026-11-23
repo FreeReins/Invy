@@ -12,6 +12,7 @@ internal sealed class SpaceManager(
     ITypeAccess types,
     IAccountAccess accounts,
     IStarterPackAccess starterPacks,
+    IFileStoreAccess files,
     IMessageAccess messages,
     ValidationEngine validation,
     TimeProvider clock) : ISpaceManager
@@ -61,6 +62,9 @@ internal sealed class SpaceManager(
         await validation.SpaceRoleAsync(spaceId, userId, SpaceRole.Owner, cancellationToken);
         await spaces.RemoveAsync(spaceId, cancellationToken);
         await messages.CommitAsync(cancellationToken);
+
+        // Its attached files go once its rows have. Backups keep their own copies.
+        files.DeleteSpace(spaceId);
     }
 
     public async Task<IReadOnlyList<SpaceMemberResponse>> ListMembersAsync(Guid userId, Guid spaceId, CancellationToken cancellationToken) =>

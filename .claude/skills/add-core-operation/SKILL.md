@@ -43,3 +43,5 @@ before anything else.
   `postgres:17-alpine` container on a spare port and run Invy.Api with `Database__Mode=External`, `Https__Mode=Off`
   and `ConnectionStrings__Invy` pointing at it; it listens on 8080 (`Https__HttpPort` changes that, not
   `ASPNETCORE_URLS`, when a dev run holds 8080).
+- An endpoint that sends a file returns `Task<IResult>` (`Results.File`). Its manager returns a record in
+  `Managers/Contracts/` (not `Messages/`, which `JsonShapeTests` checks), such as `AttachmentContent`.

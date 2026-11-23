@@ -14,7 +14,7 @@ internal static partial class Mapping
     public static AccountSession ToAccountSession(this UserAccount user) => new(user.ToResponse(), user.ToSession());
 
     public static SecurityResponse ToResponse(this SecuritySettings rules) =>
-        new(rules.MaxFailedSignIns, rules.LockoutMinutes, rules.RequireHttps);
+        new(rules.MaxFailedSignIns, rules.LockoutMinutes, rules.RequireHttps, rules.BarcodeLookup);
 
     public static NotificationSettingsResponse ToResponse(this NotificationSettings settings) =>
         new(settings.WebhookUrl, settings.DailyTime, settings.LastDailyRunOn);

@@ -13,10 +13,21 @@ namespace Invy.Core.ResourceAccess;
 /// Invy's own data rather than a PostgreSQL dump, so they don't depend on database tools
 /// or versions. They include password hashes: treat them as private. The message bus's own
 /// tables are not included.
+/// <para>
+/// Attached files are copied into the backup folder's <c>files</c> folder as each backup is made. They are named by
+/// their SHA-256 and never change, so each one is copied once and shared by every backup that needs it; restoring
+/// puts back any that are missing. Removing old backups leaves these copies.
+/// </para>
 /// </summary>
-internal sealed partial class BackupAccess(InvyDbContext db, string folder) : IBackupAccess
+/// <param name="db">The database.</param>
+/// <param name="folder">The backup folder (Data:Backups).</param>
+/// <param name="filesFolder">Attached files (Data:Files).</param>
+internal sealed partial class BackupAccess(InvyDbContext db, string folder, string filesFolder) : IBackupAccess
 {
     private const string Pattern = "invy-backup-*.json.gz";
+
+    /// <summary>Where attached files are copied, inside the backup folder.</summary>
+    private string FileCopies => Path.Combine(folder, "files");
 
     public async Task<StoredBackup> CreateAsync(string name, CancellationToken cancellationToken)
     {
@@ -38,6 +49,7 @@ internal sealed partial class BackupAccess(InvyDbContext db, string folder) : IB
             writer.WriteEndObject();
         }
 
+        CopyMissing(filesFolder, FileCopies);
         return Describe(new FileInfo(path));
     }
 
@@ -104,6 +116,38 @@ internal sealed partial class BackupAccess(InvyDbContext db, string folder) : IB
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         db.ChangeTracker.Clear();
+        CopyMissing(FileCopies, filesFolder);
+    }
+
+    /// <summary>
+    /// Copies every file in <paramref name="from"/> (and its folders) that <paramref name="to"/> lacks. Files are named
+    /// by their contents, so one with the same name is the same file. Half-written ones (.partial) are skipped.
+    /// </summary>
+    private static void CopyMissing(string from, string to)
+    {
+        if (!Directory.Exists(from))
+        {
+            return;
+        }
+
+        foreach (var source in Directory.EnumerateFiles(from, "*", SearchOption.AllDirectories))
+        {
+            if (source.EndsWith(".partial", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var target = Path.Combine(to, Path.GetRelativePath(from, source));
+            if (File.Exists(target))
+            {
+                continue;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            var partial = $"{target}.{Guid.NewGuid():N}.partial";
+            File.Copy(source, partial);
+            File.Move(partial, target, overwrite: true);
+        }
     }
 
     private static StoredBackup Describe(FileInfo file) =>
@@ -136,6 +180,7 @@ internal sealed partial class BackupAccess(InvyDbContext db, string folder) : IB
     [JsonSerializable(typeof(List<ItemEventEntity>))]
     [JsonSerializable(typeof(List<ItemValueEntity>))]
     [JsonSerializable(typeof(List<LabelEntity>))]
+    [JsonSerializable(typeof(List<AttachmentEntity>))]
     [JsonSerializable(typeof(BackupOutline))]
     private sealed partial class BackupJson : JsonSerializerContext;
 }

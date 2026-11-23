@@ -2,17 +2,20 @@
      timeline with where it has been. Editors add, change, move, count and dispose from here. -->
 <script>
   import { onMount } from 'svelte';
-  import { run, ask, toast, canEdit, stickyPlace, setStickyPlace } from '../lib/app.svelte.js';
+  import { app, run, ask, toast, canEdit, stickyPlace, setStickyPlace } from '../lib/app.svelte.js';
   import { api } from '../lib/api.js';
   import { pendingClick } from '../lib/pending.js';
   import { amount, display, label, chainText } from '../lib/items.js';
-  import { fullDate } from '../lib/format.js';
+  import { fullDate, ago } from '../lib/format.js';
   import ItemList from './ItemList.svelte';
   import ItemForm from './ItemForm.svelte';
   import MoveDialog from './MoveDialog.svelte';
   import AttachLabel from './AttachLabel.svelte';
   import QuickAdd from './QuickAdd.svelte';
   import EventLine from './EventLine.svelte';
+  import AuditWalk from './AuditWalk.svelte';
+  import Attachments from './Attachments.svelte';
+  import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
   import Plus from '@lucide/svelte/icons/plus';
   import Minus from '@lucide/svelte/icons/minus';
@@ -28,7 +31,7 @@
   let types = $state([]);
   let contents = $state(null);
   let history = $state(null);
-  /** 'edit', 'add', 'move', 'label' or null. */
+  /** 'edit', 'add', 'move', 'label', 'audit' or null. */
   let dialog = $state(null);
 
   const item = $derived(detail?.item);
@@ -42,6 +45,10 @@
     const [found, allTypes, past] = await Promise.all([
       api('GET', `${base}/items/${id}`), api('GET', `${base}/types`), api('GET', `${base}/items/${id}/history`),
     ]);
+    // Opening a container counts as seeing it and what's directly inside (Invy writes once in ten minutes).
+    if (canEdit() && found.item.holdsItems && found.item.status !== 'Disposed' && found.item.status !== 'Archived') {
+      found.item = await api('POST', `${base}/items/${id}/seen`);
+    }
     detail = found;
     types = allTypes;
     history = past;
@@ -49,7 +56,14 @@
   }
 
   const reload = () => run(load);
-  onMount(() => { reload(); });
+  onMount(() => {
+    if (app.auditItem === id) {
+      app.auditItem = null;
+      reload().then(() => { if (detail?.item.holdsItems) dialog = 'audit'; });
+    } else {
+      reload();
+    }
+  });
 
   const more = () => run(async () => {
     const page = await api('GET', `/api/spaces/${spaceId}/items?parent=${id}&after=${encodeURIComponent(contents.next)}`);
@@ -153,6 +167,7 @@
       </dl>
     {/if}
     {#if item.notes}<p class="notes">{item.notes}</p>{/if}
+    <p class="muted seen">{item.lastSeenAt ? `Last seen: ${ago(item.lastSeenAt)}` : 'Not seen since it was added'}</p>
   </section>
 
   {#if item.holdsItems}
@@ -163,6 +178,7 @@
           <span class="actions">
             <button type="button" class="small with-icon" onclick={addHere} disabled={addingHere}><MapPin size={14} aria-hidden="true" />{addingHere ? 'Adding here' : 'Add things here'}</button>
             <button type="button" class="small with-icon" onclick={() => { dialog = 'add'; }}><Plus size={14} aria-hidden="true" />Add an item</button>
+            <button type="button" class="small with-icon" onclick={() => { dialog = 'audit'; }}><ClipboardCheck size={14} aria-hidden="true" />Audit</button>
           </span>
         {/if}
       </div>
@@ -174,6 +190,8 @@
       {/if}
     </section>
   {/if}
+
+  <Attachments {spaceId} {item} onchanged={reload} />
 
   <section class="card">
     <h3>Where it has been</h3>
@@ -201,6 +219,8 @@
     <ItemForm {spaceId} {types} parent={item} onsaved={done} onclose={() => { dialog = null; }} />
   {:else if dialog === 'move'}
     <MoveDialog {spaceId} {item} chain={detail.chain} onmoved={done} onclose={() => { dialog = null; }} />
+  {:else if dialog === 'audit'}
+    <AuditWalk {spaceId} container={item} ondone={reload} onclose={() => { dialog = null; }} />
   {:else if dialog === 'label'}
     <AttachLabel {spaceId} {item} onattached={done} onclose={() => { dialog = null; }} />
   {/if}
@@ -218,6 +238,7 @@
   .fields dt { font-size: .8rem; color: var(--muted); }
   .fields dd { margin: 0; overflow-wrap: anywhere; }
   .notes { white-space: pre-wrap; margin: .75rem 0 0; }
+  .seen { margin: .6rem 0 0; font-size: .85rem; }
   .places { margin: 0 0 1rem; padding-left: 1.25rem; display: grid; gap: .3rem; }
   .places li span { display: block; }
   .timeline li { padding: .45rem 0; }

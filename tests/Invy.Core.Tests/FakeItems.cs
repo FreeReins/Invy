@@ -55,6 +55,17 @@ internal sealed partial class FakeItems : IItemAccess
         return Task.CompletedTask;
     }
 
+    public Task MarkSeenAsync(Guid spaceId, IReadOnlyCollection<Guid> ids, Guid? contentsOf, DateTimeOffset at, CancellationToken cancellationToken)
+    {
+        foreach (var item in Rows.Where(item => item.SpaceId == spaceId && (ids.Contains(item.Id)
+            || (contentsOf is not null && item.ParentId == contentsOf && item.Status is not (ItemStatus.Disposed or ItemStatus.Archived)))))
+        {
+            item.LastSeenAt = at;
+        }
+
+        return Task.CompletedTask;
+    }
+
     public Task AddEventAsync(ItemEvent itemEvent, CancellationToken cancellationToken)
     {
         Events.Add(itemEvent);

@@ -15,6 +15,7 @@ internal sealed class SettingsAccess(InvyDbContext db) : ISettingsAccess
                 MaxFailedSignIns = row.MaxFailedSignIns,
                 LockoutMinutes = row.LockoutMinutes,
                 RequireHttps = row.RequireHttps,
+                BarcodeLookup = row.BarcodeLookup,
                 IsSaved = true,
             }
             : new SecuritySettings();
@@ -25,6 +26,7 @@ internal sealed class SettingsAccess(InvyDbContext db) : ISettingsAccess
             MaxFailedSignIns = settings.MaxFailedSignIns,
             LockoutMinutes = settings.LockoutMinutes,
             RequireHttps = settings.RequireHttps,
+            BarcodeLookup = settings.BarcodeLookup,
         }, cancellationToken);
 
     public async Task<NotificationSettings> GetNotificationsAsync(CancellationToken cancellationToken) =>

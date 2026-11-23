@@ -40,6 +40,10 @@ internal sealed partial class BackupAccess
 
         // QR labels, claimed or not. Empty in backups made before phase 2a.
         new BackupTable<LabelEntity>("labels", BackupJson.Default.ListLabelEntity),
+
+        // What is attached to items. The files themselves are copied beside the backups. Empty in backups made
+        // before phase 2b.
+        new BackupTable<AttachmentEntity>("attachments", BackupJson.Default.ListAttachmentEntity),
     ];
 
     /// <summary>

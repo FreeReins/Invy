@@ -49,6 +49,32 @@ public interface IItemManager
     /// <summary>Adds several items typed in one line, such as "baseball, glove, 2 bats", in a container or the Inbox.</summary>
     Task<IReadOnlyList<ItemResponse>> QuickAddAsync(Guid userId, Guid spaceId, QuickAddRequest request, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Marks an item seen where Invy says it is, and when it holds items, everything directly inside it too: opening or
+    /// scanning a container does this. Writes one Seen event, on the item alone. Marking it again within
+    /// <see cref="SeenAgainAfter"/> changes nothing.
+    /// </summary>
+    Task<ItemResponse> MarkSeenAsync(Guid userId, Guid spaceId, Guid id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Finishes an audit walk of a container: what was ticked is seen (and found, if it was missing); what is directly
+    /// inside but wasn't ticked is marked missing, with a Missing event each. Lent items are left alone.
+    /// </summary>
+    /// <exception cref="RuleViolationException">It doesn't hold items, or holds more than an audit can check at once.</exception>
+    Task<AuditResponse> AuditAsync(Guid userId, Guid spaceId, Guid id, AuditRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Looks a UPC or EAN barcode up online, to fill in a new item's name, brand and photo. Editors only, and only once
+    /// an admin has turned barcode lookup on.
+    /// </summary>
+    /// <exception cref="RuleViolationException">Lookup is off, or the text isn't a product barcode.</exception>
+    /// <exception cref="NotFoundException">No database knows it.</exception>
+    /// <exception cref="WebSourceException">The databases couldn't be reached.</exception>
+    Task<ProductResponse> LookUpBarcodeAsync(Guid userId, Guid spaceId, string barcode, CancellationToken cancellationToken);
+
+    /// <summary>How long after being marked seen an item is marked again, so opening a box twice writes one event.</summary>
+    static TimeSpan SeenAgainAfter => TimeSpan.FromMinutes(10);
+
     /// <summary>An item's timeline and where it has been, counting its containers' moves.</summary>
     Task<ItemHistoryResponse> GetHistoryAsync(Guid userId, Guid spaceId, Guid id, CancellationToken cancellationToken);
 

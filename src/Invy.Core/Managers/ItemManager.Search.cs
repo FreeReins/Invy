@@ -1,12 +1,27 @@
 using Invy.Core.Engines;
+using Invy.Core.Managers.Contracts;
 using Invy.Core.Managers.Contracts.Messages;
 using Invy.Core.ResourceAccess.Contracts.Messages;
 
 namespace Invy.Core.Managers;
 
-/// <content>Search, and keeping containers' counts and value totals up to date.</content>
+/// <content>Search, barcode lookup, and keeping containers' counts and value totals up to date.</content>
 internal sealed partial class ItemManager
 {
+    public async Task<ProductResponse> LookUpBarcodeAsync(Guid userId, Guid spaceId, string barcode, CancellationToken cancellationToken)
+    {
+        await validation.SpaceRoleAsync(spaceId, userId, SpaceRole.Editor, cancellationToken);
+        var code = ValidationEngine.Barcode(barcode);
+        if (!(await settings.GetSecurityAsync(cancellationToken)).BarcodeLookup)
+        {
+            throw new RuleViolationException("Barcode lookup is off. An admin can turn it on in Settings, Labels and printing; until then, type the name.");
+        }
+
+        var found = await products.LookUpAsync(code, cancellationToken)
+            ?? throw new NotFoundException($"No product database knows barcode {code}. Type its name instead.");
+        return new ProductResponse(code, found.Name, found.Brand, found.ImageUrl?.ToString(), found.Source);
+    }
+
     /// <summary>How many results a page of search holds.</summary>
     public const int SearchPageSize = 50;
 

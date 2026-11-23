@@ -50,12 +50,25 @@ camera and press **Go**. The camera needs a secure connection (HTTPS); without o
 
 | Mode | What a scan does |
 |---|---|
-| **Open** | Opens the item a label is on. A product barcode (UPC or EAN) searches for it on **Find** |
+| **Open** | Opens the item a label is on, and marks it seen. A product barcode (UPC or EAN) searches for it on **Find** |
 | **Move** | Scan the thing, then scan where it's going. It moves there with everything inside it |
 | **Claim** | Each new label becomes a box in the place you're adding to |
-| **Add** | Makes the scanned container the place you're adding to, then **Quick add** puts things in it |
+| **Add** | Makes the scanned container the place you're adding to, then **Quick add** puts things in it. A product barcode adds that product (below) |
+| **Audit** | Opens the scanned container's audit, to tick what's in it. See [Last seen and audits](audits.md) |
 
 Viewers see only **Open**.
+
+## Add products by their barcode
+
+In **Add** mode, scanning the UPC or EAN barcode on a product's packaging looks it up online and offers to add it
+where you're adding to, with its name filled in. Press **Add it …**, check the form, and press **Add**. If the type
+you pick has a **Barcode** field, or a text field called `brand`, those are filled in too, and the product's photo is
+attached to the new item.
+
+An admin has to turn this on first, under **Settings → Labels and printing → Look up product barcodes online**.
+Invy then sends the barcode, and nothing else, to [Open Food Facts](https://world.openfoodfacts.org), and if that
+doesn't know it, to [UPCitemdb](https://www.upcitemdb.com), whose free service answers about 100 lookups a day.
+Open Food Facts knows mostly food, drink and household products; UPCitemdb knows tools, electronics and more.
 
 ## Find things by label
 
@@ -68,5 +81,9 @@ Search finds an item by its label code, and `in:7K3Q` finds everything inside th
   digits.
 - **"belongs to another space"**: the label was made in another space. Scan it in **Open** mode to switch to that
   space, or pick it with the space picker.
+- **"Barcode lookup is off"**: ask an admin to turn it on, or type the name.
+- **"No product database knows barcode …"**: neither database has it. Type its name instead.
+- **"The barcode lookup services couldn't be reached"**: Invy has no internet connection, or UPCitemdb's daily
+  limit is used up. Try again later, or type the name.
 - **The camera doesn't start**: allow the camera in the browser's site settings, and check Invy is opened over HTTPS.
   See [HTTPS and certificates](../admin/https-and-certificates.md).

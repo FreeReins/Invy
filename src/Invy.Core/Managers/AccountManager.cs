@@ -219,6 +219,7 @@ internal sealed partial class AccountManager(
         rules.MaxFailedSignIns = request.MaxFailedSignIns;
         rules.LockoutMinutes = request.LockoutMinutes;
         rules.RequireHttps = request.RequireHttps;
+        rules.BarcodeLookup = request.BarcodeLookup;
         await settings.SaveSecurityAsync(rules, cancellationToken);
         await messages.PublishAsync(new SecuritySettingsChanged(rules.RequireHttps));
         await messages.CommitAsync(cancellationToken);

@@ -12,6 +12,9 @@ internal sealed class SecuritySettings
     /// <summary>Send anyone arriving over plain HTTP to the HTTPS address.</summary>
     public bool RequireHttps { get; set; }
 
+    /// <summary>Look product barcodes up online (Open Food Facts, UPCitemdb). Off until an admin turns it on.</summary>
+    public bool BarcodeLookup { get; set; }
+
     /// <summary>False until these rules are first saved: until then they are the defaults. Not stored itself.</summary>
     public bool IsSaved { get; set; }
 }

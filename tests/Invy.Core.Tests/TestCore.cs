@@ -33,6 +33,12 @@ internal sealed class TestCore
 
     public FakeLabels Labels { get; } = new();
 
+    public FakeAttachments Attachments { get; } = new();
+
+    public FakeFiles Files { get; } = new();
+
+    public FakeProducts Products { get; } = new();
+
     public FakeWebhook Webhook { get; } = new();
 
     public FakeSettings Settings { get; } = new();
@@ -53,6 +59,8 @@ internal sealed class TestCore
 
     public LabelManager LabelManager() => Make<LabelManager>();
 
+    public AttachmentManager AttachmentManager() => Make<AttachmentManager>();
+
     /// <summary>A new manager each call, as each request gets in the app; the fakes and engines are shared.</summary>
     private T Make<T>()
         where T : notnull => services.Value.GetRequiredService<T>();
@@ -68,6 +76,9 @@ internal sealed class TestCore
         services.AddSingleton<ITypeAccess>(Types);
         services.AddSingleton<IItemAccess>(Items);
         services.AddSingleton<ILabelAccess>(Labels);
+        services.AddSingleton<IAttachmentAccess>(Attachments);
+        services.AddSingleton<IFileStoreAccess>(Files);
+        services.AddSingleton<IProductAccess>(Products);
         services.AddSingleton<IStarterPackAccess>(TestData.StarterPacks);
         services.AddSingleton<INotificationAccess>(Webhook);
         services.AddSingleton<ISettingsAccess>(Settings);
@@ -85,6 +96,7 @@ internal sealed class TestCore
         services.AddSingleton<QuickAddEngine>();
         services.AddSingleton<QueryEngine>();
         services.AddSingleton<LabelEngine>();
+        services.AddSingleton<ImageEngine>();
         services.AddTransient<ValidationEngine>();
 
         // The managers under test.
@@ -94,6 +106,7 @@ internal sealed class TestCore
         services.AddTransient<TypeManager>();
         services.AddTransient<ItemManager>();
         services.AddTransient<LabelManager>();
+        services.AddTransient<AttachmentManager>();
 
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
     }

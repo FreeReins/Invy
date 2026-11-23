@@ -27,3 +27,6 @@ Add one line per decision that changes `design.md`, newest last, and update `des
 - 2026-11-22: one install, many spaces; unique and counted items; v1 capture by labels, AI photos, barcodes and MCP.
 - 2026-11-23: an item's value is its type's first Money field times its amount (1 when unique); a container's rollup is the count and value total of everything inside it at any depth, currencies not converted.
 - 2026-11-23: label codes are unique across the install, so a scan finds its space; claiming one without a name makes a container called "Box <code>".
+- 2026-11-23: marking a container seen writes one `Seen` event on it, not one per item inside, and nothing again within 10 minutes.
+- 2026-11-23: attachments are stored by SHA-256 with SkiaSharp thumbnails on the images queue; backups copy each file once into `<backups>/files/`, kept when old backups go.
+- 2026-11-23: barcode lookup tries Open Food Facts, then UPCitemdb's free trial, through `PublicWeb`; its switch is in the security settings (`barcodeLookup`).

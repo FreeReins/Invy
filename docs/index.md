@@ -29,6 +29,7 @@ in any text editor, or inside Invy itself: press the **?** button at the top of 
 - [Set up the types of things I keep, and their fields](using/types-and-fields.md)
 - [Add things, put them in boxes and move them](using/items.md)
 - [Print QR labels and scan things to add and move them](using/labels-and-scanning.md)
+- [Check a box against what Invy says is in it](using/audits.md)
 - [See where something has been](using/timeline.md)
 - [Find anything](using/search.md)
 

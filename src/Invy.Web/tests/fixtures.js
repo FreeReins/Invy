@@ -60,6 +60,17 @@ function defaults() {
     'POST /api/spaces/*/items/*/quantity': data.itemDetail(data.itemIds.screws).item,
     'POST /api/spaces/*/items/*/dispose': data.itemDetail(data.itemIds.f).item,
     'POST /api/spaces/*/items/*/restore': data.itemDetail(data.itemIds.f).item,
+    'POST /api/spaces/*/items/*/seen': (request) => ({ ...(data.itemDetail(new URL(request.url()).pathname.split('/').at(-2)) ?? data.itemDetail(data.itemIds.f)).item, lastSeenAt: new Date().toISOString() }),
+    'POST /api/spaces/*/items/*/audit': data.auditResult(),
+    'GET /api/spaces/*/items/*/attachments': (request) => (request.url().includes(data.itemIds.drill) ? data.attachments() : []),
+    'POST /api/spaces/*/items/*/attachments': (request) => ({ ...data.attachments()[0], id: '00000000-0000-4000-8000-000000000b99', name: request.postDataJSON().name, hasThumbnail: false }),
+    'DELETE /api/spaces/*/attachments/*': null,
+    'POST /api/spaces/*/items/*/attachments/from-web': { ...data.attachments()[0], id: '00000000-0000-4000-8000-000000000b98', hasThumbnail: false },
+    // Barcodes: the test product is known; anything else isn't.
+    'GET /api/spaces/*/barcodes/*': (request) => (request.url().endsWith(data.product().barcode)
+      ? data.product() : reply(404, { detail: 'No product database knows barcode 12345670. Type its name instead.' })),
+    'GET /api/spaces/*/attachments/*/thumbnail': reply(200, Buffer.from(data.TINY_PNG, 'base64'), 'image/png'),
+    'GET /api/spaces/*/attachments/*/file': reply(200, Buffer.from(data.TINY_PNG, 'base64'), 'image/png'),
     'POST /api/spaces/*/quick-add': [],
     // Labels: 7K3Q is on Box F, other codes aren't on anything yet, and XXXX isn't a label Invy has.
     'GET /api/labels/*': (request) => data.labelFor(decodeURIComponent(new URL(request.url()).pathname.split('/').pop()))

@@ -86,7 +86,7 @@ public class ReminderAndBackupTests
                 await zip.WriteAsync(Encoding.UTF8.GetBytes(json));
             }
 
-            var counts = await new BackupAccess(null!, folder).CountAsync(name, CancellationToken.None);
+            var counts = await new BackupAccess(null!, folder, folder).CountAsync(name, CancellationToken.None);
 
             await Assert.That(counts).IsEqualTo(new BackupCounts(2));
         }

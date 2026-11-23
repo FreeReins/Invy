@@ -89,11 +89,28 @@ answer shape.
 | POST | `/api/spaces/{spaceId}/items/{id}/restore` | editor | Brings a disposed or archived item back |
 | POST | `/api/spaces/{spaceId}/quick-add` | editor | Adds several items from one line of `text`, such as `baseball, glove, 2 bats` |
 | GET | `/api/spaces/{spaceId}/items/{id}/history` | viewer | An item's timeline and where it has been |
+| POST | `/api/spaces/{spaceId}/items/{id}/seen` | editor | Marks an item seen, and when it holds items, what is directly inside. One `Seen` event; again within 10 minutes changes nothing |
+| POST | `/api/spaces/{spaceId}/items/{id}/audit` | editor | Finishes an audit of a container: `present` lists the ids ticked. Unticked contents become `Missing`; ticked missing ones are found. Answers with the `missing`, `found` and `elsewhere` lists. Up to 2,000 items |
+| GET | `/api/spaces/{spaceId}/barcodes/{code}` | editor | Looks a UPC or EAN barcode up online (once an admin turned that on): `name`, `brand`, `imageUrl`, `source`. 404 when no database knows it |
 | GET | `/api/spaces/{spaceId}/activity?before=` | viewer | The space's timeline, newest first, 50 at a time |
 | GET | `/api/spaces/{spaceId}/search?q=&sort=&after=` | viewer | Finds items, 50 at a time; `sort` is `relevance`, `name` or `recent`. The first page has a `total`. See [Search](../using/search.md) for what `q` can hold |
 
 An item's `contentCount` and `contentValue` (everything inside it, at any depth) are recounted in the background
 shortly after a change, so they can lag a moment behind.
+
+## Attachments
+
+Photos (JPEG, PNG, WebP, GIF) and PDFs attached to items, up to 10 MB each. A photo's thumbnail is made in the
+background just after it is attached; `hasThumbnail` says when it is ready.
+
+| Method | Path | Who | What it does |
+|---|---|---|---|
+| GET | `/api/spaces/{spaceId}/items/{id}/attachments` | viewer | An item's attachments, oldest first |
+| POST | `/api/spaces/{spaceId}/items/{id}/attachments` | editor | Attaches `data` (the file's bytes, base64) as `name`. The type comes from the bytes, not the name |
+| POST | `/api/spaces/{spaceId}/items/{id}/attachments/from-web` | editor | Downloads `url` from the public internet and attaches it, named `name` or after the address |
+| GET | `/api/spaces/{spaceId}/attachments/{id}/file` | viewer | The file. Photos are sent to show; PDFs to download |
+| GET | `/api/spaces/{spaceId}/attachments/{id}/thumbnail` | viewer | A photo's JPEG thumbnail, at most 480 pixels across. 404 until it is made |
+| DELETE | `/api/spaces/{spaceId}/attachments/{id}` | editor | Removes an attachment |
 
 ## Labels
 
@@ -112,8 +129,8 @@ belongs to. Codes are 4 to 6 characters, without look-alikes such as 0 and O.
 
 | Method | Path | Who | What it does |
 |---|---|---|---|
-| GET | `/api/system/security` | admin | The sign-in rules |
-| PUT | `/api/system/security` | admin | Changes the lockout rules and "always use HTTPS" |
+| GET | `/api/system/security` | admin | The sign-in rules, and whether barcode lookup is on |
+| PUT | `/api/system/security` | admin | Changes the lockout rules, "always use HTTPS" and `barcodeLookup` (left out, it is turned off) |
 | GET | `/api/system/https` | | How HTTPS is set up |
 | POST | `/api/system/https/certificate` | admin | Makes a new self-signed certificate for the given names |
 | GET | `/api/system/https/certificate` | | Downloads the public certificate, to install on devices |

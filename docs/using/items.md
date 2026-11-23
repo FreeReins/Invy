@@ -37,6 +37,17 @@ together). Invy recounts these just after a change, so they can lag a moment beh
 Everything inside goes with it: moving box F to the garage moves the baseball in it too. Invy won't put an item
 inside itself or inside something that is inside it.
 
+## Photos and files
+
+An item's page has **Photos and files**. Press **Add a photo or PDF** to attach pictures (JPEG, PNG, WebP or GIF) or
+PDFs, such as a receipt or a manual, up to 10 MB each. On a phone it offers the camera. Photos are made smaller before
+they are sent, and show as thumbnails; press one to open the whole file. Adding a photo writes an entry in the item's
+timeline.
+
+The files are kept in Invy's data folder and backed up with everything else (see
+[Backups and restore](../admin/backups-and-restore.md)). Viewers can look at them; editors and owners add and remove
+them.
+
 ## Counted items
 
 Turn on **Counted** for many of the same, such as 200 screws or 3.5 kg of filament, and give an **Amount** and an
@@ -53,3 +64,6 @@ kept, and **Restore** brings it back. A container has to be empty first.
 - *"… is inside …, so … can't go into it."* Move the inner one out first.
 - *"Someone else changed … while you were editing it."* Close the form, open the item again, and redo your change.
 - *"… still has … inside."* Move what's inside somewhere else before disposing of the container.
+- *"Invy keeps photos (JPEG, PNG, WebP or GIF) and PDFs."* Save the file as one of those first. iPhone photos taken
+  as HEIC are usually turned into JPEG by the browser; if not, change **Settings → Camera → Formats** to **Most
+  Compatible** on the phone.

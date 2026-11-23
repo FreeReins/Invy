@@ -49,6 +49,12 @@ internal interface IItemAccess
     /// </summary>
     Task RecountAsync(Guid spaceId, IReadOnlyCollection<Guid> containerIds, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Sets when these items were last seen, and when <paramref name="contentsOf"/> is given, the current items directly
+    /// inside it too, in one statement in the request's transaction. Versions don't change, so nobody's edit conflicts.
+    /// </summary>
+    Task MarkSeenAsync(Guid spaceId, IReadOnlyCollection<Guid> ids, Guid? contentsOf, DateTimeOffset at, CancellationToken cancellationToken);
+
     Task AddEventAsync(ItemEvent itemEvent, CancellationToken cancellationToken);
 
     /// <summary>An item's own events and what went in and out of it, newest first, at most <paramref name="limit"/>.</summary>

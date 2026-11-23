@@ -76,6 +76,7 @@ const VIEWS = [
   { name: 'browse: a new item', path: '/browse', act: (page) => page.getByRole('button', { name: 'New item' }).click() },
   { name: 'item: a box with things inside', path: `/browse/${data.itemIds.f}`, act: (page) => page.getByText('Where it has been').waitFor() },
   { name: 'item: a tool with fields', path: `/browse/${data.itemIds.drill}`, act: (page) => page.getByText('DeWalt').first().waitFor() },
+  { name: 'item: photos and files', path: `/browse/${data.itemIds.drill}`, act: (page) => page.getByText('DeWalt manual.pdf').waitFor() },
   { name: 'item: a counted thing', path: `/browse/${data.itemIds.screws}`, act: (page) => page.getByRole('button', { name: 'One more' }).waitFor() },
   { name: 'item: editing', path: `/browse/${data.itemIds.drill}`, act: (page) => page.getByRole('button', { name: 'Edit' }).click() },
   { name: 'item: moving', path: `/browse/${data.itemIds.f}`,
@@ -84,6 +85,14 @@ const VIEWS = [
     answers: { 'GET /api/spaces': data.spaces().map((space) => ({ ...space, role: 'Viewer' })) },
     act: (page) => page.getByText('Where it has been').waitFor() },
 
+  { name: 'item: auditing a box', path: `/browse/${data.itemIds.f}`,
+    act: async (page) => { await page.getByRole('button', { name: 'Audit' }).click(); await page.getByText('0 of 3 ticked').waitFor(); } },
+  { name: "item: an audit's differences", path: `/browse/${data.itemIds.f}`,
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Audit' }).click();
+      await page.getByRole('button', { name: 'Finish the audit' }).click();
+      await page.getByText('Found again').waitFor();
+    } },
   { name: 'item: sticking on a label', path: `/browse/${data.itemIds.drill}`,
     act: (page) => page.getByRole('button', { name: 'Stick on a label' }).click().then(() => page.getByRole('dialog').waitFor()) },
 
@@ -121,9 +130,19 @@ const VIEWS = [
     name: 'scan: adding to a scanned box', path: '/scan',
     act: async (page) => {
       await page.getByRole('radio', { name: 'Add' }).check();
-      await page.getByLabel('Or type the label code').fill(data.labelCodes.onBoxF);
+      await page.getByLabel('Or type a label code or barcode').fill(data.labelCodes.onBoxF);
       await page.getByRole('button', { name: 'Go' }).click();
       await page.getByLabel('Quick add to Box F').waitFor();
+    },
+  },
+  {
+    name: 'scan: a product found from its barcode', path: '/scan',
+    act: async (page) => {
+      await page.getByRole('radio', { name: 'Add' }).check();
+      await page.getByLabel('Or type a label code or barcode').fill(data.product().barcode);
+      await page.getByRole('button', { name: 'Go' }).click();
+      await page.getByRole('button', { name: 'Add it at the top' }).click();
+      await page.getByRole('dialog').waitFor();
     },
   },
   { name: 'scan: as a viewer', path: '/scan', answers: { 'GET /api/spaces': data.spaces().map((space) => ({ ...space, role: 'Viewer' })) } },

@@ -147,6 +147,7 @@ public static class ServiceRegistration
     {
         DataFolders.RequireWritable(KeysFolder(configuration), "Data:SessionKeys");
         DataFolders.RequireWritable(CoreRegistration.StoragePath(configuration, "Data:Backups", "backups"), "Data:Backups");
+        DataFolders.RequireWritable(CoreRegistration.StoragePath(configuration, "Data:Files", "files"), "Data:Files");
 
         var options = configuration.GetSection("Https").Get<HttpsOptions>() ?? new HttpsOptions();
         var certificates = new CertificateStore(options, KeysFolder(configuration));

@@ -50,14 +50,20 @@ public static class CoreRegistration
         services.AddScoped<ITypeAccess, TypeAccess>();
         services.AddScoped<IItemAccess, ItemAccess>();
         services.AddScoped<ILabelAccess, LabelAccess>();
+        services.AddScoped<IAttachmentAccess, AttachmentAccess>();
         services.AddScoped<ISettingsAccess, SettingsAccess>();
         services.AddScoped<IMessageAccess, MessageAccess>();
         var backupFolder = StoragePath(configuration, "Data:Backups", "backups");
-        services.AddScoped<IBackupAccess>(provider => new BackupAccess(provider.GetRequiredService<InvyDbContext>(), backupFolder));
+        var filesFolder = StoragePath(configuration, "Data:Files", "files");
+        services.AddSingleton<IFileStoreAccess>(new FileStoreAccess(filesFolder));
+        services.AddScoped<IBackupAccess>(provider => new BackupAccess(provider.GetRequiredService<InvyDbContext>(), backupFolder, filesFolder));
         services.AddHttpClient<INotificationAccess, NotificationAccess>(client => client.Timeout = TimeSpan.FromSeconds(10));
         // AI models are set up by an admin and may run on the home network (Ollama, LM Studio), so private addresses
         // are allowed. Reading a photo can take a minute or more.
         services.AddHttpClient<IAiAccess, AiAccess>(client => client.Timeout = TimeSpan.FromSeconds(180));
+        // Barcode lookups reach only the public internet, through PublicWeb.
+        services.AddHttpClient<IProductAccess, ProductAccess>(client => client.Timeout = TimeSpan.FromSeconds(15))
+            .ConfigurePrimaryHttpMessageHandler(PublicWeb.Handler);
 
         // Engines. They hold no state; ValidationEngine reads through the accessors, so it lives per request.
         services.AddSingleton<TransformationEngine>();
@@ -68,6 +74,7 @@ public static class CoreRegistration
         services.AddSingleton<QuickAddEngine>();
         services.AddSingleton<QueryEngine>();
         services.AddSingleton<LabelEngine>();
+        services.AddSingleton<ImageEngine>();
         services.AddScoped<ValidationEngine>();
 
         // Managers: one per request or message, sharing one database transaction.
@@ -77,6 +84,7 @@ public static class CoreRegistration
         services.AddScoped<ITypeManager, TypeManager>();
         services.AddScoped<IItemManager, ItemManager>();
         services.AddScoped<ILabelManager, LabelManager>();
+        services.AddScoped<IAttachmentManager, AttachmentManager>();
 
         return services;
     }

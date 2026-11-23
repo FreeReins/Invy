@@ -12,6 +12,8 @@ internal sealed partial class ItemManager(
     IItemAccess items,
     ITypeAccess types,
     IAccountAccess accounts,
+    ISettingsAccess settings,
+    IProductAccess products,
     IMessageAccess messages,
     ValidationEngine validation,
     ItemEngine itemEngine,

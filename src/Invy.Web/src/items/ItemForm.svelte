@@ -1,5 +1,6 @@
 <!-- Adds or changes an item: its name, marking, type, whether it holds items or is counted, its fields, tags and notes.
-     Fields follow the chosen type; values of fields the type doesn't have are kept and shown as Other fields. -->
+     Fields follow the chosen type; values of fields the type doesn't have are kept and shown as Other fields. A product
+     looked up from its barcode fills in a new item's name, and its brand and barcode fields when the type has them. -->
 <script>
   import { untrack } from 'svelte';
   import { run, toast } from '../lib/app.svelte.js';
@@ -9,11 +10,16 @@
   import { display } from '../lib/items.js';
   import Modal from '../components/Modal.svelte';
 
-  /** spaceId; types: ItemTypeResponse[]; item: ItemResponse to change, or null to add; parent: where a new one goes; onsaved(item); onclose(). */
-  let { spaceId, types, item = null, parent = null, onsaved, onclose } = $props();
+  /**
+   * spaceId; types: ItemTypeResponse[]; item: ItemResponse to change, or null to add; parent: where a new one goes;
+   * product: a ProductResponse to fill a new one from; onsaved(item); onclose().
+   */
+  let { spaceId, types, item = null, parent = null, product = null, onsaved, onclose } = $props();
 
   const opened = untrack(() => item);
-  let name = $state(opened?.name ?? '');
+  const found = untrack(() => product);
+  const productName = found ? (found.brand && !found.name.toLowerCase().includes(found.brand.toLowerCase()) ? `${found.brand} ${found.name}` : found.name) : '';
+  let name = $state(opened?.name ?? productName);
   let marking = $state(opened?.marking ?? '');
   let typeId = $state(opened?.typeId ?? '');
   let holdsItems = $state(opened?.holdsItems ?? null);
@@ -27,6 +33,19 @@
   const type = $derived(types.find((candidate) => candidate.id === typeId) ?? null);
   const holds = $derived(holdsItems ?? type?.holdsItems ?? false);
   const own = $derived(new Set(type?.fields.map((field) => field.id) ?? []));
+  // A looked-up product's brand and barcode go into the chosen type's fields for them, when those are still empty.
+  $effect(() => {
+    const fields = type?.fields ?? [];
+    untrack(() => {
+      if (!found) return;
+      for (const field of fields) {
+        if (values[field.id] != null && values[field.id] !== '') continue;
+        if (field.kind === 'Barcode') values[field.id] = found.barcode;
+        else if (field.key === 'brand' && field.kind === 'Text' && found.brand) values[field.id] = found.brand;
+      }
+    });
+  });
+
   const others = $derived(Object.keys(values).filter((id) => !own.has(id) && values[id] != null));
 
   function toggleChoice(field, option, checked) {

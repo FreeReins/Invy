@@ -70,6 +70,25 @@ public static class ItemEndpoints
         Guid spaceId, Guid id, ClaimsPrincipal principal, [FromServices] IItemManager items, CancellationToken cancellationToken) =>
         items.RestoreItemAsync(Sessions.RequireUserId(principal), spaceId, id, cancellationToken);
 
+    /// <summary>Looks a UPC or EAN barcode up online, once an admin has turned that on, to fill in a new item.</summary>
+    [WolverineGet("/api/spaces/{spaceId}/barcodes/{code}")]
+    public static Task<ProductResponse> LookUpBarcode(
+        Guid spaceId, string code, ClaimsPrincipal principal, [FromServices] IItemManager items, CancellationToken cancellationToken) =>
+        items.LookUpBarcodeAsync(Sessions.RequireUserId(principal), spaceId, code, cancellationToken);
+
+    /// <summary>Marks an item seen, and what is directly inside it. The web page calls it when a container is opened or scanned.</summary>
+    [WolverinePost("/api/spaces/{spaceId}/items/{id}/seen")]
+    public static Task<ItemResponse> Seen(
+        Guid spaceId, Guid id, ClaimsPrincipal principal, [FromServices] IItemManager items, CancellationToken cancellationToken) =>
+        items.MarkSeenAsync(Sessions.RequireUserId(principal), spaceId, id, cancellationToken);
+
+    /// <summary>Finishes an audit walk: what isn't ticked is marked missing, and the differences are listed.</summary>
+    [WolverinePost("/api/spaces/{spaceId}/items/{id}/audit")]
+    public static Task<AuditResponse> Audit(
+        Guid spaceId, Guid id, AuditRequest request, ClaimsPrincipal principal, [FromServices] IItemManager items,
+        CancellationToken cancellationToken) =>
+        items.AuditAsync(Sessions.RequireUserId(principal), spaceId, id, request, cancellationToken);
+
     /// <summary>An item's timeline and where it has been.</summary>
     [WolverineGet("/api/spaces/{spaceId}/items/{id}/history")]
     public static Task<ItemHistoryResponse> History(

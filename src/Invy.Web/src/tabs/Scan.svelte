@@ -1,6 +1,9 @@
-<!-- The Scan tab: the camera, in one of four modes. Open goes to what a label is on (or searches for a product barcode);
+<!-- The Scan tab: the camera, in one of five modes. Open goes to what a label is on (or searches for a product barcode),
+     marking it seen;
      Move takes two scans, the thing and then where it's going; Claim turns each new label into a box in the sticky place;
-     Add makes the scanned container the sticky place, then quick add fills it. /l/<code> for a label that isn't on
+     Add makes the scanned container the sticky place, then quick add fills it, and a product barcode is looked up online
+     (when an admin turned that on) to add it there with its name and photo; Audit opens the scanned container's audit
+     walk. /l/<code> for a label that isn't on
      anything yet lands here, offering to claim it. -->
 <script>
   import { onMount } from 'svelte';
@@ -14,13 +17,16 @@
   import Scanner from '../components/Scanner.svelte';
   import StickyPlace from '../items/StickyPlace.svelte';
   import QuickAdd from '../items/QuickAdd.svelte';
+  import ItemForm from '../items/ItemForm.svelte';
+  import PackageSearch from '@lucide/svelte/icons/package-search';
   import Tag from '@lucide/svelte/icons/tag';
 
   const MODES = [
     { key: 'open', label: 'Open', hint: 'Scan a label to open what it is on, or a product barcode to search for it.' },
     { key: 'move', label: 'Move', hint: 'Scan the thing, then scan where it is going.' },
     { key: 'claim', label: 'Claim', hint: 'Scan new labels. Each one becomes a box in the place below.' },
-    { key: 'add', label: 'Add', hint: 'Scan a box or shelf to add things to it, then type what goes in.' },
+    { key: 'add', label: 'Add', hint: 'Scan a box or shelf to add things to it, then type what goes in or scan their barcodes.' },
+    { key: 'audit', label: 'Audit', hint: 'Scan a box or shelf to check what is in it.' },
   ];
 
   let mode = $state('open');
@@ -28,6 +34,12 @@
   let unclaimed = $state(null);
   /** The item a Move scan picked up (ItemRef), waiting for where it goes. */
   let moving = $state(null);
+  /** A product looked up from its barcode (ProductResponse), offered to add to the sticky place. */
+  let product = $state(null);
+  /** The space's types, loaded when a product is first added. */
+  let types = $state(null);
+  /** True while the form to add the product is open. */
+  let addingProduct = $state(false);
   /** What happened, newest first: { id, text, href? }. */
   let log = $state([]);
   let nextId = 0;
@@ -55,7 +67,26 @@
     mode = key;
     moving = null;
     unclaimed = null;
+    product = null;
   }
+
+  /** True for a UPC or EAN product barcode: 8, 12, 13 or 14 digits. */
+  const isBarcode = (text) => /^(\d{8}|\d{12,14})$/.test(text.replace(/[\s-]/g, ''));
+
+  const addProduct = () => run(async () => {
+    types ??= await api('GET', `/api/spaces/${app.spaceId}/types`);
+    addingProduct = true;
+  });
+
+  const productAdded = (made) => run(async () => {
+    addingProduct = false;
+    const found = product;
+    product = null;
+    note(`Added ${made.name} ${where}.`, `/browse/${made.id}`);
+    if (found.imageUrl) {
+      await api('POST', `/api/spaces/${app.spaceId}/items/${made.id}/attachments/from-web`, { url: found.imageUrl, name: null });
+    }
+  });
 
   /** A label in this space, or an error saying what to scan instead. */
   async function labelHere(text) {
@@ -84,8 +115,15 @@
       }
       const label = await findLabel(code);
       showSpaceOf(label);
+      if (label.item && canEdit()) await api('POST', `/api/spaces/${app.spaceId}/items/${label.item.id}/seen`);
       if (label.item) await go(`/browse/${label.item.id}`);
       else unclaimed = label.code;
+      return;
+    }
+
+    if (mode === 'add' && !labelCode(text) && isBarcode(text)) {
+      product = null;
+      product = await api('GET', `/api/spaces/${app.spaceId}/barcodes/${encodeURIComponent(text.replace(/[\s-]/g, ''))}`);
       return;
     }
 
@@ -104,6 +142,10 @@
         note(`Moved ${moving.name} into ${label.item.name}.`, `/browse/${moving.id}`);
         moving = null;
       }
+    } else if (mode === 'audit') {
+      if (!label.item) throw new Error(`Label ${label.code} isn't on anything yet. Claim it first.`);
+      app.auditItem = label.item.id;
+      await go(`/browse/${label.item.id}`);
     } else if (mode === 'add') {
       const container = label.item ?? await claim(label.code);
       setStickyPlace(container);
@@ -128,7 +170,7 @@
     </fieldset>
     <p class="muted">{current.hint}</p>
 
-    {#if editor && mode !== 'open'}<StickyPlace />{/if}
+    {#if editor && (mode === 'claim' || mode === 'add' || mode === 'move')}<StickyPlace />{/if}
 
     {#if unclaimed}
       <div class="card unclaimed" role="status">
@@ -148,16 +190,34 @@
       </div>
     {/if}
 
+    {#if product}
+      <div class="card unclaimed" role="status">
+        <span class="empty-icon" style="--area: var(--area-scan)" aria-hidden="true"><PackageSearch size={22} /></span>
+        <div>
+          <h3>{product.brand ? `${product.brand}: ` : ''}{product.name}</h3>
+          <p class="muted">Barcode {product.barcode}, found on {product.source}.{product.imageUrl ? ' Its photo is attached too.' : ''}</p>
+          <div class="actions">
+            <button type="button" class="primary" onclick={pendingClick(addProduct)}>Add it {where}</button>
+            <button type="button" onclick={() => { product = null; }}>Not now</button>
+          </div>
+        </div>
+      </div>
+    {/if}
+
     {#if moving}
       <p class="card waiting" role="status">Moving <strong>{moving.name}</strong>. Now scan where it is going.
         <button type="button" class="small" onclick={() => { moving = null; }}>Cancel</button></p>
     {/if}
 
     <Scanner onscan={scanned} prompt={moving ? `Scan where ${moving.name} is going` : current.hint.replace(/\.$/, '')}
-      typeLabel={mode === 'open' ? 'Or type a label code or barcode' : 'Or type the label code'} />
+      typeLabel={mode === 'open' || mode === 'add' ? 'Or type a label code or barcode' : 'Or type the label code'} />
 
     {#if mode === 'add' && editor && place}
       <div class="card"><QuickAdd spaceId={app.spaceId} parent={place} onadded={(made) => note(`${plural(made.length, 'item')} added to ${place.name}.`, `/browse/${place.id}`)} /></div>
+    {/if}
+
+    {#if addingProduct && product}
+      <ItemForm spaceId={app.spaceId} {types} parent={place} {product} onsaved={productAdded} onclose={() => { addingProduct = false; }} />
     {/if}
 
     {#if log.length}

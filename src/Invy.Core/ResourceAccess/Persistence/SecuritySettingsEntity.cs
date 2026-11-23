@@ -10,4 +10,6 @@ internal sealed class SecuritySettingsEntity
     public int LockoutMinutes { get; set; }
 
     public bool RequireHttps { get; set; }
+
+    public bool BarcodeLookup { get; set; }
 }

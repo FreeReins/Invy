@@ -29,7 +29,7 @@ export const https = () => ({
   canRegenerate: true, isSecureNow: false, requireHttps: false,
 });
 
-export const security = () => ({ maxFailedSignIns: 5, lockoutMinutes: 15, requireHttps: false });
+export const security = () => ({ maxFailedSignIns: 5, lockoutMinutes: 15, requireHttps: false, barcodeLookup: false });
 
 /** BackupsResponse */
 export const backups = () => ({
@@ -210,6 +210,30 @@ export const itemDetail = (id) => ({
 }[id]);
 
 const ref = (id, name, marking = null) => ({ id, name, marking });
+
+/** A 1×1 PNG, base64, for thumbnails and photos. */
+export const TINY_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+/** AttachmentResponse[]: the drill's photo and its manual. */
+export const attachments = () => [
+  { id: '00000000-0000-4000-8000-000000000b01', itemId: itemIds.drill, kind: 'Photo', name: 'drill.jpg', contentType: 'image/jpeg', bytes: 182000,
+    hasThumbnail: true, createdAt: '2026-11-20T09:00:00Z' },
+  { id: '00000000-0000-4000-8000-000000000b02', itemId: itemIds.drill, kind: 'Document', name: 'DeWalt manual.pdf', contentType: 'application/pdf',
+    bytes: 2400000, hasThumbnail: false, createdAt: '2026-11-20T09:01:00Z' },
+];
+
+/** ProductResponse: a drill found from its barcode. */
+export const product = () => ({ barcode: '0012345678905', name: '20V cordless drill', brand: 'DeWalt',
+  imageUrl: 'https://images.example/drill.jpg', source: 'UPCitemdb' });
+
+/** AuditResponse for Box F: the screws went missing, the baseball turned up again, and the shed's lamp was in there. */
+export const auditResult = () => ({
+  container: { ...itemDetail(itemIds.f).item, lastSeenAt: '2026-11-23T10:00:00Z' },
+  seen: 3,
+  missing: [summary(itemIds.screws, 'Screws', { quantity: 185, status: 'Missing' })],
+  found: [summary(itemIds.ball, 'Baseball')],
+  elsewhere: [summary('00000000-0000-4000-8000-000000000a77', 'Lamp')],
+});
 
 /** ItemEventResponse[]: a few of each kind the page words differently. */
 export const events = () => [

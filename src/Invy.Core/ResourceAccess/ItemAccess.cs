@@ -101,6 +101,33 @@ internal sealed partial class ItemAccess(InvyDbContext db) : IItemAccess
             cancellationToken);
     }
 
+    /// <summary>One UPDATE, opening the request's transaction first as <see cref="MoveContentsAsync"/> does.</summary>
+    public async Task MarkSeenAsync(Guid spaceId, IReadOnlyCollection<Guid> ids, Guid? contentsOf, DateTimeOffset at, CancellationToken cancellationToken)
+    {
+        if (ids.Count == 0 && contentsOf is null)
+        {
+            return;
+        }
+
+        if (db.Database.CurrentTransaction is null)
+        {
+            await db.Database.BeginTransactionAsync(cancellationToken);
+        }
+
+        var seen = at.ToUniversalTime();
+        await db.Items
+            .Where(item => item.SpaceId == spaceId && (ids.Contains(item.Id)
+                || (contentsOf != null && item.ParentId == contentsOf && item.Status != ItemStatus.Disposed && item.Status != ItemStatus.Archived)))
+            .ExecuteUpdateAsync(set => set.SetProperty(item => item.LastSeenAt, seen), cancellationToken);
+        foreach (var tracked in db.Items.Local.Where(item => item.SpaceId == spaceId && (ids.Contains(item.Id) || (contentsOf != null && item.ParentId == contentsOf))))
+        {
+            // Keep tracked rows in step, so a later save in this request doesn't put the old time back.
+            var lastSeen = db.Entry(tracked).Property(item => item.LastSeenAt);
+            lastSeen.CurrentValue = seen;
+            lastSeen.OriginalValue = seen;
+        }
+    }
+
     /// <summary>Items that are neither disposed nor archived.</summary>
     private IQueryable<ItemEntity> Current(Guid spaceId) =>
         db.Items.AsNoTracking().Where(item => item.SpaceId == spaceId && item.Status != ItemStatus.Disposed && item.Status != ItemStatus.Archived);
