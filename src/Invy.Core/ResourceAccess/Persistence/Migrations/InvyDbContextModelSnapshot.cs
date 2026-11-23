@@ -234,6 +234,10 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                     b.Property<bool>("HoldsItems")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("LabelCode")
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)");
+
                     b.Property<DateTimeOffset?>("LastSeenAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -288,6 +292,10 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LabelCode")
+                        .IsUnique()
+                        .HasFilter("\"LabelCode\" IS NOT NULL");
 
                     b.HasIndex("ParentId");
 
@@ -461,6 +469,33 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                     b.ToTable("ItemValues", (string)null);
                 });
 
+            modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.LabelEntity", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("PrintedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SpaceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Code");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("SpaceId", "Code");
+
+                    b.ToTable("Labels", (string)null);
+                });
+
             modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.NotificationSettingsEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -632,6 +667,20 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                     b.HasOne("Invy.Core.ResourceAccess.Persistence.ItemEntity", null)
                         .WithMany()
                         .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.LabelEntity", b =>
+                {
+                    b.HasOne("Invy.Core.ResourceAccess.Persistence.ItemEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Invy.Core.ResourceAccess.Persistence.SpaceEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SpaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

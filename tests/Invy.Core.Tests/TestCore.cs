@@ -31,6 +31,8 @@ internal sealed class TestCore
 
     public FakeItems Items { get; } = new();
 
+    public FakeLabels Labels { get; } = new();
+
     public FakeWebhook Webhook { get; } = new();
 
     public FakeSettings Settings { get; } = new();
@@ -49,6 +51,8 @@ internal sealed class TestCore
 
     public ItemManager ItemManager() => Make<ItemManager>();
 
+    public LabelManager LabelManager() => Make<LabelManager>();
+
     /// <summary>A new manager each call, as each request gets in the app; the fakes and engines are shared.</summary>
     private T Make<T>()
         where T : notnull => services.Value.GetRequiredService<T>();
@@ -63,6 +67,7 @@ internal sealed class TestCore
         services.AddSingleton<ISpaceAccess>(Spaces);
         services.AddSingleton<ITypeAccess>(Types);
         services.AddSingleton<IItemAccess>(Items);
+        services.AddSingleton<ILabelAccess>(Labels);
         services.AddSingleton<IStarterPackAccess>(TestData.StarterPacks);
         services.AddSingleton<INotificationAccess>(Webhook);
         services.AddSingleton<ISettingsAccess>(Settings);
@@ -79,6 +84,7 @@ internal sealed class TestCore
         services.AddSingleton<TimelineEngine>();
         services.AddSingleton<QuickAddEngine>();
         services.AddSingleton<QueryEngine>();
+        services.AddSingleton<LabelEngine>();
         services.AddTransient<ValidationEngine>();
 
         // The managers under test.
@@ -87,6 +93,7 @@ internal sealed class TestCore
         services.AddTransient<SpaceManager>();
         services.AddTransient<TypeManager>();
         services.AddTransient<ItemManager>();
+        services.AddTransient<LabelManager>();
 
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
     }

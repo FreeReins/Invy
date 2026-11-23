@@ -61,6 +61,13 @@ function defaults() {
     'POST /api/spaces/*/items/*/dispose': data.itemDetail(data.itemIds.f).item,
     'POST /api/spaces/*/items/*/restore': data.itemDetail(data.itemIds.f).item,
     'POST /api/spaces/*/quick-add': [],
+    // Labels: 7K3Q is on Box F, other codes aren't on anything yet, and XXXX isn't a label Invy has.
+    'GET /api/labels/*': (request) => data.labelFor(decodeURIComponent(new URL(request.url()).pathname.split('/').pop()))
+      ?? reply(404, { detail: 'There is no label XXXX. Check the code, or scan it again.' }),
+    'GET /api/spaces/*/labels': data.unclaimedLabels(),
+    'POST /api/spaces/*/labels': (request) => data.newLabels(request.postDataJSON().count),
+    'POST /api/spaces/*/labels/*/claim': (request) => data.claimedBox(new URL(request.url()).pathname.split('/').at(-2), request.postDataJSON().parentId),
+    'POST /api/spaces/*/labels/*/attach': (request) => ({ ...data.itemDetail(data.itemIds.drill).item, labelCode: new URL(request.url()).pathname.split('/').at(-2) }),
     // Search: "baseball" finds two, "type:" can't be read, "nothing" finds none, "part" finds 120 (for scrolling),
     // and an empty box gives the recently changed items.
     'GET /api/spaces/*/search': (request) => {

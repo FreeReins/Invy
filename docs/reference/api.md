@@ -95,6 +95,19 @@ answer shape.
 An item's `contentCount` and `contentValue` (everything inside it, at any depth) are recounted in the background
 shortly after a change, so they can lag a moment behind.
 
+## Labels
+
+A label code is unique across the whole install, so looking one up needs no space: the answer says which space it
+belongs to. Codes are 4 to 6 characters, without look-alikes such as 0 and O.
+
+| Method | Path | Who | What it does |
+|---|---|---|---|
+| GET | `/api/labels/{code}` | viewer of its space | The label and the item it is on (`item`, null while unclaimed). `code` may be the whole scanned address, URL-encoded |
+| GET | `/api/spaces/{spaceId}/labels?unclaimed=&after=` | viewer | The space's labels by code, 100 at a time; only unclaimed ones with `unclaimed=true` |
+| POST | `/api/spaces/{spaceId}/labels` | editor | Makes `count` (1 to 500) new unclaimed codes to print |
+| POST | `/api/spaces/{spaceId}/labels/{code}/claim` | editor | Makes a new item with the label on it, in `parentId`: named `name`, or Box and the code; of `typeId`, or none (then it holds items) |
+| POST | `/api/spaces/{spaceId}/labels/{code}/attach` | editor | Sticks an unclaimed label on the existing item `itemId`. A label it had before becomes unclaimed |
+
 ## Running the server (admin)
 
 | Method | Path | Who | What it does |

@@ -7,3 +7,4 @@ export * from './session.svelte.js';
 export * from './live.svelte.js';
 export * from './inbox.svelte.js';
 export * from './spaces.svelte.js';
+export * from './labels.svelte.js';

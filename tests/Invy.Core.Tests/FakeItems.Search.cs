@@ -63,7 +63,8 @@ internal sealed partial class FakeItems
         Inside inside => Rows.Any(container => container.SpaceId == item.SpaceId && container.HoldsItems && container.Id != item.Id
             && ItemPaths.IsWithin(item.Path, container.Path)
             && (string.Equals(container.Name, inside.Container, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(container.Marking, inside.Container, StringComparison.OrdinalIgnoreCase))),
+                || string.Equals(container.Marking, inside.Container, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(container.LabelCode, inside.Container, StringComparison.OrdinalIgnoreCase))),
         Contains contains => (contains.Column switch { ItemText.Name => item.Name, ItemText.Marking => item.Marking, _ => item.Notes })
             ?.Contains(contains.Text, StringComparison.OrdinalIgnoreCase) == true,
         Tagged tag => item.Tags.Contains(tag.Tag),
@@ -85,7 +86,7 @@ internal sealed partial class FakeItems
     };
 
     private static IEnumerable<string> Texts(Item item) =>
-        new[] { item.Name, item.Marking, item.Notes }.OfType<string>().Concat(item.Tags)
+        new[] { item.Name, item.Marking, item.LabelCode, item.Notes }.OfType<string>().Concat(item.Tags)
             .Concat(item.Fields.Values.Where(value => value.ValueKind == JsonValueKind.String).Select(value => value.GetString()!));
 
     private static bool Matches(JsonElement value, FieldMatch match) =>

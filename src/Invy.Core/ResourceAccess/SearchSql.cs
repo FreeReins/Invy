@@ -97,7 +97,7 @@ internal sealed partial class SearchSql
         var name = Add(container.ToLowerInvariant());
         return $"""
             EXISTS (SELECT 1 FROM "Items" c WHERE c."SpaceId" = {space} AND c."HoldsItems"
-                AND (lower(c."Name") = {name} OR lower(c."Marking") = {name})
+                AND (lower(c."Name") = {name} OR lower(c."Marking") = {name} OR lower(c."LabelCode") = {name})
                 AND c."Path" @> i."Path" AND c."Id" <> i."Id")
             """;
     }

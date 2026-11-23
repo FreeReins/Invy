@@ -11,9 +11,11 @@
   import BackupsPanel from '../settings/BackupsPanel.svelte';
   import LogsPanel from '../settings/LogsPanel.svelte';
   import AppearancePanel from '../settings/AppearancePanel.svelte';
+  import LabelsPanel from '../settings/LabelsPanel.svelte';
   import HelpLink from '../components/HelpLink.svelte';
   import BackToTop from '../components/BackToTop.svelte';
   import Palette from '@lucide/svelte/icons/palette';
+  import QrCode from '@lucide/svelte/icons/qr-code';
   import KeyRound from '@lucide/svelte/icons/key-round';
   import Lock from '@lucide/svelte/icons/lock';
   import Bell from '@lucide/svelte/icons/bell';
@@ -28,10 +30,11 @@
    * the guide in the documentation (a page under docs/, and what it is about), linked at the end of the section.
    * Sections are listed under the group they belong to, in GROUPS order.
    */
-  const GROUPS = ['You', 'Connections', 'System'];
+  const GROUPS = ['You', 'This space', 'Connections', 'System'];
   const SECTIONS = [
     { group: 'You', key: 'login', label: 'Login', icon: KeyRound, visible: () => true, panel: LoginPanel, help: ['admin/people-and-accounts#passwords', 'Passwords and lockout'] },
     { group: 'You', key: 'appearance', label: 'Appearance', icon: Palette, visible: () => true, panel: AppearancePanel },
+    { group: 'This space', key: 'labels', label: 'Labels and printing', icon: QrCode, visible: () => true, panel: LabelsPanel, wide: true, help: ['using/labels-and-scanning', 'Labels and scanning'] },
     { group: 'Connections', key: 'assistants', label: 'AI assistants', icon: Bot, visible: () => true, panel: AssistantsPanel, help: ['admin/ai-assistants', 'AI models and assistants'] },
     { group: 'Connections', key: 'notifications', label: 'Notifications', icon: Bell, visible: () => isAdmin() && app.notifications, panel: NotificationsPanel, help: ['admin/notifications', 'Notifications and Home Assistant'] },
     { group: 'System', key: 'https', label: 'HTTPS', icon: Lock, visible: () => true, panel: HttpsPanel, heading: 'Secure connection (HTTPS)', help: ['admin/https-and-certificates', 'HTTPS and certificates'] },

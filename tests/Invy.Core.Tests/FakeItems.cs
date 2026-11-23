@@ -88,6 +88,7 @@ internal sealed partial class FakeItems : IItemAccess
         TypeId = item.TypeId,
         Name = item.Name,
         Marking = item.Marking,
+        LabelCode = item.LabelCode,
         ParentId = item.ParentId,
         Path = item.Path,
         Depth = item.Depth,

@@ -84,7 +84,10 @@ counted item it holds the amount, with an optional `unit` (200 screws, 3.5 kg of
 event with `qty_delta`.
 
 **Markings and labels.** `marking` is whatever is written on the thing ("ABC", "F"). `label_code` is Invy's short
-code (`7K3Q`) printed in the QR label. Search finds both.
+code (`7K3Q`) printed in the QR label. Search finds both. A code is unique across the whole install, not just its
+space, so `/l/<code>` finds the label's space by itself and opens it for anyone who is a member there. Scanning an
+unclaimed label makes a container named "Box" and the code (`Box 7K3Q`) in the sticky place, unless a name or type is
+given first.
 
 **Status:** `Active`, `Missing`, `Lent`, `Disposed`, `Archived`. Disposed and archived items are left out of search
 unless asked for (`is:disposed`).

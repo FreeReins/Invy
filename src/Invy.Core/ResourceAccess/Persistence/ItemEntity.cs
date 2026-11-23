@@ -14,6 +14,8 @@ internal sealed class ItemEntity
 
     public string? Marking { get; set; }
 
+    public string? LabelCode { get; set; }
+
     public Guid? ParentId { get; set; }
 
     /// <summary>An ltree column. See ItemPaths.</summary>

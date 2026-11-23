@@ -12,10 +12,10 @@ internal static partial class Mapping
     public static ItemResponse ToResponse(this Item item) => new(
         item.Id, item.Name, item.Marking, item.TypeId, item.ParentId, item.HoldsItems, item.Quantity, item.Unit,
         item.Fields, item.Tags, item.Notes, item.Status, item.LastSeenAt, item.CreatedAt, item.UpdatedAt, item.Version,
-        item.Value, item.ContentCount, item.ContentValue);
+        item.Value, item.ContentCount, item.ContentValue, item.LabelCode);
 
     public static ItemSummary ToSummary(this Item item) =>
-        new(item.Id, item.Name, item.Marking, item.TypeId, item.HoldsItems, item.Quantity, item.Unit, item.Status, item.ContentCount, item.Value, item.ContentValue);
+        new(item.Id, item.Name, item.Marking, item.TypeId, item.HoldsItems, item.Quantity, item.Unit, item.Status, item.ContentCount, item.Value, item.ContentValue, item.LabelCode);
 
     public static ItemRef ToRef(this Item item) => new(item.Id, item.Name, item.Marking);
 
@@ -39,6 +39,7 @@ internal static partial class Mapping
         TypeId = item.TypeId,
         Name = item.Name,
         Marking = item.Marking,
+        LabelCode = item.LabelCode,
         ParentId = item.ParentId,
         Path = item.Path,
         Depth = item.Depth,

@@ -7,7 +7,7 @@ Type in the box on **Find** and the results appear as you type. Each result show
 
 ## Words
 
-Plain words find items by their name, marking, tags, notes and text fields. A word can be half typed (`base` finds
+Plain words find items by their name, marking, label code, tags, notes and text fields. A word can be half typed (`base` finds
 *Baseball*) or slightly misspelt (`basebll` still finds it). Every word has to match. Put words in quotes to find them
 together: `"box f"`.
 
@@ -16,7 +16,7 @@ together: `"box f"`.
 | Type | To find |
 |---|---|
 | `type:tool` | items of a type, by its name |
-| `in:shed`, `in:"Box F"` | anything inside a container, at any depth, by its name or marking |
+| `in:shed`, `in:"Box F"` | anything inside a container, at any depth, by its name, marking or label code |
 | `brand:dewalt` | an exact field value, using the field's search name from the **Types** tab |
 | `price>50`, `price<=20`, `price:10..20` | ranges on number, money and date fields that have **Sort and compare** turned on |
 | `bought>2026-01-31` | dates are written year-month-day |

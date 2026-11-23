@@ -111,4 +111,24 @@ internal sealed class ItemEngine
     };
 
     private static string? Join(IEnumerable<string> values) => string.Join(", ", values) is { Length: > 0 } joined ? joined : null;
+
+    /// <summary>Sets the item's container, path and depth for being inside <paramref name="parent"/> (null for the top).</summary>
+    public static void Place(Item item, Item? parent)
+    {
+        item.ParentId = parent?.Id;
+        item.Path = ItemPaths.Of(item.Id, parent?.Path);
+        item.Depth = ItemPaths.Depth(item.Path);
+    }
+
+    /// <summary>A new timeline event for the item.</summary>
+    public static ItemEvent Event(Item item, Guid userId, ItemEventKind kind, DateTimeOffset at, Guid? from = null, Guid? to = null) => new()
+    {
+        SpaceId = item.SpaceId,
+        ItemId = item.Id,
+        At = at,
+        ActorId = userId,
+        Kind = kind,
+        FromParent = from,
+        ToParent = to,
+    };
 }

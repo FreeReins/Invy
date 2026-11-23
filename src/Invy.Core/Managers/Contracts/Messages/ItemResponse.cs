@@ -22,6 +22,7 @@ namespace Invy.Core.Managers.Contracts.Messages;
 /// <param name="Value">Its type's first money field times its amount (1 when unique), or null without one.</param>
 /// <param name="ContentCount">How many items are inside it, at any depth. Updated shortly after a change.</param>
 /// <param name="ContentValue">The total value of what is inside it, at any depth. Currencies aren't converted.</param>
+/// <param name="LabelCode">The code of the QR label stuck on it, such as 7K3Q, or null.</param>
 public sealed record ItemResponse(
     Guid Id,
     string Name,
@@ -41,4 +42,5 @@ public sealed record ItemResponse(
     int Version,
     decimal? Value,
     int ContentCount,
-    decimal ContentValue);
+    decimal ContentValue,
+    string? LabelCode);

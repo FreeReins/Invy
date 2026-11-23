@@ -49,6 +49,7 @@ public static class CoreRegistration
         services.AddScoped<ISpaceAccess, SpaceAccess>();
         services.AddScoped<ITypeAccess, TypeAccess>();
         services.AddScoped<IItemAccess, ItemAccess>();
+        services.AddScoped<ILabelAccess, LabelAccess>();
         services.AddScoped<ISettingsAccess, SettingsAccess>();
         services.AddScoped<IMessageAccess, MessageAccess>();
         var backupFolder = StoragePath(configuration, "Data:Backups", "backups");
@@ -66,6 +67,7 @@ public static class CoreRegistration
         services.AddSingleton<TimelineEngine>();
         services.AddSingleton<QuickAddEngine>();
         services.AddSingleton<QueryEngine>();
+        services.AddSingleton<LabelEngine>();
         services.AddScoped<ValidationEngine>();
 
         // Managers: one per request or message, sharing one database transaction.
@@ -74,6 +76,7 @@ public static class CoreRegistration
         services.AddScoped<ISpaceManager, SpaceManager>();
         services.AddScoped<ITypeManager, TypeManager>();
         services.AddScoped<IItemManager, ItemManager>();
+        services.AddScoped<ILabelManager, LabelManager>();
 
         return services;
     }

@@ -2,7 +2,7 @@
      timeline with where it has been. Editors add, change, move, count and dispose from here. -->
 <script>
   import { onMount } from 'svelte';
-  import { run, ask, toast, canEdit } from '../lib/app.svelte.js';
+  import { run, ask, toast, canEdit, stickyPlace, setStickyPlace } from '../lib/app.svelte.js';
   import { api } from '../lib/api.js';
   import { pendingClick } from '../lib/pending.js';
   import { amount, display, label, chainText } from '../lib/items.js';
@@ -10,6 +10,7 @@
   import ItemList from './ItemList.svelte';
   import ItemForm from './ItemForm.svelte';
   import MoveDialog from './MoveDialog.svelte';
+  import AttachLabel from './AttachLabel.svelte';
   import QuickAdd from './QuickAdd.svelte';
   import EventLine from './EventLine.svelte';
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -17,6 +18,8 @@
   import Minus from '@lucide/svelte/icons/minus';
   import Move from '@lucide/svelte/icons/move';
   import SquarePen from '@lucide/svelte/icons/square-pen';
+  import Tag from '@lucide/svelte/icons/tag';
+  import MapPin from '@lucide/svelte/icons/map-pin';
 
   /** spaceId; id: the item's id. */
   let { spaceId, id } = $props();
@@ -25,7 +28,7 @@
   let types = $state([]);
   let contents = $state(null);
   let history = $state(null);
-  /** 'edit', 'add', 'move' or null. */
+  /** 'edit', 'add', 'move', 'label' or null. */
   let dialog = $state(null);
 
   const item = $derived(detail?.item);
@@ -76,6 +79,13 @@
     await load();
   });
 
+  const addingHere = $derived(stickyPlace()?.id === id);
+
+  function addHere() {
+    setStickyPlace(item);
+    toast(`Scanning and quick add put new things into ${item.name} now.`);
+  }
+
   function done() {
     dialog = null;
     reload();
@@ -99,6 +109,7 @@
         <h2>{item.name}</h2>
         <div class="chips">
           {#if item.marking}<span class="chip">Marked {item.marking}</span>{/if}
+          {#if item.labelCode}<span class="chip with-icon"><Tag size={12} aria-hidden="true" />Label {item.labelCode}</span>{/if}
           {#if type}<span class="chip info">{type.name}</span>{/if}
           {#if item.status !== 'Active'}<span class="chip warn">{item.status}</span>{/if}
           {#each item.tags as tag (tag)}<span class="chip">#{tag}</span>{/each}
@@ -111,6 +122,7 @@
           {:else}
             <button type="button" class="with-icon" onclick={() => { dialog = 'edit'; }}><SquarePen size={16} aria-hidden="true" />Edit</button>
             <button type="button" class="with-icon" onclick={() => { dialog = 'move'; }}><Move size={16} aria-hidden="true" />Move</button>
+            <button type="button" class="with-icon" onclick={() => { dialog = 'label'; }}><Tag size={16} aria-hidden="true" />{item.labelCode ? 'New label' : 'Stick on a label'}</button>
             <button type="button" onclick={pendingClick(dispose)}>Dispose</button>
           {/if}
         </div>
@@ -148,7 +160,10 @@
       <div class="row">
         <h3>Inside {item.name}</h3>
         {#if canEdit() && !gone}
-          <button type="button" class="small with-icon" onclick={() => { dialog = 'add'; }}><Plus size={14} aria-hidden="true" />Add an item</button>
+          <span class="actions">
+            <button type="button" class="small with-icon" onclick={addHere} disabled={addingHere}><MapPin size={14} aria-hidden="true" />{addingHere ? 'Adding here' : 'Add things here'}</button>
+            <button type="button" class="small with-icon" onclick={() => { dialog = 'add'; }}><Plus size={14} aria-hidden="true" />Add an item</button>
+          </span>
         {/if}
       </div>
       {#if canEdit() && !gone}<QuickAdd {spaceId} parent={item} onadded={reload} />{/if}
@@ -186,6 +201,8 @@
     <ItemForm {spaceId} {types} parent={item} onsaved={done} onclose={() => { dialog = null; }} />
   {:else if dialog === 'move'}
     <MoveDialog {spaceId} {item} chain={detail.chain} onmoved={done} onclose={() => { dialog = null; }} />
+  {:else if dialog === 'label'}
+    <AttachLabel {spaceId} {item} onattached={done} onclose={() => { dialog = null; }} />
   {/if}
 {/if}
 

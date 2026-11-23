@@ -37,6 +37,9 @@ internal sealed partial class BackupAccess
         new BackupTable<ItemEntity>("items", BackupJson.Default.ListItemEntity, query: rows => rows.OrderBy(item => item.Depth)),
         new BackupTable<ItemEventEntity>("itemEvents", BackupJson.Default.ListItemEventEntity),
         new BackupTable<ItemValueEntity>("itemValues", BackupJson.Default.ListItemValueEntity),
+
+        // QR labels, claimed or not. Empty in backups made before phase 2a.
+        new BackupTable<LabelEntity>("labels", BackupJson.Default.ListLabelEntity),
     ];
 
     /// <summary>

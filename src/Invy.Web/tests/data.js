@@ -153,7 +153,7 @@ const toolType = '00000000-0000-4000-8000-000000000d03';
 
 /** ItemSummary */
 const summary = (id, name, extra = {}) => ({
-  id, name, marking: null, typeId: null, holdsItems: false, quantity: null, unit: null, status: 'Active', contents: 0, ...extra,
+  id, name, marking: null, typeId: null, holdsItems: false, quantity: null, unit: null, status: 'Active', contents: 0, labelCode: null, ...extra,
 });
 
 /** ItemPageResponse: the top of Home. */
@@ -181,13 +181,14 @@ export const boxContents = () => ({
 /** ItemResponse */
 const item = (id, name, extra = {}) => ({
   id, name, marking: null, typeId: null, parentId: null, holdsItems: false, quantity: null, unit: null, fields: {}, tags: [],
-  notes: null, status: 'Active', lastSeenAt: null, createdAt: '2026-05-02T12:00:00Z', updatedAt: '2026-05-10T12:00:00Z', version: 2, ...extra,
+  notes: null, status: 'Active', lastSeenAt: null, createdAt: '2026-05-02T12:00:00Z', updatedAt: '2026-05-10T12:00:00Z', version: 2,
+  labelCode: null, ...extra,
 });
 
 /** ItemDetailResponse for each item the tests open. */
 export const itemDetail = (id) => ({
   [itemIds.f]: {
-    item: item(itemIds.f, 'Box F', { marking: 'F', typeId: boxType, parentId: itemIds.garage, holdsItems: true,
+    item: item(itemIds.f, 'Box F', { marking: 'F', typeId: boxType, parentId: itemIds.garage, holdsItems: true, labelCode: '7K3Q',
       fields: { '00000000-0000-4000-8000-000000000e01': 'Large' }, tags: ['sports'] }),
     chain: [{ id: itemIds.garage, name: 'Garage', marking: null }],
     contents: 3,
@@ -257,4 +258,30 @@ export const baseballResults = () => ({
       contents: 3, value: null, contentValue: 129.5 }, chain: [{ id: itemIds.garage, name: 'Garage', marking: null }] },
   ],
   total: 2, totalIsEstimate: false, next: null,
+});
+
+/** The labels the tests scan: 7K3Q is on Box F, N3WW and the rest aren't on anything yet. */
+export const labelCodes = { onBoxF: '7K3Q', unclaimed: 'N3WW' };
+
+/** LabelResponse */
+export const label = (code, onItem = null) => ({
+  code, spaceId: spaceIds.home, item: onItem, createdAt: '2026-11-20T10:00:00Z', printedAt: null,
+});
+
+/** LabelResponse for a scanned code, or null when Invy has no such label. */
+export function labelFor(code) {
+  if (code === labelCodes.onBoxF) return label(code, ref(itemIds.f, 'Box F', 'F'));
+  return /^[34679ACDEFGHJKMNPQRTUVWXY]{4,6}$/.test(code) && code !== 'XXXX' ? label(code) : null;
+}
+
+/** Codes for new labels, as LabelResponse[]: count of them, made from a running number. */
+export const newLabels = (count) => Array.from({ length: count }, (_, index) => label(
+  [...index.toString(25).padStart(4, '0')].map((digit) => '34679ACDEFGHJKMNPQRTUVWXY'[parseInt(digit, 25)]).join('')));
+
+/** LabelPageResponse: the space's unclaimed labels. */
+export const unclaimedLabels = () => ({ labels: newLabels(12), next: null });
+
+/** ItemResponse for a box made by claiming a label. */
+export const claimedBox = (code, parentId = null) => item('00000000-0000-4000-8000-000000000f20', `Box ${code}`, {
+  holdsItems: true, parentId, labelCode: code, version: 1,
 });

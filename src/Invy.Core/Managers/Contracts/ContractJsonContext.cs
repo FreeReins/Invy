@@ -67,6 +67,13 @@ namespace Invy.Core.Managers.Contracts;
 [JsonSerializable(typeof(ActivityResponse))]
 [JsonSerializable(typeof(SearchResponse))]
 [JsonSerializable(typeof(ItemsChanged))]
+// Labels
+[JsonSerializable(typeof(CreateLabelsRequest))]
+[JsonSerializable(typeof(IReadOnlyList<LabelResponse>))]
+[JsonSerializable(typeof(LabelResponse))]
+[JsonSerializable(typeof(LabelPageResponse))]
+[JsonSerializable(typeof(ClaimLabelRequest))]
+[JsonSerializable(typeof(AttachLabelRequest))]
 // Maintenance
 [JsonSerializable(typeof(NotificationSettingsRequest))]
 [JsonSerializable(typeof(NotificationSettingsResponse))]

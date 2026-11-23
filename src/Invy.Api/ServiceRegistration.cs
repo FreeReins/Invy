@@ -199,9 +199,11 @@ public static class ServiceRegistration
     /// The browser rules for Invy's own page: scripts, style sheets, images and API calls only from Invy
     /// itself, no plugins, and no other site showing Invy in a frame. Inline style attributes stay allowed,
     /// since the page's components use them for layout; inline scripts and style elements are refused.
+    /// 'wasm-unsafe-eval' lets the page compile WebAssembly (the bundled barcode reader, for browsers without
+    /// BarcodeDetector); it allows no JavaScript eval.
     /// </summary>
     private const string ContentSecurityPolicy =
-        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; style-src-elem 'self'; " +
+        "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; style-src-elem 'self'; " +
         "style-src-attr 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; " +
         "base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
 

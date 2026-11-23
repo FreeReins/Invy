@@ -41,4 +41,5 @@ before anything else.
 - TestCore calls managers directly, so an endpoint can pass every test and still fail at runtime (Wolverine builds
   its code on first call). Check new endpoints once against a real database: start a throwaway
   `postgres:17-alpine` container on a spare port and run Invy.Api with `Database__Mode=External`, `Https__Mode=Off`
-  and `ConnectionStrings__Invy` pointing at it; it listens on 8080.
+  and `ConnectionStrings__Invy` pointing at it; it listens on 8080 (`Https__HttpPort` changes that, not
+  `ASPNETCORE_URLS`, when a dev run holds 8080).

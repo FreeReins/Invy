@@ -18,6 +18,9 @@ internal sealed class Item
     /// <summary>Whatever is written on the thing, such as ABC.</summary>
     public string? Marking { get; set; }
 
+    /// <summary>The code of the QR label stuck on it, such as 7K3Q, or null. The Labels table says the same.</summary>
+    public string? LabelCode { get; set; }
+
     /// <summary>The container it is in now, or null at the top.</summary>
     public Guid? ParentId { get; set; }
 

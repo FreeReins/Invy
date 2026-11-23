@@ -84,6 +84,67 @@ const VIEWS = [
     answers: { 'GET /api/spaces': data.spaces().map((space) => ({ ...space, role: 'Viewer' })) },
     act: (page) => page.getByText('Where it has been').waitFor() },
 
+  { name: 'item: sticking on a label', path: `/browse/${data.itemIds.drill}`,
+    act: (page) => page.getByRole('button', { name: 'Stick on a label' }).click().then(() => page.getByRole('dialog').waitFor()) },
+
+  // Scan and labels
+  { name: 'scan: open', path: '/scan', act: (page) => page.getByRole('button', { name: 'Start the camera' }).waitFor() },
+  { name: 'scan: an unclaimed label from its address', path: `/l/${data.labelCodes.unclaimed}`,
+    act: (page) => page.getByText(`Label ${data.labelCodes.unclaimed} isn't on anything yet`).waitFor() },
+  {
+    name: 'scan: claiming labels into the sticky place', path: '/scan',
+    act: async (page) => {
+      await page.getByRole('radio', { name: 'Claim' }).check();
+      await page.getByLabel('Or type the label code').fill(data.labelCodes.unclaimed);
+      await page.getByRole('button', { name: 'Go' }).click();
+      await page.getByText(`Made Box ${data.labelCodes.unclaimed}`).waitFor();
+    },
+  },
+  {
+    name: 'scan: picking the sticky place', path: '/scan',
+    act: async (page) => {
+      await page.getByRole('radio', { name: 'Claim' }).check();
+      await page.getByRole('button', { name: 'Change' }).click();
+      await page.getByRole('button', { name: 'Add to the top' }).waitFor();
+    },
+  },
+  {
+    name: 'scan: move, waiting for where it goes', path: '/scan',
+    act: async (page) => {
+      await page.getByRole('radio', { name: 'Move' }).check();
+      await page.getByLabel('Or type the label code').fill(data.labelCodes.onBoxF);
+      await page.getByRole('button', { name: 'Go' }).click();
+      await page.getByText('Now scan where it is going').waitFor();
+    },
+  },
+  {
+    name: 'scan: adding to a scanned box', path: '/scan',
+    act: async (page) => {
+      await page.getByRole('radio', { name: 'Add' }).check();
+      await page.getByLabel('Or type the label code').fill(data.labelCodes.onBoxF);
+      await page.getByRole('button', { name: 'Go' }).click();
+      await page.getByLabel('Quick add to Box F').waitFor();
+    },
+  },
+  { name: 'scan: as a viewer', path: '/scan', answers: { 'GET /api/spaces': data.spaces().map((space) => ({ ...space, role: 'Viewer' })) } },
+  { name: 'scan: no space yet', path: '/scan', answers: { 'GET /api/spaces': [] } },
+  { name: 'settings: labels and printing', path: '/settings/labels' },
+  {
+    name: 'settings: a sheet of labels ready to print', path: '/settings/labels',
+    act: async (page) => {
+      await page.getByRole('button', { name: /^Make 30 labels/ }).click();
+      await page.getByRole('button', { name: 'Print', exact: true }).waitFor();
+    },
+  },
+  {
+    name: 'settings: unclaimed labels on a small sheet', path: '/settings/labels',
+    act: async (page) => {
+      await page.getByLabel('Sticker sheet').selectOption('avery-l7651');
+      await page.getByRole('button', { name: 'Print the unclaimed labels again' }).click();
+      await page.getByText('12 unclaimed labels').waitFor();
+    },
+  },
+
   // Activity
   { name: 'activity: the feed', path: '/activity', act: (page) => page.getByText('took 15 from').waitFor() },
   { name: 'activity: nothing yet', path: '/activity', answers: { 'GET /api/spaces/*/activity': { events: [], next: null } } },

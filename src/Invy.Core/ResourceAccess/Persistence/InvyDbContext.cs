@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace Invy.Core.ResourceAccess.Persistence;
 
-/// <summary>The PostgreSQL database: accounts, sign-in links, API tokens, inboxes, AI models, settings and spaces.</summary>
+/// <summary>The PostgreSQL database: accounts, sign-in links, API tokens, inboxes, AI models, settings, spaces, items and labels.</summary>
 internal sealed class InvyDbContext(DbContextOptions<InvyDbContext> options) : DbContext(options)
 {
     public DbSet<UserEntity> Users => Set<UserEntity>();
@@ -27,6 +27,8 @@ internal sealed class InvyDbContext(DbContextOptions<InvyDbContext> options) : D
     public DbSet<ItemEventEntity> ItemEvents => Set<ItemEventEntity>();
 
     public DbSet<ItemValueEntity> ItemValues => Set<ItemValueEntity>();
+
+    public DbSet<LabelEntity> Labels => Set<LabelEntity>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -129,6 +131,8 @@ internal sealed class InvyDbContext(DbContextOptions<InvyDbContext> options) : D
             item.HasIndex(i => i.SpaceId, "IX_Items_Containers").HasFilter("\"HoldsItems\"");
             item.HasIndex(i => i.SpaceId, "IX_Items_Counted").HasFilter("\"Quantity\" IS NOT NULL");
             item.HasIndex(i => new { i.SpaceId, i.Status }, "IX_Items_NotActive").HasFilter("\"Status\" <> 'Active'");
+            item.Property(i => i.LabelCode).HasMaxLength(6);
+            item.HasIndex(i => i.LabelCode).IsUnique().HasFilter("\"LabelCode\" IS NOT NULL");
         });
 
         // The timeline: append-only. Indexed for an item's own events, what went in and out of a container, and the
@@ -155,6 +159,19 @@ internal sealed class InvyDbContext(DbContextOptions<InvyDbContext> options) : D
             value.HasIndex(v => new { v.FieldId, v.Num });
             value.HasIndex(v => new { v.FieldId, v.Date });
             value.HasIndex(v => new { v.FieldId, v.Text });
+        });
+
+        // QR labels. The code is the key, unique across the install, so a scan finds its space. A label goes with its
+        // space; removing its item frees it. Items keep a copy of their code (LabelCode) for search.
+        modelBuilder.Entity<LabelEntity>(label =>
+        {
+            label.ToTable("Labels");
+            label.HasKey(l => l.Code);
+            label.Property(l => l.Code).HasMaxLength(6);
+            label.HasOne<SpaceEntity>().WithMany().HasForeignKey(l => l.SpaceId).OnDelete(DeleteBehavior.Cascade);
+            label.HasOne<ItemEntity>().WithMany().HasForeignKey(l => l.ItemId).OnDelete(DeleteBehavior.SetNull);
+            label.HasIndex(l => new { l.SpaceId, l.Code });
+            label.HasIndex(l => l.ItemId);
         });
 
         StoreEnumsByName(modelBuilder);

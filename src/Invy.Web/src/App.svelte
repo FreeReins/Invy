@@ -1,4 +1,4 @@
-<!-- Invy's page: first-run setup, sign-in, then the space picker and the tabs (Find, Browse, Activity, Types, People and Settings for now; the rest come with their phases in
+<!-- Invy's page: first-run setup, sign-in, then the space picker and the tabs (Find, Browse, Scan, Activity, Types, People and Settings for now; the rest come with their phases in
      docs/roadmap/). State and actions live in lib/app.svelte.js. -->
 <script>
   import { app, run, start, signOut } from './lib/app.svelte.js';
@@ -12,6 +12,7 @@
   import Types from './tabs/Types.svelte';
   import Browse from './tabs/Browse.svelte';
   import Activity from './tabs/Activity.svelte';
+  import Scan from './tabs/Scan.svelte';
   import People from './tabs/People.svelte';
   import SpacePicker from './components/SpacePicker.svelte';
   import Toasts from './components/Toasts.svelte';
@@ -27,6 +28,7 @@
   import FolderTree from '@lucide/svelte/icons/folder-tree';
   import ActivityIcon from '@lucide/svelte/icons/activity';
   import Users from '@lucide/svelte/icons/users';
+  import ScanLine from '@lucide/svelte/icons/scan-line';
   import CircleHelp from '@lucide/svelte/icons/circle-help';
   import LogOut from '@lucide/svelte/icons/log-out';
   import Sprout from '@lucide/svelte/icons/sprout';
@@ -34,13 +36,14 @@
   const TABS = [
     { key: 'find', label: 'Find', icon: Search },
     { key: 'browse', label: 'Browse', icon: FolderTree },
+    { key: 'scan', label: 'Scan', icon: ScanLine },
     { key: 'activity', label: 'Activity', icon: ActivityIcon },
     { key: 'types', label: 'Types', icon: Shapes },
     { key: 'people', label: 'People', icon: Users },
     { key: 'settings', label: 'Settings', icon: SettingsIcon },
   ].map((tab) => ({ ...tab, area: `var(--area-${tab.key})` }));
   const GATES = { 'setup-account': SetupAccount, 'setup-https': SetupHttps, 'sign-in': SignIn, join: Join, reset: Reset };
-  const TAB_VIEWS = { find: Find, browse: Browse, activity: Activity, types: Types, people: People, settings: Settings };
+  const TAB_VIEWS = { find: Find, browse: Browse, scan: Scan, activity: Activity, types: Types, people: People, settings: Settings };
 
   const inApp = $derived(app.screen === 'app');
   const Gate = $derived(GATES[app.screen]);

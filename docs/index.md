@@ -28,6 +28,7 @@ in any text editor, or inside Invy itself: press the **?** button at the top of 
 - [Make a space and share it with people](using/spaces.md)
 - [Set up the types of things I keep, and their fields](using/types-and-fields.md)
 - [Add things, put them in boxes and move them](using/items.md)
+- [Print QR labels and scan things to add and move them](using/labels-and-scanning.md)
 - [See where something has been](using/timeline.md)
 - [Find anything](using/search.md)
 
