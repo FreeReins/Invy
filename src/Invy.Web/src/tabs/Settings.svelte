@@ -2,7 +2,7 @@
      and once that button has scrolled out of view a round button in the corner brings it back. -->
 <script>
   import { tick } from 'svelte';
-  import { app, isAdmin } from '../lib/app.svelte.js';
+  import { app, isAdmin, canEdit } from '../lib/app.svelte.js';
   import { followLink } from '../lib/addresses.js';
   import LoginPanel from '../settings/LoginPanel.svelte';
   import HttpsPanel from '../settings/HttpsPanel.svelte';
@@ -13,6 +13,7 @@
   import AppearancePanel from '../settings/AppearancePanel.svelte';
   import LabelsPanel from '../settings/LabelsPanel.svelte';
   import SpacePanel from '../settings/SpacePanel.svelte';
+  import ImportPanel from '../settings/ImportPanel.svelte';
   import HelpLink from '../components/HelpLink.svelte';
   import BackToTop from '../components/BackToTop.svelte';
   import Palette from '@lucide/svelte/icons/palette';
@@ -25,6 +26,7 @@
   import Archive from '@lucide/svelte/icons/archive';
   import ScrollText from '@lucide/svelte/icons/scroll-text';
   import Menu from '@lucide/svelte/icons/menu';
+  import Upload from '@lucide/svelte/icons/upload';
   import X from '@lucide/svelte/icons/x';
 
   /**
@@ -37,6 +39,7 @@
     { group: 'You', key: 'login', label: 'Login', icon: KeyRound, visible: () => true, panel: LoginPanel, help: ['admin/people-and-accounts#passwords', 'Passwords and lockout'] },
     { group: 'You', key: 'appearance', label: 'Appearance', icon: Palette, visible: () => true, panel: AppearancePanel },
     { group: 'This space', key: 'space', label: 'Kind and features', icon: House, visible: () => true, panel: SpacePanel, help: ['using/spaces', 'Spaces, kinds and features'] },
+    { group: 'This space', key: 'import', label: 'Import', icon: Upload, visible: () => canEdit(), panel: ImportPanel, wide: true, help: ['using/imports', 'Importing from CSV and Homebox'] },
     { group: 'This space', key: 'labels', label: 'Labels and printing', icon: QrCode, visible: () => true, panel: LabelsPanel, wide: true, help: ['using/labels-and-scanning', 'Labels and scanning'] },
     { group: 'Connections', key: 'assistants', label: 'AI assistants', icon: Bot, visible: () => true, panel: AssistantsPanel, help: ['admin/ai-assistants', 'AI models and assistants'] },
     { group: 'Connections', key: 'notifications', label: 'Notifications', icon: Bell, visible: () => isAdmin() && app.notifications, panel: NotificationsPanel, help: ['admin/notifications', 'Notifications and Home Assistant'] },

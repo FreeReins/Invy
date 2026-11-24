@@ -21,4 +21,10 @@ internal sealed class TypeField
     public bool Required { get; set; }
 
     public bool Sortable { get; set; }
+
+    /// <summary>Date fields only: remind this many days ahead, or null for no reminder.</summary>
+    public int? Remind { get; set; }
+
+    /// <summary>Date fields with a reminder only: how many months Done moves an upkeep date on, or null.</summary>
+    public int? RepeatMonths { get; set; }
 }

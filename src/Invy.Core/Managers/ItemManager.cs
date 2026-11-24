@@ -136,8 +136,21 @@ internal sealed partial class ItemManager(
         }
 
         await RecountLaterAsync(spaceId, item.Path);
+        await AlertIfRanLowAsync(before, item);
         await messages.CommitAsync(cancellationToken);
         return item.ToResponse();
+    }
+
+    /// <summary>
+    /// Queues the low-stock alert, in the caller's commit, when a change took a counted item from above its level to at
+    /// or below it. Whether its space has Stock on is checked when the alert goes out.
+    /// </summary>
+    private async Task AlertIfRanLowAsync(Item before, Item after)
+    {
+        if (!before.IsLow && after.IsLow && after.Status == ItemStatus.Active)
+        {
+            await messages.PublishAsync(new StockRanLow(after.SpaceId, after.Id));
+        }
     }
 
     /// <summary>Works out the item's value and returns its sortable values, both from its fields and type.</summary>

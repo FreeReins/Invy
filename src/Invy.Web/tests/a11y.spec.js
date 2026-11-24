@@ -234,6 +234,56 @@ const VIEWS = [
   { name: 'views: reports and value totals', path: '/views', act: (page) => page.getByRole('cell', { name: 'Not in a place' }).waitFor() },
   { name: 'views: no reports with values and audits off', path: '/views', answers: { 'GET /api/spaces': data.spacesWith([]) },
     act: (page) => page.getByText('Tools by power').waitFor() },
+  // Space features (phase 6), every one switched on.
+  { name: 'views: the feature lists', path: '/views', answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures) },
+    act: (page) => page.getByRole('link', { name: 'Running low' }).waitFor() },
+  { name: 'lists: running low', path: '/views/low-stock', answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures) },
+    act: (page) => page.getByText('12 left').waitFor() },
+  { name: 'lists: running low, nothing', path: '/views/low-stock',
+    answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures), 'GET /api/spaces/*/low-stock': { items: [], more: false } },
+    act: (page) => page.getByText('Nothing is running low').waitFor() },
+  { name: 'lists: lent out', path: '/views/loans', answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures) },
+    act: (page) => page.getByText('with Sam').waitFor() },
+  { name: 'lists: coming up', path: '/views/reminders', answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures) },
+    act: (page) => page.getByText('Next service').waitFor() },
+  { name: 'lists: moving', path: '/views/moving', answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures) },
+    act: (page) => page.getByRole('link', { name: 'Manifest' }).waitFor() },
+  { name: 'lists: a box manifest', path: `/views/manifest?box=${data.itemIds.f}`, answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures) },
+    act: (page) => page.getByText('Goes to:').waitFor() },
+  { name: 'lists: projects', path: '/views/projects', answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures) },
+    act: (page) => page.getByRole('heading', { name: 'Bookshelf' }).waitFor() },
+  { name: 'lists: a feature switched off', path: '/views/loans', answers: { 'GET /api/spaces': data.spacesWith([]) },
+    act: (page) => page.getByText('That list is switched off').waitFor() },
+  { name: 'item: low stock and set aside', path: `/browse/${data.itemIds.screws}`,
+    answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures), 'GET /api/spaces/*/items/*': data.lowScrews(), 'GET /api/spaces/*/items/*/projects': data.projects() },
+    act: (page) => page.getByText('Low stock at 20.').waitFor() },
+  { name: 'item: lent out', path: `/browse/${data.itemIds.drill}`,
+    answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures), 'GET /api/spaces/*/items/*': data.lentDrill() },
+    act: (page) => page.getByText('Lent to').waitFor() },
+  { name: 'item: lending', path: `/browse/${data.itemIds.drill}`, answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures) },
+    act: (page) => page.getByRole('button', { name: 'Lend' }).click() },
+  { name: 'item: setting aside for a project', path: `/browse/${data.itemIds.screws}`, answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures) },
+    act: async (page) => { await page.getByRole('button', { name: 'Set aside for a project' }).click(); await page.getByLabel('Project').waitFor(); } },
+  { name: 'item: a packed box', path: `/browse/${data.itemIds.f}`,
+    answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures), 'GET /api/spaces/*/items/*': (request) => (request.url().endsWith(data.itemIds.f) ? data.packedBox() : data.itemDetail(data.itemIds.f)),
+      'POST /api/spaces/*/items/*/seen': data.packedBox().item },
+    act: (page) => page.getByRole('button', { name: 'Arrived' }).waitFor() },
+  { name: 'settings: import', path: '/settings/import', act: (page) => page.getByText('1 row was skipped').waitFor() },
+  { name: 'settings: import, checking the columns', path: '/settings/import',
+    act: async (page) => {
+      await page.getByLabel('CSV file').setInputFiles({ name: 'homebox-export.csv', mimeType: 'text/csv', buffer: Buffer.from('HB.name\nSander\n') });
+      await page.getByRole('button', { name: 'Upload and check' }).click();
+      await page.getByRole('cell', { name: 'Sander' }).waitFor();
+    } },
+  { name: 'settings: the calendar feed on', path: '/settings/space', answers: { 'GET /api/spaces/*/calendar': data.calendarFeed() },
+    act: (page) => page.getByLabel('Address to subscribe to').waitFor() },
+  { name: 'types: a date field that reminds', path: '/types', answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures) },
+    act: async (page) => {
+      await page.getByRole('button', { name: 'New type' }).click();
+      await page.getByRole('button', { name: 'Add a field' }).click();
+      await page.getByLabel('Kind').selectOption('Date');
+      await page.getByLabel('Remind, days ahead').fill('30');
+    } },
   { name: 'reports: insurance inventory', path: '/views/insurance', act: (page) => page.getByRole('heading', { name: /^Garage/ }).waitFor() },
   { name: 'reports: insurance inventory, nothing yet', path: '/views/insurance',
     answers: { 'GET /api/spaces/*/reports/insurance': { madeAt: '2026-11-24T10:00:00Z', total: 0, count: 0, truncated: false, rooms: [] } } },

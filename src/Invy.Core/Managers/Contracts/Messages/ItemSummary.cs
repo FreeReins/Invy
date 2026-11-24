@@ -14,6 +14,10 @@ namespace Invy.Core.Managers.Contracts.Messages;
 /// <param name="ContentValue">The total value of what is inside it, at any depth. Currencies aren't converted.</param>
 /// <param name="LabelCode">The code of the QR label stuck on it, such as 7K3Q, or null.</param>
 /// <param name="SuggestedTypeId">While it is in the Inbox: the type an AI model suggested, to accept or ignore, or null.</param>
+/// <param name="IsLow">True when it has a low-stock level and what's left after reservations is at or below it.</param>
+/// <param name="LentTo">Who or where it is lent to, or null when it isn't lent.</param>
+/// <param name="DueOn">When a loan is due back, or null.</param>
+/// <param name="DestinationId">For moving: the place or container it goes to, or null.</param>
 public sealed record ItemSummary(
     Guid Id,
     string Name,
@@ -27,4 +31,8 @@ public sealed record ItemSummary(
     decimal? Value,
     decimal ContentValue,
     string? LabelCode,
-    Guid? SuggestedTypeId = null);
+    Guid? SuggestedTypeId = null,
+    bool IsLow = false,
+    string? LentTo = null,
+    DateOnly? DueOn = null,
+    Guid? DestinationId = null);

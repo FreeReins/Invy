@@ -231,6 +231,75 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                     b.ToTable("BackupSettings", (string)null);
                 });
 
+            modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.ImportEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Added")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Done")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("FilePath")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Mapping")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Problems")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("SpaceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("Total")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("TypeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SpaceId", "CreatedAt");
+
+                    b.ToTable("Imports", (string)null);
+                });
+
             modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.InboxEntryEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -286,6 +355,12 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                     b.Property<int>("Depth")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("DestinationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly?>("DueOn")
+                        .HasColumnType("date");
+
                     b.Property<string>("Fields")
                         .IsRequired()
                         .HasColumnType("jsonb");
@@ -302,6 +377,17 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
 
                     b.Property<DateTimeOffset?>("LastSeenAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("LentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LentTo")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal?>("LowStockAt")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
 
                     b.Property<string>("Marking")
                         .HasColumnType("text");
@@ -321,6 +407,10 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                         .HasColumnType("ltree");
 
                     b.Property<decimal?>("Quantity")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.Property<decimal>("Reserved")
                         .HasPrecision(12, 3)
                         .HasColumnType("numeric(12,3)");
 
@@ -381,6 +471,9 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                     b.HasIndex(new[] { "SpaceId" }, "IX_Items_Counted")
                         .HasFilter("\"Quantity\" IS NOT NULL");
 
+                    b.HasIndex(new[] { "DestinationId", "SpaceId" }, "IX_Items_Destination")
+                        .HasFilter("\"DestinationId\" IS NOT NULL");
+
                     b.HasIndex(new[] { "SpaceId" }, "IX_Items_Examples")
                         .HasFilter("\"IsExample\"");
 
@@ -388,6 +481,12 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex(new[] { "Fields" }, "IX_Items_Fields"), "gin");
                     NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex(new[] { "Fields" }, "IX_Items_Fields"), new[] { "jsonb_path_ops" });
+
+                    b.HasIndex(new[] { "SpaceId", "DueOn" }, "IX_Items_Lent")
+                        .HasFilter("\"LentAt\" IS NOT NULL");
+
+                    b.HasIndex(new[] { "SpaceId" }, "IX_Items_LowStock")
+                        .HasFilter("\"LowStockAt\" IS NOT NULL");
 
                     b.HasIndex(new[] { "Marking" }, "IX_Items_Marking_Trgm");
 
@@ -591,6 +690,66 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                     b.ToTable("NotificationSettings", (string)null);
                 });
 
+            modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.ProjectEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("SpaceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SpaceId", "Status", "Name");
+
+                    b.ToTable("Projects", (string)null);
+                });
+
+            modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.ProjectItemEntity", b =>
+                {
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.Property<Guid>("SpaceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ProjectId", "ItemId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("ProjectItems", (string)null);
+                });
+
             modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.SecuritySettingsEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -617,6 +776,9 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("CalendarToken")
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -774,8 +936,22 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.ImportEntity", b =>
+                {
+                    b.HasOne("Invy.Core.ResourceAccess.Persistence.SpaceEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SpaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.ItemEntity", b =>
                 {
+                    b.HasOne("Invy.Core.ResourceAccess.Persistence.ItemEntity", null)
+                        .WithMany()
+                        .HasForeignKey("DestinationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Invy.Core.ResourceAccess.Persistence.ItemEntity", null)
                         .WithMany()
                         .HasForeignKey("ParentId")
@@ -840,6 +1016,30 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.ProjectEntity", b =>
+                {
+                    b.HasOne("Invy.Core.ResourceAccess.Persistence.SpaceEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SpaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.ProjectItemEntity", b =>
+                {
+                    b.HasOne("Invy.Core.ResourceAccess.Persistence.ItemEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Invy.Core.ResourceAccess.Persistence.ProjectEntity", null)
+                        .WithMany("Items")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.SpaceMemberEntity", b =>
                 {
                     b.HasOne("Invy.Core.ResourceAccess.Persistence.SpaceEntity", null)
@@ -868,6 +1068,11 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                         .HasForeignKey("SpaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.ProjectEntity", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.SpaceEntity", b =>

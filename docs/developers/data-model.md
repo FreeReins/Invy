@@ -22,9 +22,17 @@ applied when Invy starts. A released migration is never changed; each change is 
 | `AddBarcodeLookup` | The admin's barcode lookup switch |
 | `AddSuggestedTypes` | `Items.SuggestedTypeId` and `TypeSuggestedAt`, for the Inbox type sweep |
 | `AddSpaceFeatures` | `Spaces.Features`, `Items.IsExample` (with the partial index `IX_Items_Examples`) and `SpaceMembers.GettingStartedDismissed` |
+| `AddAudienceFeatures` | `Items.LowStockAt`, `Reserved`, `LentTo`, `LentAt`, `DueOn` and `DestinationId` (each list with a partial index), `Spaces.CalendarToken`, and the `Projects`, `ProjectItems` and `Imports` tables |
 
 ## AddSpaceFeatures
 
 Spaces gained [kinds and features](design.md#tailored-spaces). As it runs, the migration switches on each existing
 space's kind's features, so a home made before has *values*, *barcodes*, *lending* and *reminders* on. A space made
 with no starter pack gets none. No existing item is an example, and nobody's getting-started card starts dismissed.
+
+## AddAudienceFeatures
+
+The phase 6 features ([design](design.md#audience-features-phase-6)). Every new item column is empty, so nothing is
+low, lent, reserved or going anywhere until someone sets it, and no space's calendar feed is on. Projects are backed
+up with what each sets aside inside them. Imports aren't backed up: an import is short-lived work, and what it added
+is in the items.

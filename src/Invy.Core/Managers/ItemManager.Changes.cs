@@ -89,6 +89,7 @@ internal sealed partial class ItemManager
         }
 
         var now = clock.GetUtcNow();
+        var before = item.Copy();
         item.Quantity = ValidationEngine.Quantity(amount + request.Delta);
         if (item.Quantity == amount)
         {
@@ -102,6 +103,7 @@ internal sealed partial class ItemManager
         await items.SaveAsync(item, await ValuesAsync(item, cancellationToken), cancellationToken);
         await items.AddEventAsync(counted, cancellationToken);
         await RecountLaterAsync(spaceId, item.Path);
+        await AlertIfRanLowAsync(before, item);
         await messages.CommitAsync(cancellationToken);
         return item.ToResponse();
     }

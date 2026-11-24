@@ -8,6 +8,7 @@
   import { pending } from '../lib/pending.js';
   import { hasOptions } from '../lib/fields.js';
   import { display } from '../lib/items.js';
+  import { has } from '../lib/features.js';
   import Modal from '../components/Modal.svelte';
 
   /**
@@ -26,6 +27,7 @@
   let counted = $state(opened?.quantity != null);
   let quantity = $state(opened?.quantity ?? 1);
   let unit = $state(opened?.unit ?? '');
+  let lowStockAt = $state(opened?.lowStockAt ?? '');
   let values = $state({ ...(opened?.fields ?? {}) });
   let tags = $state((opened?.tags ?? []).join(', '));
   let notes = $state(opened?.notes ?? '');
@@ -71,6 +73,7 @@
     const request = {
       name, marking: marking || null, typeId: typeId || null, parentId: parent?.id ?? null, holdsItems: holds,
       quantity: counted ? Number(quantity) : null, unit: counted && unit ? unit : null, fields: fields(),
+      lowStockAt: counted && lowStockAt !== '' && lowStockAt != null ? Number(lowStockAt) : null,
       tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean), notes: notes || null, version: opened?.version ?? 0,
     };
     return pending(event, () => run(async () => {
@@ -107,6 +110,10 @@
         <label>Amount <input type="number" bind:value={quantity} min="0" step="any" required /></label>
         <label>Unit <input bind:value={unit} maxlength="20" placeholder="kg" autocomplete="off" /></label>
       </div>
+      {#if has('stock') || (lowStockAt !== '' && lowStockAt != null)}
+        <label>Low stock at <span class="muted">Tell me when it gets down to this. Empty to stop watching it.</span>
+          <input type="number" bind:value={lowStockAt} min="0" step="any" /></label>
+      {/if}
     {/if}
 
     {#if type?.fields.length}

@@ -29,6 +29,18 @@ internal sealed class ItemEntity
 
     public string? Unit { get; set; }
 
+    public decimal? LowStockAt { get; set; }
+
+    public decimal Reserved { get; set; }
+
+    public string? LentTo { get; set; }
+
+    public DateTimeOffset? LentAt { get; set; }
+
+    public DateOnly? DueOn { get; set; }
+
+    public Guid? DestinationId { get; set; }
+
     /// <summary>Field values by field id, as JSON in a jsonb column.</summary>
     public string Fields { get; set; } = "{}";
 

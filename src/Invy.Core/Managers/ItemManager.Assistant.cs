@@ -70,7 +70,8 @@ internal sealed partial class ItemManager
             fields,
             request.Tags ?? item.Tags,
             request.Notes is null ? item.Notes : Blank(request.Notes),
-            item.Version);
+            item.Version,
+            item.LowStockAt);
         return await UpdateItemAsync(userId, spaceId, id, update, cancellationToken);
     }
 

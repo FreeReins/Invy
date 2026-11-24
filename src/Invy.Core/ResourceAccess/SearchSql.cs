@@ -74,6 +74,13 @@ internal sealed partial class SearchSql
             : $"(i.\"LastSeenAt\" IS NOT NULL AND {Bounds("i.\"LastSeenAt\"", Utc(seen.Range))})",
         AddedIn added => Bounds("i.\"CreatedAt\"", Utc(added.Range)),
         Flag flag => FlagSql(flag),
+        LentTo lent => $"i.\"LentTo\" ILIKE {Add(Like(lent.Text))}",
+        LoanDue due => $"(i.\"LentAt\" IS NOT NULL AND i.\"DueOn\" IS NOT NULL AND {Bounds("i.\"DueOn\"", due.Range)})",
+        GoingTo going => GoingSql(going.Place),
+        ReservedFor reserved => $"""
+            EXISTS (SELECT 1 FROM "ProjectItems" r JOIN "Projects" p ON p."Id" = r."ProjectId"
+                WHERE r."ItemId" = i."Id" AND p."SpaceId" = {space} AND p."Status" = 'Open' AND lower(p."Name") = {Add(reserved.Project.ToLowerInvariant())})
+            """,
         _ => throw new ArgumentOutOfRangeException(nameof(node), node, "QueryEngine made a condition SearchSql doesn't know."),
     };
 
@@ -102,6 +109,15 @@ internal sealed partial class SearchSql
             """;
     }
 
+    private string GoingSql(string place)
+    {
+        var name = Add(place.ToLowerInvariant());
+        return $"""
+            EXISTS (SELECT 1 FROM "Items" d WHERE d."SpaceId" = {space} AND d."Id" = i."DestinationId"
+                AND (lower(d."Name") = {name} OR lower(d."Marking") = {name} OR lower(d."LabelCode") = {name}))
+            """;
+    }
+
     private string MatchSql(FieldMatch match)
     {
         if (match.Json is JsonElement json)
@@ -125,6 +141,7 @@ internal sealed partial class SearchSql
         ItemFlag.Container => "i.\"HoldsItems\"",
         ItemFlag.Counted => "i.\"Quantity\" IS NOT NULL",
         ItemFlag.Unique => "i.\"Quantity\" IS NULL",
+        ItemFlag.Low => "(i.\"LowStockAt\" IS NOT NULL AND i.\"Quantity\" IS NOT NULL AND i.\"Quantity\" - i.\"Reserved\" <= i.\"LowStockAt\")",
         ItemFlag.HasBarcode => flag.FieldIds.Count == 0
             ? "FALSE"
             : $"i.\"Fields\" ?| {Add(flag.FieldIds.Select(id => id.ToString()).ToArray(), NpgsqlDbType.Array | NpgsqlDbType.Text)}",

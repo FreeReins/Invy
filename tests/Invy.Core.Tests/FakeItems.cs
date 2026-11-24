@@ -9,6 +9,9 @@ internal sealed partial class FakeItems : IItemAccess
 {
     public List<Item> Rows { get; } = [];
 
+    /// <summary>Whether an open project with this name reserves the item; TestCore points it at the fake projects.</summary>
+    public Func<Guid, string, bool> ReservedFor { get; set; } = (_, _) => false;
+
     public List<ItemEvent> Events { get; } = [];
 
     public List<ItemValue> Values { get; } = [];
@@ -143,6 +146,12 @@ internal sealed partial class FakeItems : IItemAccess
         HoldsItems = item.HoldsItems,
         Quantity = item.Quantity,
         Unit = item.Unit,
+        LowStockAt = item.LowStockAt,
+        Reserved = item.Reserved,
+        LentTo = item.LentTo,
+        LentAt = item.LentAt,
+        DueOn = item.DueOn,
+        DestinationId = item.DestinationId,
         Fields = item.Fields.ToDictionary(pair => pair.Key, pair => pair.Value.Clone()),
         Tags = [.. item.Tags],
         Notes = item.Notes,

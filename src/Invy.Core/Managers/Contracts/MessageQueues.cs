@@ -34,6 +34,9 @@ public static class MessageQueues
     /// </summary>
     public const string Rollups = "rollups";
 
+    /// <summary>Runs imports, one at a time, so two never add the same locations at once.</summary>
+    public const string Imports = "imports";
+
     /// <summary>
     /// Tells open pages what changed. Kept in memory only: a page that misses a nudge loads everything again when it
     /// reconnects, so these messages are not worth storing.

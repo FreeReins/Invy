@@ -11,6 +11,9 @@ internal interface ISpaceAccess
     /// <summary>The spaces a person is a member of, oldest first.</summary>
     Task<List<Space>> ListForUserAsync(Guid userId, CancellationToken cancellationToken);
 
+    /// <summary>The spaces with this feature switched on, by name, without their members. For scheduled work.</summary>
+    Task<List<Space>> ListWithFeatureAsync(string feature, CancellationToken cancellationToken);
+
     /// <summary>Adds the space, or brings the stored one and its members in line with it.</summary>
     Task SaveAsync(Space space, CancellationToken cancellationToken);
 

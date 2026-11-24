@@ -70,4 +70,19 @@ public interface ISpaceManager
     /// Returns the members.
     /// </summary>
     Task<IReadOnlyList<SpaceMemberResponse>> RemoveMemberAsync(Guid userId, Guid spaceId, Guid memberId, CancellationToken cancellationToken);
+
+    /// <summary>The address of the space's calendar feed, or none while it is off. Any member can see it.</summary>
+    Task<CalendarFeedResponse> GetCalendarFeedAsync(Guid userId, Guid spaceId, Uri site, CancellationToken cancellationToken);
+
+    /// <summary>Turns the calendar feed on with a new address; one made before stops working. Owners only.</summary>
+    Task<CalendarFeedResponse> StartCalendarFeedAsync(Guid userId, Guid spaceId, Uri site, CancellationToken cancellationToken);
+
+    /// <summary>Turns the calendar feed off. Owners only.</summary>
+    Task<CalendarFeedResponse> StopCalendarFeedAsync(Guid userId, Guid spaceId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The feed itself, as iCalendar text: reminder dates and loans' due dates. Needs no sign-in, only the secret.
+    /// </summary>
+    /// <exception cref="NotFoundException">The feed is off or the secret is wrong.</exception>
+    Task<string> GetCalendarAsync(Guid spaceId, string token, Uri site, CancellationToken cancellationToken);
 }

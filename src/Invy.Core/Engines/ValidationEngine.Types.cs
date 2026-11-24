@@ -25,11 +25,17 @@ internal sealed partial class ValidationEngine
 
     /// <summary>Words search already uses before a colon, so a field can't be named after one.</summary>
     public static readonly IReadOnlySet<string> ReservedFieldKeys =
-        new HashSet<string>(["type", "in", "is", "has", "tag", "seen", "added", "qty", "name", "notes", "marking", "code", "status"]);
+        new HashSet<string>(["type", "in", "is", "has", "tag", "seen", "added", "qty", "name", "notes", "marking", "code", "status", "lent", "going", "due", "project"]);
 
     private static readonly Regex ValidFieldKey = new("^[a-z][a-z0-9_]{0,39}$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private static readonly Regex ValidColour = new("^#[0-9a-fA-F]{6}$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    /// <summary>The most days ahead a date field can remind.</summary>
+    public const int MaxRemindDays = 365;
+
+    /// <summary>The longest repeat of an upkeep date, in months.</summary>
+    public const int MaxRepeatMonths = 120;
 
     /// <summary>Kinds whose values fit in <c>item_values</c>' num, date or text column.</summary>
     private static readonly IReadOnlySet<FieldKind> SortableKinds = new HashSet<FieldKind>(
@@ -164,6 +170,22 @@ internal sealed partial class ValidationEngine
             throw new RuleViolationException($"{label} can't be sorted on: long text, multiselect and item fields aren't sortable.");
         }
 
+        if ((field.Remind is not null || field.RepeatMonths is not null) && field.Kind != FieldKind.Date)
+        {
+            throw new RuleViolationException($"Only date fields can remind you. Clear the reminder of {label}.");
+        }
+
+        if (field.Remind is < 0 or > MaxRemindDays)
+        {
+            throw new RuleViolationException($"{label} can remind you from 0 to {MaxRemindDays} days ahead.");
+        }
+
+        if (field.RepeatMonths is not null && (field.Remind is null || field.RepeatMonths is < 1 or > MaxRepeatMonths))
+        {
+            throw new RuleViolationException(
+                $"{label} can repeat every 1 to {MaxRepeatMonths} months, and only when it reminds you. Set how many days ahead to remind, or clear the repeat.");
+        }
+
         return new TypeField
         {
             Id = field.Id is Guid fieldId && fieldId != Guid.Empty ? fieldId : Guid.CreateVersion7(),
@@ -173,7 +195,10 @@ internal sealed partial class ValidationEngine
             Unit = unit,
             Options = options,
             Required = field.Required,
-            Sortable = field.Sortable,
+            // A reminder date is found through item_values, so it is always kept sortable.
+            Sortable = field.Sortable || field.Remind is not null,
+            Remind = field.Remind,
+            RepeatMonths = field.RepeatMonths,
         };
     }
 

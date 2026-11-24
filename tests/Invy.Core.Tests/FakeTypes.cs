@@ -47,6 +47,8 @@ internal sealed class FakeTypes : ITypeAccess
             Options = [.. field.Options],
             Required = field.Required,
             Sortable = field.Sortable,
+            Remind = field.Remind,
+            RepeatMonths = field.RepeatMonths,
         }).ToList(),
     };
 }

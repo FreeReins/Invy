@@ -53,6 +53,7 @@ internal sealed partial class NotificationAccess(HttpClient http, TimeProvider c
     [JsonSerializable(typeof(string))]
     [JsonSerializable(typeof(bool))]
     [JsonSerializable(typeof(int))]
+    [JsonSerializable(typeof(decimal))]
     [JsonSerializable(typeof(Guid))]
     [JsonSerializable(typeof(DateOnly))]
     [JsonSerializable(typeof(List<string>))]

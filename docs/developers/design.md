@@ -138,15 +138,18 @@ Every space-owned table carries `space_id`. Ids are `Guid.CreateVersion7()`.
 
 | Table | Columns | Notes |
 |---|---|---|
-| `spaces` | id, name, preset, features (text[]), created | `preset` is the kind; `features` the keys switched on |
+| `spaces` | id, name, preset, features (text[]), calendar_token, created | `preset` is the kind; `features` the keys switched on |
 | `space_members` | space_id, account_id, role, getting_started_dismissed | |
 | `item_types` | id, space_id, name, icon, colour, holds_items, fields (jsonb), version | All user-defined |
-| `items` | id, space_id, type_id, name, marking, label_code, parent_id, path (`ltree`), depth, holds_items, quantity, unit, fields (jsonb), tags (text[]), notes, is_example, status, last_seen_at, created, updated, version, search (generated `tsvector`) | Places, containers and things |
+| `items` | id, space_id, type_id, name, marking, label_code, parent_id, path (`ltree`), depth, holds_items, quantity, unit, fields (jsonb), tags (text[]), notes, is_example, status, last_seen_at, low_stock_at, lent_to, lent_at, due_on, destination_id, created, updated, version, search (generated `tsvector`) | Places, containers and things |
 | `item_values` | space_id, item_id, field_id, num, date, text | A typed copy of sortable field values, written in the same transaction as the item |
 | `item_events` | id, space_id, item_id, at, actor, kind, from_parent, to_parent, qty_delta, data (jsonb) | Append-only timeline |
 | `labels` | code, space_id, item_id (null until claimed), printed_at | QR labels |
 | `views` | id, space_id, owner_id, name, query (text), display, columns (text[]), sort, group_by, shared, pinned, created, updated | Saved searches. `owner_id` is who made it; `shared` shows it to the whole space |
 | `attachments` | id, space_id, item_id, kind, name, content_type, path, sha256, bytes, has_thumbnail, created_by, created_at | Files go under `Data:Root/files/<space>/<sha256>.<ext>`, not in the database, with a `.thumb.jpg` beside photos. Backups copy each file once into `<backups>/files/` |
+| `projects` | id, space_id, name, notes, status, created, updated | Open or done. Reserving and using up items (phase 6) |
+| `project_items` | space_id, project_id, item_id, amount | An amount set aside. Doesn't change the item's quantity until **Use up** |
+| `imports` | id, space_id, kind, file, mapping (jsonb), parent_id, status, total, done, problems (jsonb), created_by, created | A CSV or Homebox import, run in the background |
 | From ChefBot | accounts, API tokens, AI models and routes, settings, schedule state, the Wolverine schema | |
 
 **Unique and counted items.** `quantity` is null for a unique item (a baseball, a drill with a serial number). For a
@@ -172,6 +175,7 @@ unless asked for (`is:disposed`).
 | `key`, `label` | The query name (`brand`) and the shown name (**Brand**) |
 | `kind` | text, longtext, number, money, date, bool, select, multiselect, url, barcode, person, item |
 | `unit`, `options`, `required` | Per kind. `required` is a hint shown when filling in, never a block on saving |
+| `remind`, `repeatMonths` | Date fields only: remind this many days ahead (with the `reminders` feature), and for upkeep, how far **Done** moves the date on |
 | `sortable` | Sortable fields are also written to `item_values`, for ranges and sorting |
 
 Changing a type never rewrites items. Values for fields that no longer exist are kept and shown as **Other fields**.
@@ -284,6 +288,7 @@ keeps the time. Accepting one changes the type as an edit does, with a `Changed`
 |---|---|
 | Finding | `find_items`, `where_is`, `get_item`, `list_contents`, `item_history` |
 | Changing | `add_items`, `update_item`, `move_items`, `adjust_quantity`, `mark_seen` |
+| Audience features | `list_low_stock`, `set_low_stock`, `list_loans`, `lend_item`, `return_item`, `list_reminders`, `mark_upkeep_done`, `set_destination`, `mark_arrived`, `list_projects`, `start_project`, `reserve_for_project`, `use_up_for_project` |
 | Types and views | `list_types`, `define_type`, `list_views`, `run_view` |
 | Spaces | `list_spaces` |
 
@@ -336,6 +341,36 @@ PDF library or fonts. CSV files come from the server, written in batches so a la
 **Starter packs:** `config/types-home.json`, `config/types-hobby.json`, `config/types-collection.json` and
 `config/types-business.json`, one per kind (see [Tailored spaces](#tailored-spaces)). Each idea above hides behind a
 feature switch, so a space shows only the ones it uses.
+
+### Audience features (phase 6)
+
+Each hides behind its feature switch. Its scheduled work (alerts and reminders) skips a space with the switch off.
+The daily reminders go to the install's one webhook, one notification per kind, listing every space that has
+something to say.
+
+- **Stock.** A counted item's level is `low_stock_at`. It is low when its amount, less what open projects have
+  reserved, is at or below the level. A change that takes it from above to at-or-below queues `StockRanLow`, which
+  sends one `low-stock` alert right away; the daily `low-stock-daily` reminder lists everything still low. Search:
+  `is:low`.
+- **Lending.** **Lend** sets `lent_to` (free text, a person or a site), `lent_at`, an optional `due_on`, the status
+  `Lent` and one `Lent` event; **Return** clears them with a `Returned` event. The whole item is lent. Overdue loans
+  are in the daily `overdue` reminder and the calendar feed. Search: `is:lent`, `is:overdue`, `lent:<name>`.
+- **Reminders.** A Date field with `remind` (days ahead) is a reminder date; with `repeatMonths` it is upkeep, and
+  **Done** moves it on by that many months (a `Changed` event). The daily `reminders` notification lists dates
+  coming up within their `remind` window. Each space has a calendar feed at `/api/spaces/<id>/calendar/<secret>.ics`
+  (ChefBot's `CalendarEngine` pattern): owners turn it on, replace it or turn it off. It holds reminder dates and
+  loan due dates as all-day events. Search: `due<30d`.
+- **Imports.** Editors upload a CSV and map its columns (name, amount, unit, tags, notes, location, a type, and type
+  fields), or Homebox's CSV export (mapped for them), into a container they pick. The import runs on the `imports`
+  queue: it makes the location containers first, then inserts the items and their `Created` events with `COPY`,
+  and records the rows it skipped and why. Always on: not a switch.
+- **Moving.** A box's `destination_id` is a place or container in the same space. **Manifest** is a print page per
+  box (its contents and destination), like the label sheet. **Arrived** moves the box to its destination with one
+  `Moved` event and clears it. Search: `going:<place>`.
+- **Projects.** A project has a name, notes and a status (open or done). Reserving sets an amount of an item aside
+  (`project_items`; a unique item's amount is 1). **Use up** takes the reserved amount off a counted item with one
+  `QuantityChanged` event, or disposes a unique one, and removes the reservation. Finishing a project releases what
+  is still reserved.
 
 ## Scale targets
 

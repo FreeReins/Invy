@@ -146,4 +146,37 @@ public interface IItemManager
 
     /// <summary>The space's timeline, newest first. <paramref name="before"/> is the last page's Next.</summary>
     Task<ActivityResponse> ListActivityAsync(Guid userId, Guid spaceId, string? before, CancellationToken cancellationToken);
+
+    /// <summary>Counted items at or below their low-stock level, after reservations, by name.</summary>
+    Task<ItemListResponse> ListLowStockAsync(Guid userId, Guid spaceId, CancellationToken cancellationToken);
+
+    /// <summary>Sets or clears a counted item's low-stock level. Writes a Changed event, and alerts if it is now low.</summary>
+    Task<ItemResponse> SetLowStockAsync(Guid userId, Guid spaceId, Guid id, LowStockRequest request, CancellationToken cancellationToken);
+
+    /// <summary>What is lent out, by due date (none last); with <paramref name="overdue"/>, only what is past its due date.</summary>
+    Task<ItemListResponse> ListLoansAsync(Guid userId, Guid spaceId, bool overdue, CancellationToken cancellationToken);
+
+    /// <summary>Lends an item out, whole: its status becomes Lent, with one Lent event.</summary>
+    Task<ItemResponse> LendAsync(Guid userId, Guid spaceId, Guid id, LendRequest request, CancellationToken cancellationToken);
+
+    /// <summary>Marks a lent item back: its status becomes Active again, with one Returned event. Nothing if it isn't lent.</summary>
+    Task<ItemResponse> ReturnAsync(Guid userId, Guid spaceId, Guid id, CancellationToken cancellationToken);
+
+    /// <summary>Reminder dates within <paramref name="days"/> (30 when null) and overdue upkeep, soonest first.</summary>
+    Task<RemindersResponse> ListRemindersAsync(Guid userId, Guid spaceId, int? days, CancellationToken cancellationToken);
+
+    /// <summary>Marks an upkeep date done: the field becomes today plus its repeat, with a Changed event.</summary>
+    Task<ItemResponse> MarkUpkeepDoneAsync(Guid userId, Guid spaceId, Guid id, UpkeepDoneRequest request, CancellationToken cancellationToken);
+
+    /// <summary>Boxes and things with a moving destination, by name.</summary>
+    Task<ItemListResponse> ListGoingAsync(Guid userId, Guid spaceId, CancellationToken cancellationToken);
+
+    /// <summary>Sets or clears where something goes in a move, with a Changed event. It can't go inside itself.</summary>
+    Task<ItemResponse> SetDestinationAsync(Guid userId, Guid spaceId, Guid id, DestinationRequest request, CancellationToken cancellationToken);
+
+    /// <summary>Moves a box into its destination with one Moved event, and clears the destination.</summary>
+    Task<ItemResponse> MarkArrivedAsync(Guid userId, Guid spaceId, Guid id, CancellationToken cancellationToken);
+
+    /// <summary>A box's manifest: where it goes and what is directly inside it.</summary>
+    Task<ManifestResponse> GetManifestAsync(Guid userId, Guid spaceId, Guid id, CancellationToken cancellationToken);
 }

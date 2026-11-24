@@ -14,12 +14,14 @@ internal sealed partial class SpaceManager(
     IItemAccess items,
     ILabelAccess labels,
     IAttachmentAccess attachments,
+    IProjectAccess projects,
     IAccountAccess accounts,
     IStarterPackAccess starterPacks,
     IFileStoreAccess files,
     IMessageAccess messages,
     ValidationEngine validation,
     ItemEngine itemEngine,
+    CalendarEngine calendar,
     TimeProvider clock) : ISpaceManager
 {
     public async Task<IReadOnlyList<SpaceResponse>> ListSpacesAsync(Guid userId, CancellationToken cancellationToken) =>

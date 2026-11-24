@@ -23,10 +23,10 @@ spaces, and you pick the one you're looking at from the **Space** list under the
 
 | Kind | Starts with these types | Features on | Places suggested |
 |---|---|---|---|
-| **Home** | Room, Furniture, Box, Appliance, Tool, Electronics, Clothing, Book, Document, Pantry item | Values, Barcodes | Kitchen, Living room, Bedroom, Bathroom, Hallway, Garage, Loft, Shed |
-| **Hobby** | Workspace, Bin, Drawer unit, Part, Material, Kit, Tool | Barcodes | Workbench, Craft table, Desk, Garage, Shed, Spare room |
-| **Collection** | Display case, Binder, Set, Collectible | Values | Living room cabinet, Study shelves, Glass case, Storage boxes |
-| **Business** | Site, Room, Rack, Bin, Product, Equipment, Document | Values, Audits, Barcodes | Shop, Warehouse, Office, Workshop, Stockroom |
+| **Home** | Room, Furniture, Box, Appliance, Tool, Electronics, Clothing, Book, Document, Pantry item | Values, Barcodes, Lending, Reminders | Kitchen, Living room, Bedroom, Bathroom, Hallway, Garage, Loft, Shed |
+| **Hobby** | Workspace, Bin, Drawer unit, Part, Material, Kit, Tool | Barcodes, Stock, Reminders, Projects | Workbench, Craft table, Desk, Garage, Shed, Spare room |
+| **Collection** | Display case, Binder, Set, Collectible | Values, Lending | Living room cabinet, Study shelves, Glass case, Storage boxes |
+| **Business** | Site, Room, Rack, Bin, Product, Equipment, Document | Values, Audits, Barcodes, Stock, Lending, Reminders | Shop, Warehouse, Office, Workshop, Stockroom |
 
 A kind only adds types. You can change or remove any of them on the **Types** tab, and copy a type from another kind
 with **Add from another pack** (see [Types and fields](types-and-fields.md#add-a-type-from-another-pack)). The kind also
@@ -42,10 +42,16 @@ Each space switches features on and off by itself, so a home can use audits and 
 | **Values** | What things are worth: **Worth** on a counted thing, **Worth inside** on a box or place, the **Value** column in views, and the value totals and insurance inventory in [Reports](reports.md) |
 | **Audits** | **Audit** on a box or place, Scan's **Audit** mode, and the missing items in [Reports](reports.md) |
 | **Barcodes** | Looking up a product's barcode in Scan's **Add** mode (the admin's **Look up product barcodes online** switch still applies) |
+| **Stock** | **Low stock at** on counted things, **Running low** on Views, and alerts when something runs low. See [Low stock](stock.md) |
+| **Lending** | **Lend** and **It's back** on a thing, **Lent out** on Views, and overdue reminders. See [Lending](lending.md) |
+| **Reminders** | **Remind, days ahead** on date fields, **Done today** for upkeep, **Coming up** on Views, and the calendar feed. See [Reminders and upkeep](reminders.md) |
+| **Moving** | **Say where it's going**, **Manifest** and **Arrived** on a box, and **Moving** on Views. See [Moving house](moving.md) |
+| **Projects** | **Set aside for a project** on a thing, and **Projects** on Views. See [Projects](projects.md) |
 
 A feature that is off is only hidden: its details stay, and show again when it is switched back on. Labels, scanning,
-search, Browse, Views, Types and Activity are always there. More features, such as lending, stock and reminders, come with
-later versions; a kind that uses them has them on already, ready for when they arrive.
+search, Browse, Views, Types, Activity and [importing](imports.md) are always there. A feature that is off sends no
+alerts or reminders for the space, and its calls in the [HTTP API](../reference/api.md) and for AI assistants still
+work.
 
 ## Getting started and examples
 

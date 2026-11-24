@@ -176,6 +176,22 @@ internal sealed partial class ValidationEngine
         item.Unit = unit is null || unit.Length <= UnitLength
             ? unit
             : throw new RuleViolationException($"A unit can have up to {UnitLength} characters.");
+
+        item.LowStockAt = request.LowStockAt is null || item.Quantity is not null
+            ? Quantity(request.LowStockAt)
+            : throw new RuleViolationException("Only counted items can run low. Give it an amount, or clear Low stock at.");
+    }
+
+    /// <summary>The longest name of who or where something is lent to.</summary>
+    public const int BorrowerLength = 100;
+
+    /// <summary>Who or where something is lent to, trimmed.</summary>
+    public static string Borrower(string? to)
+    {
+        var borrower = Optional(to) ?? throw new RuleViolationException("Say who or where it's lent to, such as Sam or the church hall.");
+        return borrower.Length <= BorrowerLength
+            ? borrower
+            : throw new RuleViolationException($"Who it's lent to can have up to {BorrowerLength} characters.");
     }
 
     public static decimal? Quantity(decimal? quantity) => quantity switch

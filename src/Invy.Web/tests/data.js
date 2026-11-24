@@ -166,24 +166,24 @@ export const gettingStarted = (extra = {}) => ({
   examplesLeft: 2, dismissed: false, ...extra,
 });
 
-/** SpaceFeatureResponse[]: the catalogue in Utilities/SpaceFeatures.cs, most of which isn't built yet. */
+/** SpaceFeatureResponse[]: the catalogue in Utilities/SpaceFeatures.cs, every feature built. */
 export const spaceFeatures = () => [
   { key: 'values', name: 'Values', description: 'Add up what things are worth, in each box and across the space.', available: true },
   { key: 'audits', name: 'Audits', description: "Walk round with your phone and tick off what's where.", available: true },
   { key: 'barcodes', name: 'Barcodes', description: "Fill in a product's details from its barcode when you add it.", available: true },
-  { key: 'stock', name: 'Stock', description: 'Get told when something you keep counted is running low.', available: false },
-  { key: 'lending', name: 'Lending', description: "Lend things to people and get reminded when they're due back.", available: false },
-  { key: 'reminders', name: 'Reminders', description: 'Get reminded of warranties, upkeep and expiry dates.', available: false },
-  { key: 'moving', name: 'Moving', description: "Pack boxes for a move, with where each one goes and what's in it.", available: false },
-  { key: 'projects', name: 'Projects', description: 'Set things aside or use them up for a project.', available: false },
+  { key: 'stock', name: 'Stock', description: 'Get told when something you keep counted is running low.', available: true },
+  { key: 'lending', name: 'Lending', description: "Lend things to people and get reminded when they're due back.", available: true },
+  { key: 'reminders', name: 'Reminders', description: 'Get reminded of warranties, upkeep and expiry dates.', available: true },
+  { key: 'moving', name: 'Moving', description: "Pack boxes for a move, with where each one goes and what's in it.", available: true },
+  { key: 'projects', name: 'Projects', description: 'Set things aside or use them up for a project.', available: true },
 ];
 
 /** StarterPackResponse[]: the packs in config/types-*.json as Invy sends them. Keep in step when a pack changes. */
 export const starterPacks = () => [
-  {"key": "home", "name": "Home", "description": "Rooms, furniture and boxes, with types for appliances, tools, electronics, clothes, books, documents and the pantry.", "types": ["Room", "Furniture", "Box", "Appliance", "Tool", "Electronics", "Clothing", "Book", "Document", "Pantry item"], "icon": "house", "features": ["values", "barcodes", "lending", "reminders"], "places": {"type": "Room", "suggest": ["Kitchen", "Living room", "Bedroom", "Bathroom", "Hallway", "Garage", "Loft", "Shed"]}, "examples": ["Toolbox", "Toaster", "Rice", "Winter clothes"], "gettingStarted": ["places", "labels", "pack", "photo", "invite"], "hints": {"find": "Search for anything you've added, or add your first things with Add.", "browse": "Start with your rooms, then add the furniture and boxes in them.", "scan": "Scan a QR label on a box to open it, or a blank one to make it a new box.", "types": "Types such as Appliance and Book give items their own fields, like a serial number or an author."}},
-  {"key": "hobby", "name": "Hobby", "description": "Bins and drawers for a workshop or craft room, with types for parts, materials, kits and tools.", "types": ["Workspace", "Bin", "Drawer unit", "Part", "Material", "Kit", "Tool"], "icon": "palette", "features": ["barcodes", "stock", "reminders", "projects"], "places": {"type": "Workspace", "suggest": ["Workbench", "Craft table", "Desk", "Garage", "Shed", "Spare room"]}, "examples": ["Small parts", "PLA filament", "Spitfire model"], "gettingStarted": ["places", "labels", "pack", "photo", "invite"], "hints": {"find": "Search your parts, materials and kits, or add the first ones with Add.", "browse": "Start with your workbench or craft table, then add the bins and drawers on it.", "scan": "Scan a QR label on a bin to see what's in it, or a blank one to make it a new bin.", "types": "Types such as Part and Material give items their own fields, like a part number or a colour."}},
-  {"key": "collection", "name": "Collection", "description": "Display cases, binders and sets, with a collectible type for series, condition and value.", "types": ["Display case", "Binder", "Set", "Collectible"], "icon": "star", "features": ["values", "lending"], "places": {"type": "Display case", "suggest": ["Living room cabinet", "Study shelves", "Glass case", "Storage boxes"]}, "examples": ["Trading cards", "Coins of the year"], "gettingStarted": ["places", "values", "photo", "labels", "invite"], "hints": {"find": "Search your collection by name, series or year, or add your first pieces with Add.", "browse": "Start with your display cases, then add the binders and sets in them.", "scan": "Scan a QR label on a case or binder to open it, or a blank one to make it a new one.", "types": "Types such as Collectible give items their own fields, like a series, a condition and a value."}},
-  {"key": "business", "name": "Business", "description": "Sites, rooms, racks and bins, with types for stock you sell, equipment you own and the documents behind them.", "types": ["Site", "Room", "Rack", "Bin", "Product", "Equipment", "Document"], "icon": "building", "features": ["values", "audits", "barcodes", "stock", "lending", "reminders"], "places": {"type": "Site", "suggest": ["Shop", "Warehouse", "Office", "Workshop", "Stockroom"]}, "examples": ["Rack A", "Office laptop"], "gettingStarted": ["places", "labels", "pack", "audit", "invite"], "hints": {"find": "Search stock, equipment and documents by name, SKU or asset tag, or add the first ones with Add.", "browse": "Start with your sites, then add the rooms, racks and bins in them.", "scan": "Scan a QR label on a rack or bin to open it, or use Audit to tick off what's where.", "types": "Types such as Product and Equipment give items their own fields, like a SKU or an asset tag."}},
+  {"key": "home", "name": "Home", "description": "Rooms, furniture and boxes, with types for appliances, tools, electronics, clothes, books, documents and the pantry.", "types": ["Room", "Furniture", "Box", "Appliance", "Tool", "Electronics", "Clothing", "Book", "Document", "Pantry item"], "icon": "house", "features": ["values", "barcodes", "lending", "reminders"], "places": {"type": "Room", "suggest": ["Kitchen", "Living room", "Bedroom", "Bathroom", "Hallway", "Garage", "Loft", "Shed"]}, "examples": ["Toolbox", "Toaster", "Rice", "Winter clothes"], "gettingStarted": ["places", "labels", "pack", "photo", "lend", "remind", "invite"], "hints": {"find": "Search for anything you've added, or add your first things with Add.", "browse": "Start with your rooms, then add the furniture and boxes in them.", "scan": "Scan a QR label on a box to open it, or a blank one to make it a new box.", "types": "Types such as Appliance and Book give items their own fields, like a serial number or an author."}},
+  {"key": "hobby", "name": "Hobby", "description": "Bins and drawers for a workshop or craft room, with types for parts, materials, kits and tools.", "types": ["Workspace", "Bin", "Drawer unit", "Part", "Material", "Kit", "Tool"], "icon": "palette", "features": ["barcodes", "stock", "reminders", "projects"], "places": {"type": "Workspace", "suggest": ["Workbench", "Craft table", "Desk", "Garage", "Shed", "Spare room"]}, "examples": ["Small parts", "PLA filament", "Spitfire model"], "gettingStarted": ["places", "labels", "pack", "stock", "project", "photo", "invite"], "hints": {"find": "Search your parts, materials and kits, or add the first ones with Add.", "browse": "Start with your workbench or craft table, then add the bins and drawers on it.", "scan": "Scan a QR label on a bin to see what's in it, or a blank one to make it a new bin.", "types": "Types such as Part and Material give items their own fields, like a part number or a colour."}},
+  {"key": "collection", "name": "Collection", "description": "Display cases, binders and sets, with a collectible type for series, condition and value.", "types": ["Display case", "Binder", "Set", "Collectible"], "icon": "star", "features": ["values", "lending"], "places": {"type": "Display case", "suggest": ["Living room cabinet", "Study shelves", "Glass case", "Storage boxes"]}, "examples": ["Trading cards", "Coins of the year"], "gettingStarted": ["places", "values", "photo", "labels", "lend", "invite"], "hints": {"find": "Search your collection by name, series or year, or add your first pieces with Add.", "browse": "Start with your display cases, then add the binders and sets in them.", "scan": "Scan a QR label on a case or binder to open it, or a blank one to make it a new one.", "types": "Types such as Collectible give items their own fields, like a series, a condition and a value."}},
+  {"key": "business", "name": "Business", "description": "Sites, rooms, racks and bins, with types for stock you sell, equipment you own and the documents behind them.", "types": ["Site", "Room", "Rack", "Bin", "Product", "Equipment", "Document"], "icon": "building", "features": ["values", "audits", "barcodes", "stock", "lending", "reminders"], "places": {"type": "Site", "suggest": ["Shop", "Warehouse", "Office", "Workshop", "Stockroom"]}, "examples": ["Rack A", "Office laptop"], "gettingStarted": ["places", "labels", "pack", "audit", "stock", "lend", "invite"], "hints": {"find": "Search stock, equipment and documents by name, SKU or asset tag, or add the first ones with Add.", "browse": "Start with your sites, then add the rooms, racks and bins in them.", "scan": "Scan a QR label on a rack or bin to open it, or use Audit to tick off what's where.", "types": "Types such as Product and Equipment give items their own fields, like a SKU or an asset tag."}},
 ];
 
 /** ItemTypeResponse[]: a container, a type with every kind of extra (unit, options) and one with no fields. */
@@ -219,7 +219,8 @@ const toolType = '00000000-0000-4000-8000-000000000d03';
 
 /** ItemSummary */
 const summary = (id, name, extra = {}) => ({
-  id, name, marking: null, typeId: null, holdsItems: false, quantity: null, unit: null, status: 'Active', contents: 0, labelCode: null, ...extra,
+  id, name, marking: null, typeId: null, holdsItems: false, quantity: null, unit: null, status: 'Active', contents: 0, labelCode: null,
+  isLow: false, lentTo: null, dueOn: null, destinationId: null, ...extra,
 });
 
 /** ItemPageResponse: the top of Home. */
@@ -248,7 +249,7 @@ export const boxContents = () => ({
 const item = (id, name, extra = {}) => ({
   id, name, marking: null, typeId: null, parentId: null, holdsItems: false, quantity: null, unit: null, fields: {}, tags: [],
   notes: null, status: 'Active', lastSeenAt: null, createdAt: '2026-05-02T12:00:00Z', updatedAt: '2026-05-10T12:00:00Z', version: 2,
-  labelCode: null, ...extra,
+  labelCode: null, lowStockAt: null, reserved: 0, isLow: false, lentTo: null, lentAt: null, dueOn: null, destinationId: null, ...extra,
 });
 
 /** ItemDetailResponse for each item the tests open. */
@@ -438,3 +439,85 @@ export const missingItems = () => {
   const ball = viewResults().results.find((result) => result.item.id === itemIds.ball);
   return { results: [{ ...ball, item: { ...ball.item, status: 'Missing' } }], total: 1, totalIsEstimate: false, next: null };
 };
+
+// ---------- Space features (phase 6) ----------
+
+/** Every feature switched on, for the screens they add. */
+export const allFeatures = ['values', 'audits', 'barcodes', 'stock', 'lending', 'reminders', 'moving', 'projects'];
+
+/** ItemDetailResponse: the screws, low and partly set aside for a project. */
+export const lowScrews = () => {
+  const detail = itemDetail(itemIds.screws);
+  return { ...detail, item: { ...detail.item, quantity: 12, lowStockAt: 20, reserved: 4, isLow: true } };
+};
+
+/** ItemDetailResponse: the drill, lent to Sam and overdue. */
+export const lentDrill = () => {
+  const detail = itemDetail(itemIds.drill);
+  return { ...detail, item: { ...detail.item, status: 'Lent', lentTo: 'Sam', lentAt: '2026-11-01T10:00:00Z', dueOn: '2026-11-10' } };
+};
+
+/** ItemDetailResponse: Box F, packed and going to the shed. */
+export const packedBox = () => {
+  const detail = itemDetail(itemIds.f);
+  return { ...detail, item: { ...detail.item, destinationId: itemIds.shed } };
+};
+
+/** ItemListResponse: what's running low. */
+export const lowStock = () => ({ items: [summary(itemIds.screws, 'Screws', { quantity: 12, isLow: true })], more: false });
+
+/** ItemListResponse: what's lent out. */
+export const loans = () => ({
+  items: [summary(itemIds.drill, 'Drill', { typeId: toolType, status: 'Lent', lentTo: 'Sam', dueOn: '2026-11-10' }),
+    summary(itemIds.ball, 'Baseball', { status: 'Lent', lentTo: 'the church hall', dueOn: null })],
+  more: false,
+});
+
+/** RemindersResponse: a warranty coming up and some overdue upkeep. */
+export const reminders = () => ({
+  dates: [
+    { item: summary(itemIds.drill, 'Drill', { typeId: toolType }), fieldId: '00000000-0000-4000-8000-000000000e05', field: 'Next service', on: '2026-10-01', upkeep: true, days: -54 },
+    { item: summary(itemIds.ball, 'Baseball'), fieldId: '00000000-0000-4000-8000-000000000e06', field: 'Warranty until', on: '2026-12-10', upkeep: false, days: 16 },
+  ],
+  more: false,
+});
+
+/** ItemListResponse: boxes with a destination. */
+export const moving = () => ({ items: [summary(itemIds.f, 'Box F', { marking: 'F', holdsItems: true, contents: 3, destinationId: itemIds.shed })], more: false });
+
+/** ManifestResponse: Box F, going to the shed. */
+export const manifest = () => ({
+  box: summary(itemIds.f, 'Box F', { marking: 'F', holdsItems: true, contents: 3, labelCode: '7K3Q', destinationId: itemIds.shed }),
+  destination: ref(itemIds.shed, 'Shed'),
+  destinationPath: [ref(itemIds.shed, 'Shed')],
+  contents: boxContents().items,
+  more: false,
+});
+
+/** ProjectResponse[]: one open project setting aside screws and the drill. */
+export const projects = () => [{
+  id: '00000000-0000-4000-8000-000000003001', name: 'Bookshelf', notes: null, status: 'Open', createdAt: '2026-11-20T10:00:00Z',
+  updatedAt: '2026-11-21T10:00:00Z', version: 3,
+  items: [
+    { item: summary(itemIds.drill, 'Drill', { typeId: toolType }), amount: 1 },
+    { item: summary(itemIds.screws, 'Screws', { quantity: 12 }), amount: 4 },
+  ],
+}];
+
+/** ImportResponse: a Homebox export uploaded and waiting for its columns to be checked. */
+export const importDraft = () => ({
+  id: '00000000-0000-4000-8000-000000004001', kind: 'Homebox', fileName: 'homebox-export.csv', status: 'Draft',
+  headers: ['HB.location', 'HB.labels', 'HB.name', 'HB.quantity', 'HB.serial_number'],
+  sample: [['Garage / Shelf 2', 'Tools', 'Sander', '1', 'SN9'], ['Garage', '', 'Nails', '500', '']],
+  mapping: [{ column: 0, target: 'location' }, { column: 1, target: 'tags' }, { column: 2, target: 'name' }, { column: 3, target: 'quantity' }, { column: 4, target: 'note' }],
+  parentId: null, typeId: null, total: 2, done: 0, added: 0, problems: [], createdAt: '2026-11-24T10:00:00Z', finishedAt: null,
+});
+
+/** ImportResponse[]: one finished import, with a row it skipped. */
+export const imports = () => [{
+  ...importDraft(), id: '00000000-0000-4000-8000-000000004002', fileName: 'parts.csv', kind: 'Csv', status: 'Done', headers: [], sample: [],
+  total: 120, done: 120, added: 125, problems: [{ row: 14, problem: 'It has no name.' }], finishedAt: '2026-11-24T10:01:00Z',
+}];
+
+/** CalendarFeedResponse while the feed is on. */
+export const calendarFeed = () => ({ url: `http://localhost/api/spaces/${spaceIds.home}/calendar/0123456789abcdef.ics` });

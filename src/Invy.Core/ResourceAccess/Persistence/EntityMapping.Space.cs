@@ -12,6 +12,7 @@ internal static partial class EntityMapping
         Preset = entity.Preset,
         CreatedAt = entity.CreatedAt,
         Features = [.. entity.Features],
+        CalendarToken = entity.CalendarToken,
         Members = entity.Members.Select(member => new SpaceMember
         {
             UserId = member.UserId,
@@ -27,6 +28,7 @@ internal static partial class EntityMapping
         Preset = space.Preset,
         CreatedAt = space.CreatedAt,
         Features = [.. space.Features],
+        CalendarToken = space.CalendarToken,
         Members = space.Members.Select(member => new SpaceMemberEntity
         {
             SpaceId = space.Id,

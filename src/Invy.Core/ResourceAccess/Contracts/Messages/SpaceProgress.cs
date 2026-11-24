@@ -15,6 +15,15 @@ internal sealed class SpaceProgress
     /// <summary>Something of the person's own marked as seen.</summary>
     public bool HasSeen { get; set; }
 
+    /// <summary>Something of the person's own with a low-stock level.</summary>
+    public bool HasLowStockLevels { get; set; }
+
+    /// <summary>Something that has been lent, now or before.</summary>
+    public bool HasLent { get; set; }
+
+    /// <summary>Something with a moving destination.</summary>
+    public bool HasDestinations { get; set; }
+
     /// <summary>How many examples are left.</summary>
     public int ExamplesLeft { get; set; }
 }

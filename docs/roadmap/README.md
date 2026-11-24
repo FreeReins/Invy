@@ -15,7 +15,7 @@ and one phase file. Run a phase with `/phase <id>` (`.claude/skills/phase/SKILL.
 | 3 AI and MCP | [phase-3-ai-and-mcp.md](phase-3-ai-and-mcp.md) | Done |
 | 4 Tailored spaces | [phase-4-tailored-spaces.md](phase-4-tailored-spaces.md) | Done |
 | 5 Views and reports | [phase-5-views-and-reports.md](phase-5-views-and-reports.md) | Done |
-| 6 Audience features | [phase-6-audience-features.md](phase-6-audience-features.md) | Not started |
+| 6 Audience features | [phase-6-audience-features.md](phase-6-audience-features.md) | Done |
 | 7 Scale hardening | [phase-7-scale-hardening.md](phase-7-scale-hardening.md) | Not started |
 
 Phases 1 to 4 are in order. Phases 5, 6 and 7 only need phase 4 and can be done in any order. A feature that phases 5
@@ -38,3 +38,4 @@ Add one line per decision that changes `design.md`, newest last, and update `des
 - 2026-11-24: removing examples keeps an example that holds something of the person's own; an example's place that wasn't ticked is made as an example; getting-started steps of a feature that is off are left off the card.
 - 2026-11-24: a view keeps its search as text, read again each run so `seen>1y` stays relative (a stored tree would freeze the date); it keeps its maker in `owner_id` with a `shared` flag, and pinning is per view.
 - 2026-11-24: reports are printed from the browser (a print page with **Print or save as PDF**, as label sheets are), so Invy bundles no PDF library or fonts; their CSV comes from the server, streamed in batches.
+- 2026-11-24: phase 6 (design.md, Audience features): stock is `items.low_stock_at`, alerting once on crossing and daily, against the amount less project reservations; lending is `lent_to`, `lent_at`, `due_on`, whole items only; reminders are Date fields with `remind` and `repeatMonths`, plus a per-space secret calendar feed; imports take CSV or Homebox's CSV into a chosen container, in background `COPY` batches; moving is `destination_id`, a printed manifest and **Arrived**; projects are `projects` and `project_items`; each feature has MCP tools that read and change it.

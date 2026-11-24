@@ -14,4 +14,7 @@ internal enum ItemFlag
 
     /// <summary>has:barcode, a value in one of the barcode fields named.</summary>
     HasBarcode,
+
+    /// <summary>is:low, a counted item at or below its low-stock level, after reservations.</summary>
+    Low,
 }

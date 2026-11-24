@@ -29,6 +29,13 @@ public interface IMaintenanceManager
     /// </summary>
     Task<ReminderRun?> SendDueRemindersAsync(SendDueReminders command, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Sends the alert for a counted item that ran low, if it still is, is still here, and its space still has the
+    /// Stock feature on. Nothing when there is no webhook.
+    /// </summary>
+    /// <exception cref="TransientDeliveryException">The webhook is unreachable for now; try again later.</exception>
+    Task<ReminderRun> SendLowStockAsync(StockRanLow message, CancellationToken cancellationToken);
+
     Task<BackupsResponse> GetBackupsAsync(CancellationToken cancellationToken);
 
     /// <summary>Saves when backups run and how many are kept.</summary>

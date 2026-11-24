@@ -13,6 +13,7 @@
   import ArrowDown from '@lucide/svelte/icons/arrow-down';
   import Trash from '@lucide/svelte/icons/trash';
   import Plus from '@lucide/svelte/icons/plus';
+  import { has } from '../lib/features.js';
   import Sparkles from '@lucide/svelte/icons/sparkles';
 
   /** type: ItemTypeResponse, or null for a new one. onsaved(type), onremoved(id), onclose(). */
@@ -23,6 +24,7 @@
     row: nextRow++, id: field?.id ?? null, label: field?.label ?? '', key: field?.key ?? '', kind: field?.kind ?? 'Text',
     unit: field?.unit ?? '', options: (field?.options ?? []).join('\n'), required: field?.required ?? false,
     sortable: field?.sortable ?? false, keyTouched: Boolean(field),
+    remind: field?.remind ?? '', repeatMonths: field?.repeatMonths ?? '',
   });
 
   // The form starts from the type as it was opened and is edited from there.
@@ -67,6 +69,9 @@
         unit: hasUnit(field.kind) && field.unit.trim() ? field.unit.trim() : null,
         options: hasOptions(field.kind) ? field.options.split('\n').map((option) => option.trim()).filter(Boolean) : [],
         required: field.required, sortable: canSort(field.kind) && field.sortable,
+        remind: field.kind === 'Date' && field.remind !== '' && field.remind != null ? Number(field.remind) : null,
+        repeatMonths: field.kind === 'Date' && field.remind !== '' && field.remind != null && field.repeatMonths !== '' && field.repeatMonths != null
+          ? Number(field.repeatMonths) : null,
       })),
     };
   }
@@ -156,6 +161,13 @@
                     placeholder={field.kind === 'Money' ? 'USD' : 'kg'} /></label>
                 {/if}
               </div>
+              {#if field.kind === 'Date' && (has('reminders') || field.remind !== '')}
+                <div class="field-grid">
+                  <label>Remind, days ahead <input type="number" bind:value={field.remind} min="0" max="365" step="1" placeholder="Don't remind" /></label>
+                  <label>Repeats every, months <input type="number" bind:value={field.repeatMonths} min="1" max="120" step="1"
+                    placeholder="Doesn't repeat" disabled={field.remind === '' || field.remind == null} /></label>
+                </div>
+              {/if}
               {#if hasOptions(field.kind)}
                 <label>Choices, one per line <textarea bind:value={field.options} rows="3" required></textarea></label>
               {/if}

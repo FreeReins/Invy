@@ -20,6 +20,14 @@ internal sealed class SpaceAccess(InvyDbContext db) : ISpaceAccess
         .Select(space => space.ToContract())
         .ToList();
 
+    public async Task<List<Space>> ListWithFeatureAsync(string feature, CancellationToken cancellationToken) =>
+        (await db.Spaces.AsNoTracking()
+            .Where(space => space.Features.Contains(feature))
+            .OrderBy(space => space.Name).ThenBy(space => space.Id)
+            .ToListAsync(cancellationToken))
+        .Select(space => space.ToContract())
+        .ToList();
+
     public async Task SaveAsync(Space space, CancellationToken cancellationToken)
     {
         var fresh = space.ToEntity();

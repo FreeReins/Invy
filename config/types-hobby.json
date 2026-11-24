@@ -30,7 +30,8 @@
     { "name": "Tool", "icon": "wrench", "colour": "#dc2626", "fields": [
       { "key": "brand", "label": "Brand", "kind": "Text", "sortable": true },
       { "key": "model", "label": "Model", "kind": "Text" },
-      { "key": "purchased", "label": "Purchased", "kind": "Date", "sortable": true }
+      { "key": "purchased", "label": "Purchased", "kind": "Date", "sortable": true },
+      { "key": "service", "label": "Next service", "kind": "Date", "sortable": true, "remind": 7, "repeatMonths": 12 }
     ] }
   ],
   "places": { "type": "Workspace", "suggest": ["Workbench", "Craft table", "Desk", "Garage", "Shed", "Spare room"] },
@@ -65,7 +66,7 @@
       "fields": { "maker": "Airfix", "scale": "1:72", "build": "Not started" }
     }
   ],
-  "gettingStarted": ["places", "labels", "pack", "photo", "invite"],
+  "gettingStarted": ["places", "labels", "pack", "stock", "project", "photo", "invite"],
   "hints": {
     "find": "Search your parts, materials and kits, or add the first ones with Add.",
     "browse": "Start with your workbench or craft table, then add the bins and drawers on it.",

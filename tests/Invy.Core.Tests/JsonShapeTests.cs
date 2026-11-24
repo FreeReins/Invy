@@ -4,7 +4,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using Invy.Core.Engines.Contracts.Messages;
 using Invy.Core.Managers.Contracts;
+using Invy.Core.Managers.Contracts.Messages;
 using Invy.Core.ResourceAccess;
 using Invy.Core.ResourceAccess.Contracts.Messages;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -80,8 +82,15 @@ public class JsonShapeTests
     [Test]
     public async Task Every_kind_of_notification_reaches_the_webhook_as_before()
     {
-        var notifications = new List<Notification> { TestData.Notifications.Test() };
-        notifications.AddRange(TestData.Notifications.Daily(TestData.Sunday));
+        var today = TestData.Sunday;
+        var space = new Space { Name = "Workshop" };
+        var screws = new Item { Name = "Screws", Quantity = 4, Unit = "boxes", LowStockAt = 5, Reserved = 1 };
+        var drill = new Item { Name = "Drill", LentTo = "Sam", LentAt = DateTimeOffset.UnixEpoch, DueOn = today.AddDays(-2) };
+        var warranty = new TypeField { Label = "Warranty until", Kind = FieldKind.Date, Remind = 30 };
+        var facts = new DailyFacts(
+            [new SpaceItem(space, screws)], [new SpaceItem(space, drill)], [new DueDate(space, drill, warranty, today.AddDays(30))]);
+        var notifications = new List<Notification> { TestData.Notifications.Test(), TestData.Notifications.LowStock(space, screws) };
+        notifications.AddRange(TestData.Notifications.Daily(today, facts));
 
         var webhook = new CapturingHandler();
         var clock = new FixedClock();

@@ -38,6 +38,27 @@ internal sealed class Item
 
     public string? Unit { get; set; }
 
+    /// <summary>For a counted item: it is low when what's left after reservations is at or below this, or null for no level.</summary>
+    public decimal? LowStockAt { get; set; }
+
+    /// <summary>How much open projects have set aside: the total of its project reservations, 0 when none.</summary>
+    public decimal Reserved { get; set; }
+
+    /// <summary>Who or where it is lent to while its status is Lent, as typed, or null.</summary>
+    public string? LentTo { get; set; }
+
+    /// <summary>When it was lent, or null when it isn't.</summary>
+    public DateTimeOffset? LentAt { get; set; }
+
+    /// <summary>When a loan is due back, or null for no date (or no loan).</summary>
+    public DateOnly? DueOn { get; set; }
+
+    /// <summary>For moving: the place or container this box goes to, or null.</summary>
+    public Guid? DestinationId { get; set; }
+
+    /// <summary>True when it has a low-stock level and what's left after reservations is at or below it.</summary>
+    public bool IsLow => LowStockAt is decimal level && Quantity is decimal amount && amount - Reserved <= level;
+
     /// <summary>Field values by field id. Values of fields the type no longer has are kept.</summary>
     public Dictionary<Guid, JsonElement> Fields { get; set; } = [];
 

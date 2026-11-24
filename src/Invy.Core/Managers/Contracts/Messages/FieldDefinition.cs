@@ -9,5 +9,8 @@ namespace Invy.Core.Managers.Contracts.Messages;
 /// <param name="Options">For select and multiselect fields: the choices, in order. Empty for other kinds.</param>
 /// <param name="Required">Shown as needed when filling in. It never stops an item being saved.</param>
 /// <param name="Sortable">Also kept as a typed value, for sorting and ranges such as <c>price&gt;50</c>.</param>
+/// <param name="Remind">Date fields only: remind this many days ahead (the Reminders feature), or null for no reminder. 0 reminds on the day.</param>
+/// <param name="RepeatMonths">Date fields with a reminder only: for upkeep, how many months <b>Done</b> moves the date on, or null.</param>
 public sealed record FieldDefinition(
-    Guid? Id, string Key, string Label, FieldKind Kind, string? Unit, IReadOnlyList<string> Options, bool Required, bool Sortable);
+    Guid? Id, string Key, string Label, FieldKind Kind, string? Unit, IReadOnlyList<string> Options, bool Required, bool Sortable,
+    int? Remind = null, int? RepeatMonths = null);

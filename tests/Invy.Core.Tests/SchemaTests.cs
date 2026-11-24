@@ -14,6 +14,7 @@ public class SchemaTests
     {
         [typeof(AccessLinkEntity)] = "sign-in and invite links are short-lived; new ones are made after a restore",
         [typeof(ApiTokenEntity)] = "a token revoked since the backup must not come back",
+        [typeof(ImportEntity)] = "an import is short-lived work whose file is gone once it finishes; what it added is in the items",
     };
 
     private static InvyDbContext Context() =>

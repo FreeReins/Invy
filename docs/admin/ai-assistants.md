@@ -89,6 +89,11 @@ batteries"*. The assistant uses these tools:
 | `list_views` | The saved views you can see: your own and the ones shared with the space |
 | `run_view` | Runs a saved view, such as *Not seen in a year*, and lists what it finds |
 | `list_spaces` | The spaces you're in, and your role in each |
+| `list_low_stock`, `set_low_stock` | What's running low, and a counted thing's low-stock level ([Low stock](../using/stock.md)) |
+| `list_loans`, `lend_item`, `return_item` | What's lent out, lending something, and marking it back ([Lending](../using/lending.md)) |
+| `list_reminders`, `mark_upkeep_done` | Warranty and upkeep dates coming up, and marking upkeep done ([Reminders](../using/reminders.md)) |
+| `set_destination`, `mark_arrived` | Where a box goes in a move, and moving it there when it arrives ([Moving house](../using/moving.md)) |
+| `list_projects`, `start_project`, `reserve_for_project`, `use_up_for_project` | Projects and what they set aside ([Projects](../using/projects.md)) |
 
 An assistant can do only what its token's owner can: a viewer of a space can find things there but not change
 them. If you're in more than one space, the assistant asks which one, or you can name it (*"in Workshop, where is

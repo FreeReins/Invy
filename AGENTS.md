@@ -43,7 +43,7 @@ skill in `.claude/skills/`: follow it.
   into SQL.
 - Managers react to each other only through messages (`IMessageAccess.PublishAsync`), handled in
   `src/Invy.Api/Messaging/<Message>Handler.cs`, which calls the other manager. Each handler names its queue with
-  `[StickyHandler(MessageQueues.…)]` and must be safe to run twice. Never retry by hand: `CoreRegistration` policies do. Every message gets `[MessageIdentity("invy.<name>.v1")]`, is listed in
+  `[StickyHandler(MessageQueues.…)]` and must be safe to run twice and commit once (Wolverine sends only the first commit's messages; for more work, publish the next message). Never retry by hand: `CoreRegistration` policies do. Every message gets `[MessageIdentity("invy.<name>.v1")]`, is listed in
   `ContractJsonContext` and only gains fields. A breaking change is a new `.v2`.
 - The schema comes from EF Core migrations, applied at startup. After changing an entity: `dotnet tool restore`, then
   `dotnet ef migrations add <Name> --project src/Invy.Core --output-dir ResourceAccess/Persistence/Migrations`, then

@@ -25,6 +25,11 @@ together: `"box f"`.
 | `added<30d`, `added>2026-01-31` | added in the last 30 days, or after a date. Times ago use d, w, m and y |
 | `is:container`, `is:counted`, `is:missing`, `is:lent` | what an item is |
 | `is:disposed`, `is:archived` | disposed and archived things, which are otherwise left out |
+| `is:low` | counted things at or below their [low-stock level](stock.md) |
+| `is:overdue`, `lent:sam` | [loans](lending.md) past their due date, and things lent to someone whose name contains the text |
+| `due<30d`, `due:2026-12-01..2026-12-31` | a [reminder date](reminders.md) or loan due back within 30 days (overdue included), or in a range |
+| `going:kitchen` | boxes whose [moving](moving.md) destination has that name, marking or label code |
+| `project:bookshelf` | what an open [project](projects.md) sets aside |
 | `has:barcode` | items with a value in a barcode field |
 | `tag:garden` | items with a tag |
 | `name:`, `marking:`, `notes:` | text anywhere in that part of the item |

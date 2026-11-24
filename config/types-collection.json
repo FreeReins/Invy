@@ -58,7 +58,7 @@
       ]
     }
   ],
-  "gettingStarted": ["places", "values", "photo", "labels", "invite"],
+  "gettingStarted": ["places", "values", "photo", "labels", "lend", "invite"],
   "hints": {
     "find": "Search your collection by name, series or year, or add your first pieces with Add.",
     "browse": "Start with your display cases, then add the binders and sets in them.",

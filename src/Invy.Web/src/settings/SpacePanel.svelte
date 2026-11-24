@@ -8,6 +8,8 @@
   import { pending, pendingClick } from '../lib/pending.js';
   import { plural } from '../lib/format.js';
   import NoSpace from '../components/NoSpace.svelte';
+  import CalendarFeed from './CalendarFeed.svelte';
+  import { has } from '../lib/features.js';
 
   const space = $derived(currentSpace());
   const owner = $derived(isOwner());
@@ -104,6 +106,8 @@
     {/each}
   </div>
   <p class="muted hint">A feature that is off is only hidden: its details stay, and come back when it is switched on.</p>
+
+  {#if has('reminders') || has('lending')}<CalendarFeed />{/if}
 
   {#if card}
     <h3>Getting started</h3>

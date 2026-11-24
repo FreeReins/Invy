@@ -18,8 +18,7 @@
       { "key": "barcode", "label": "Barcode", "kind": "Barcode" },
       { "key": "supplier", "label": "Supplier", "kind": "Text", "sortable": true },
       { "key": "cost", "label": "Cost", "kind": "Money", "sortable": true },
-      { "key": "price", "label": "Sale price", "kind": "Money", "sortable": true },
-      { "key": "reorder_at", "label": "Reorder at", "kind": "Number", "sortable": true }
+      { "key": "price", "label": "Sale price", "kind": "Money", "sortable": true }
     ] },
     { "name": "Equipment", "icon": "laptop", "colour": "#7c3aed", "fields": [
       { "key": "asset_tag", "label": "Asset tag", "kind": "Text", "sortable": true },
@@ -27,12 +26,12 @@
       { "key": "assigned_to", "label": "Assigned to", "kind": "Person", "sortable": true },
       { "key": "purchased", "label": "Purchased", "kind": "Date", "sortable": true },
       { "key": "cost", "label": "Cost", "kind": "Money", "sortable": true },
-      { "key": "warranty", "label": "Warranty until", "kind": "Date", "sortable": true },
+      { "key": "warranty", "label": "Warranty until", "kind": "Date", "sortable": true, "remind": 30 },
       { "key": "condition", "label": "Condition", "kind": "Select", "options": ["New", "Good", "Worn", "Broken"] }
     ] },
     { "name": "Document", "icon": "file", "colour": "#059669", "fields": [
       { "key": "kind", "label": "Kind", "kind": "Select", "options": ["Invoice", "Contract", "Warranty", "Licence", "Other"] },
-      { "key": "expires", "label": "Expires", "kind": "Date", "sortable": true }
+      { "key": "expires", "label": "Expires", "kind": "Date", "sortable": true, "remind": 30 }
     ] }
   ],
   "places": { "type": "Site", "suggest": ["Shop", "Warehouse", "Office", "Workshop", "Stockroom"] },
@@ -51,7 +50,8 @@
               "name": "Blue mug",
               "type": "Product",
               "quantity": 24,
-              "fields": { "sku": "MUG-BLU", "cost": 3.5, "price": 9, "reorder_at": 10 }
+              "lowStockAt": 10,
+              "fields": { "sku": "MUG-BLU", "cost": 3.5, "price": 9 }
             }
           ]
         }
@@ -64,7 +64,7 @@
       "fields": { "asset_tag": "IT-001", "cost": 900, "condition": "Good" }
     }
   ],
-  "gettingStarted": ["places", "labels", "pack", "audit", "invite"],
+  "gettingStarted": ["places", "labels", "pack", "audit", "stock", "lend", "invite"],
   "hints": {
     "find": "Search stock, equipment and documents by name, SKU or asset tag, or add the first ones with Add.",
     "browse": "Start with your sites, then add the rooms, racks and bins in them.",

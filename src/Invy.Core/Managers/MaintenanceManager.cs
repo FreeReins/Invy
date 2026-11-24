@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Invy.Core.Engines;
+using Invy.Core.Engines.Contracts.Messages;
 using Invy.Core.Managers.Contracts;
 using Invy.Core.Managers.Contracts.Messages;
 using Invy.Core.Managers.Contracts.Services;
@@ -15,6 +16,9 @@ internal sealed partial class MaintenanceManager(
     INotificationAccess webhook,
     IAiAccess ai,
     IBackupAccess backups,
+    ISpaceAccess spaces,
+    IItemAccess items,
+    ITypeAccess types,
     IMessageAccess messages,
     NotificationEngine notifications,
     ValidationEngine validation,
@@ -65,7 +69,8 @@ internal sealed partial class MaintenanceManager(
     public async Task<ReminderRun> SendReminderAsync(SendReminder command, CancellationToken cancellationToken)
     {
         // Worded now, so it says what is true when it goes out; dropped if it no longer applies.
-        var reminder = notifications.Daily(command.On).FirstOrDefault(reminder => reminder.Type == command.Type);
+        var reminder = notifications.Daily(command.On, await FactsAsync(command.On, cancellationToken))
+            .FirstOrDefault(reminder => reminder.Type == command.Type);
         return reminder is null ? new ReminderRun([], []) : await DeliverAsync(reminder, cancellationToken);
     }
 
@@ -84,6 +89,57 @@ internal sealed partial class MaintenanceManager(
         await settings.SaveNotificationsAsync(current, cancellationToken);
         await messages.CommitAsync(cancellationToken);
         return run;
+    }
+
+    public async Task<ReminderRun> SendLowStockAsync(StockRanLow message, CancellationToken cancellationToken)
+    {
+        // Checked again now: the space may have switched Stock off, or the item been topped up, since it was queued.
+        var space = await spaces.FindAsync(message.SpaceId, cancellationToken);
+        var item = await items.FindAsync(message.SpaceId, message.ItemId, cancellationToken);
+        if (space is null || !space.Features.Contains(SpaceFeatures.Stock) || item is null || !item.IsLow || item.Status != ItemStatus.Active)
+        {
+            return new ReminderRun([], []);
+        }
+
+        return await DeliverAsync(notifications.LowStock(space, item), cancellationToken);
+    }
+
+    /// <summary>
+    /// What the daily reminders are worked out from: for each feature, only the spaces that have it switched on. Each
+    /// list is capped, so one space with thousands of low items can't make a huge notification.
+    /// </summary>
+    private async Task<DailyFacts> FactsAsync(DateOnly today, CancellationToken cancellationToken)
+    {
+        const int limit = NotificationEngine.MaxListed + 1;
+        var low = new List<SpaceItem>();
+        foreach (var space in await spaces.ListWithFeatureAsync(SpaceFeatures.Stock, cancellationToken))
+        {
+            low.AddRange((await items.ListLowAsync(space.Id, limit, cancellationToken)).Select(item => new SpaceItem(space, item)));
+        }
+
+        var lent = new List<SpaceItem>();
+        foreach (var space in await spaces.ListWithFeatureAsync(SpaceFeatures.Lending, cancellationToken))
+        {
+            lent.AddRange((await items.ListLentAsync(space.Id, today, limit, cancellationToken)).Select(item => new SpaceItem(space, item)));
+        }
+
+        var dates = new List<DueDate>();
+        foreach (var space in await spaces.ListWithFeatureAsync(SpaceFeatures.Reminders, cancellationToken))
+        {
+            var fields = (await types.ListAsync(space.Id, cancellationToken)).SelectMany(type => type.Fields)
+                .Where(field => field.Remind is not null).GroupBy(field => field.Id).ToDictionary(group => group.Key, group => group.First());
+            if (fields.Count == 0)
+            {
+                continue;
+            }
+
+            // Overdue upkeep is reminded weekly for up to a year; nothing is reminded further ahead than a field allows.
+            var found = await items.ListDatesAsync(
+                space.Id, fields.Keys, today.AddDays(-365), today.AddDays(ValidationEngine.MaxRemindDays), 1000, cancellationToken);
+            dates.AddRange(found.Select(date => new DueDate(space, date.Item, fields[date.FieldId], date.On)));
+        }
+
+        return new DailyFacts(low, lent, dates);
     }
 
     // ---------- backups ----------
@@ -167,7 +223,7 @@ internal sealed partial class MaintenanceManager(
         var today = clock.Today();
         var queued = current.WebhookUrl.Length == 0
             ? []
-            : notifications.Daily(today).ToList();
+            : notifications.Daily(today, await FactsAsync(today, cancellationToken)).ToList();
         foreach (var reminder in queued)
         {
             await messages.PublishAsync(new SendReminder(reminder.Type, today));

@@ -110,6 +110,12 @@ nav:
       - Search: using/search.md
       - Views: using/views.md
       - Reports: using/reports.md
+      - Low stock: using/stock.md
+      - Lending: using/lending.md
+      - Reminders and upkeep: using/reminders.md
+      - Moving house: using/moving.md
+      - Projects: using/projects.md
+      - Importing from a spreadsheet or Homebox: using/imports.md
   - Running it:
       - People and accounts: admin/people-and-accounts.md
       - HTTPS and certificates: admin/https-and-certificates.md

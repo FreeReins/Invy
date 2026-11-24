@@ -84,6 +84,7 @@ internal sealed class ItemEngine
         Compare("Type", typeBefore?.Name, typeAfter?.Name);
         Compare("Holds items", before.HoldsItems ? "Yes" : "No", after.HoldsItems ? "Yes" : "No");
         Compare("Unit", before.Unit, after.Unit);
+        Compare("Low stock at", Number(before.LowStockAt), Number(after.LowStockAt));
         Compare("Tags", Join(before.Tags), Join(after.Tags));
         Compare("Notes", before.Notes, after.Notes);
 
@@ -109,6 +110,8 @@ internal sealed class ItemEngine
         JsonValueKind.Array => Join(value.EnumerateArray().Select(Display).OfType<string>()),
         _ => null,
     };
+
+    private static string? Number(decimal? value) => value?.ToString("0.###", CultureInfo.InvariantCulture);
 
     private static string? Join(IEnumerable<string> values) => string.Join(", ", values) is { Length: > 0 } joined ? joined : null;
 

@@ -13,5 +13,7 @@ internal sealed class SpaceEntity
     /// <summary>A text[] column.</summary>
     public List<string> Features { get; set; } = [];
 
+    public string? CalendarToken { get; set; }
+
     public List<SpaceMemberEntity> Members { get; set; } = [];
 }

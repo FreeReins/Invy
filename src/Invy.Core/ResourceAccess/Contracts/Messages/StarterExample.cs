@@ -18,6 +18,9 @@ internal sealed class StarterExample
 
     public string? Unit { get; set; }
 
+    /// <summary>A counted example's low-stock level, or null.</summary>
+    public decimal? LowStockAt { get; set; }
+
     /// <summary>Field values by the field's key, such as price.</summary>
     public Dictionary<string, JsonElement> Fields { get; set; } = [];
 

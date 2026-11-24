@@ -14,5 +14,5 @@ internal static partial class Mapping
         new(type.Name, type.Icon, type.Colour, type.HoldsItems, type.Fields.Select(field => field.ToResponse() with { Id = null }).ToList(), type.Version);
 
     public static FieldDefinition ToResponse(this TypeField field) =>
-        new(field.Id, field.Key, field.Label, field.Kind, field.Unit, field.Options, field.Required, field.Sortable);
+        new(field.Id, field.Key, field.Label, field.Kind, field.Unit, field.Options, field.Required, field.Sortable, field.Remind, field.RepeatMonths);
 }

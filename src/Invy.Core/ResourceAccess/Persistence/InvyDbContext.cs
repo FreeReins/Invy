@@ -34,6 +34,10 @@ internal sealed class InvyDbContext(DbContextOptions<InvyDbContext> options) : D
 
     public DbSet<ViewEntity> Views => Set<ViewEntity>();
 
+    public DbSet<ProjectEntity> Projects => Set<ProjectEntity>();
+
+    public DbSet<ImportEntity> Imports => Set<ImportEntity>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<decimal>().HavePrecision(12, 3);
@@ -136,6 +140,12 @@ internal sealed class InvyDbContext(DbContextOptions<InvyDbContext> options) : D
             item.HasIndex(i => i.SpaceId, "IX_Items_Counted").HasFilter("\"Quantity\" IS NOT NULL");
             item.HasIndex(i => i.SpaceId, "IX_Items_Examples").HasFilter("\"IsExample\"");
             item.HasIndex(i => new { i.SpaceId, i.Status }, "IX_Items_NotActive").HasFilter("\"Status\" <> 'Active'");
+            // Phase 6: stock levels, loans and moving destinations, each with a small filtered index for its lists.
+            item.HasOne<ItemEntity>().WithMany().HasForeignKey(i => i.DestinationId).OnDelete(DeleteBehavior.SetNull);
+            item.Property(i => i.LentTo).HasMaxLength(100);
+            item.HasIndex(i => i.SpaceId, "IX_Items_LowStock").HasFilter("\"LowStockAt\" IS NOT NULL");
+            item.HasIndex(i => new { i.SpaceId, i.DueOn }, "IX_Items_Lent").HasFilter("\"LentAt\" IS NOT NULL");
+            item.HasIndex(i => new { i.DestinationId, i.SpaceId }, "IX_Items_Destination").HasFilter("\"DestinationId\" IS NOT NULL");
             item.Property(i => i.LabelCode).HasMaxLength(6);
             item.HasIndex(i => i.LabelCode).IsUnique().HasFilter("\"LabelCode\" IS NOT NULL");
         });
@@ -205,6 +215,36 @@ internal sealed class InvyDbContext(DbContextOptions<InvyDbContext> options) : D
             view.Property(v => v.Sort).HasMaxLength(20);
             view.Property(v => v.GroupBy).HasMaxLength(40);
             view.HasIndex(v => new { v.SpaceId, v.OwnerId });
+        });
+
+        // Projects, with what each sets aside. A reservation goes with its project or its item.
+        modelBuilder.Entity<ProjectEntity>(project =>
+        {
+            project.ToTable("Projects");
+            project.HasOne<SpaceEntity>().WithMany().HasForeignKey(p => p.SpaceId).OnDelete(DeleteBehavior.Cascade);
+            project.HasMany(p => p.Items).WithOne().HasForeignKey(i => i.ProjectId).OnDelete(DeleteBehavior.Cascade);
+            project.Property(p => p.Name).HasMaxLength(100);
+            project.Property(p => p.Version).IsConcurrencyToken();
+            project.HasIndex(p => new { p.SpaceId, p.Status, p.Name });
+        });
+        modelBuilder.Entity<ProjectItemEntity>(reserved =>
+        {
+            reserved.ToTable("ProjectItems");
+            reserved.HasKey(r => new { r.ProjectId, r.ItemId });
+            reserved.HasOne<ItemEntity>().WithMany().HasForeignKey(r => r.ItemId).OnDelete(DeleteBehavior.Cascade);
+            reserved.HasIndex(r => r.ItemId);
+        });
+
+        // Imports: short-lived work, so not in backups. The file is kept under the space's files until it finishes.
+        modelBuilder.Entity<ImportEntity>(import =>
+        {
+            import.ToTable("Imports");
+            import.HasOne<SpaceEntity>().WithMany().HasForeignKey(i => i.SpaceId).OnDelete(DeleteBehavior.Cascade);
+            import.Property(i => i.Mapping).HasColumnType("jsonb");
+            import.Property(i => i.Problems).HasColumnType("jsonb");
+            import.Property(i => i.FileName).HasMaxLength(200);
+            import.Property(i => i.Version).IsConcurrencyToken();
+            import.HasIndex(i => new { i.SpaceId, i.CreatedAt });
         });
 
         StoreEnumsByName(modelBuilder);

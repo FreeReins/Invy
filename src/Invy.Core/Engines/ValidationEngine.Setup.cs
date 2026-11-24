@@ -70,6 +70,6 @@ internal sealed partial class ValidationEngine
             fields[field.Id] = value;
         }
 
-        return new ItemRequest(example.Name, null, type?.Id, parentId, null, example.Quantity, example.Unit, fields, null, null, 0);
+        return new ItemRequest(example.Name, null, type?.Id, parentId, null, example.Quantity, example.Unit, fields, null, null, 0, example.LowStockAt);
     }
 }

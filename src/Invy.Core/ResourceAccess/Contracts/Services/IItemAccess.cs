@@ -85,6 +85,46 @@ internal interface IItemAccess
     /// </summary>
     Task<List<string>> RemoveExamplesAsync(Guid spaceId, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Current counted items whose amount, less what is reserved, is at or below their low-stock level, by name, at most
+    /// <paramref name="limit"/>.
+    /// </summary>
+    Task<List<Item>> ListLowAsync(Guid spaceId, int limit, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Current items lent out, by due date (none last) then name, at most <paramref name="limit"/>. With
+    /// <paramref name="dueBy"/>, only those due back on or before it.
+    /// </summary>
+    Task<List<Item>> ListLentAsync(Guid spaceId, DateOnly? dueBy, int limit, CancellationToken cancellationToken);
+
+    /// <summary>Current items with a moving destination, by name, at most <paramref name="limit"/>.</summary>
+    Task<List<Item>> ListGoingAsync(Guid spaceId, int limit, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The current items' values of these date fields between <paramref name="first"/> and <paramref name="last"/>
+    /// (inclusive), from the sortable values, by date then name, at most <paramref name="limit"/>.
+    /// </summary>
+    Task<List<ItemDate>> ListDatesAsync(
+        Guid spaceId, IReadOnlyCollection<Guid> fieldIds, DateOnly first, DateOnly last, int limit, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Adds each amount (negative to release) to the items' reserved totals, never below 0, in the request's
+    /// transaction. Versions don't change, so nobody's edit conflicts.
+    /// </summary>
+    Task ReserveAsync(Guid spaceId, IReadOnlyDictionary<Guid, decimal> changes, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// A current container directly inside <paramref name="parentId"/> (null for the top) with this name, ignoring
+    /// case, including one added earlier in this request, or null.
+    /// </summary>
+    Task<Item?> FindContainerAsync(Guid spaceId, Guid? parentId, string name, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Adds many new items with their events and sortable values in three COPY statements, in the request's
+    /// transaction. For imports: nothing is checked against what is stored.
+    /// </summary>
+    Task InsertManyAsync(IReadOnlyList<Item> items, IReadOnlyList<ItemEvent> events, IReadOnlyList<ItemValue> values, CancellationToken cancellationToken);
+
     Task AddEventAsync(ItemEvent itemEvent, CancellationToken cancellationToken);
 
     /// <summary>An item's own events and what went in and out of it, newest first, at most <paramref name="limit"/>.</summary>

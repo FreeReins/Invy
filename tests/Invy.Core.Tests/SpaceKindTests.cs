@@ -208,7 +208,7 @@ public class SpaceKindTests
         // Examples don't count, and Eddie and Vera were invited.
         var before = await spaces.GetGettingStartedAsync(owen, home, default);
         await Assert.That(string.Join(", ", before.Steps.Select(step => $"{step.Key}:{step.Done}")))
-            .IsEqualTo("places:False, labels:False, pack:False, photo:False, invite:True");
+            .IsEqualTo("places:False, labels:False, pack:False, photo:False, lend:False, remind:False, invite:True");
         await Assert.That(before.ExamplesLeft).IsGreaterThan(0);
 
         var shed = await core.ItemManager().CreateItemAsync(
@@ -217,6 +217,11 @@ public class SpaceKindTests
             owen, home, new ItemRequest("Rake", null, null, shed.Id, null, null, null, null, null, null, 0), default);
         core.Labels.Rows.Add(new Label { Code = "7K3Q", SpaceId = home });
         core.Attachments.Rows.Add(new Attachment { SpaceId = home, ItemId = rake.Id, Kind = AttachmentKind.Photo });
+        await core.ItemManager().LendAsync(owen, home, rake.Id, new LendRequest("Sam", null), default);
+        var appliance = core.Types.Rows.First(type => type.SpaceId == home && type.Fields.Any(field => field.Key == "warranty"));
+        var warranty = appliance.Fields.First(field => field.Key == "warranty").Id;
+        await core.ItemManager().CreateItemAsync(owen, home, new ItemRequest("Kettle", null, appliance.Id, shed.Id, null, null, null,
+            new Dictionary<Guid, System.Text.Json.JsonElement> { [warranty] = System.Text.Json.JsonSerializer.SerializeToElement("2027-03-01") }, null, null, 0), default);
 
         var after = await spaces.GetGettingStartedAsync(owen, home, default);
         await Assert.That(after.Steps.All(step => step.Done)).IsTrue();
@@ -270,11 +275,11 @@ public class SpaceKindTests
     }
 
     [Test]
-    public async Task Features_are_listed_with_only_the_built_ones_offered()
+    public async Task Every_feature_is_listed_and_offered()
     {
         var features = new TestCore().SpaceManager().ListFeatures();
 
-        await Assert.That(string.Join(", ", features.Where(feature => feature.Available).Select(feature => feature.Key))).IsEqualTo("values, audits, barcodes");
+        await Assert.That(string.Join(", ", features.Where(feature => feature.Available).Select(feature => feature.Key))).IsEqualTo("values, audits, barcodes, stock, lending, reminders, moving, projects");
         await Assert.That(features.Count).IsEqualTo(8);
     }
 

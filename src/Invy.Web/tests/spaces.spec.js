@@ -59,8 +59,8 @@ for (const kind of kinds) {
       if (kind.features.includes(feature.key)) await expect(box).toBeChecked();
       else await expect(box).not.toBeChecked();
     }
-    // Features that aren't built yet aren't offered.
-    await expect(page.getByRole('checkbox', { name: /^Stock/ })).toHaveCount(0);
+    // Every feature is built now, so every switch is offered.
+    await expect(page.getByRole('checkbox', { name: /^Projects/ })).toHaveCount(1);
     await next(page);
 
     await page.getByRole('heading', { name: 'Places' }).waitFor();

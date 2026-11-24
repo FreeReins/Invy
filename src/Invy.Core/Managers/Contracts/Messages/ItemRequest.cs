@@ -14,6 +14,7 @@ namespace Invy.Core.Managers.Contracts.Messages;
 /// <param name="Tags">Tags, such as garden.</param>
 /// <param name="Notes">Free text.</param>
 /// <param name="Version">When changing: the version that was opened. Ignored when adding.</param>
+/// <param name="LowStockAt">For a counted item: the amount at or below which it is low (the Stock feature), or null for none. Left out clears it.</param>
 public sealed record ItemRequest(
     string Name,
     string? Marking,
@@ -25,4 +26,5 @@ public sealed record ItemRequest(
     IReadOnlyDictionary<Guid, JsonElement>? Fields,
     IReadOnlyList<string>? Tags,
     string? Notes,
-    int Version);
+    int Version,
+    decimal? LowStockAt = null);

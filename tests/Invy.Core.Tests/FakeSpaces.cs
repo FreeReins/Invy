@@ -15,6 +15,9 @@ internal sealed class FakeSpaces : ISpaceAccess
         Task.FromResult(Rows.Where(space => space.Members.Any(member => member.UserId == userId))
             .OrderBy(space => space.CreatedAt).ThenBy(space => space.Id).Select(Copy).ToList());
 
+    public Task<List<Space>> ListWithFeatureAsync(string feature, CancellationToken cancellationToken) =>
+        Task.FromResult(Rows.Where(space => space.Features.Contains(feature)).OrderBy(space => space.Name).ThenBy(space => space.Id).Select(Copy).ToList());
+
     public Task SaveAsync(Space space, CancellationToken cancellationToken)
     {
         Rows.RemoveAll(row => row.Id == space.Id);
@@ -35,6 +38,7 @@ internal sealed class FakeSpaces : ISpaceAccess
         Preset = space.Preset,
         CreatedAt = space.CreatedAt,
         Features = [.. space.Features],
+        CalendarToken = space.CalendarToken,
         Members = space.Members
             .Select(member => new SpaceMember { UserId = member.UserId, Role = member.Role, GettingStartedDismissed = member.GettingStartedDismissed })
             .ToList(),

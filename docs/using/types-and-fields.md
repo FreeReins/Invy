@@ -22,6 +22,8 @@ Anyone in a space can look at its types on the **Types** tab. Editors and owners
     - **Choices, one per line** for a choice field.
     - **Ask for it**: shown as needed when filling in an item. It never stops an item being saved.
     - **Sort and compare**: lets you sort by the field and search ranges such as `price>50`.
+    - **Remind, days ahead** and **Repeats every, months** for a date, while the space has Reminders on: see
+      [Reminders and upkeep](reminders.md).
    With an AI model set up, **Suggest fields** asks it which fields suit the type's name, such as *Set number*,
    *Theme* and *Pieces* for *Lego sets*. Tick the ones you want and press **Add the ticked fields**, then change them
    like any other field. Nothing is saved until you press **Save**.

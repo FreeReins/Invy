@@ -26,6 +26,10 @@
   import ValueTotals from '../views/ValueTotals.svelte';
   import InsuranceReport from '../views/InsuranceReport.svelte';
   import MissingReport from '../views/MissingReport.svelte';
+  import FeatureLists from '../views/FeatureLists.svelte';
+  import FeatureCards from '../views/FeatureCards.svelte';
+  import ProjectsPage from '../views/ProjectsPage.svelte';
+  import Manifest from '../views/Manifest.svelte';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 
   let views = $state(null);
@@ -103,6 +107,12 @@
   <InsuranceReport {types} />
 {:else if app.viewId === 'missing'}
   <MissingReport />
+{:else if ['low-stock', 'loans', 'reminders', 'moving'].includes(app.viewId)}
+  <FeatureLists which={app.viewId} />
+{:else if app.viewId === 'projects'}
+  <ProjectsPage />
+{:else if app.viewId === 'manifest'}
+  <Manifest />
 {:else if app.viewId}
   <section class="views">
     <a class="button back" href="/views"><ArrowLeft size={16} aria-hidden="true" />All views</a>
@@ -171,6 +181,8 @@
         </ul>
       </div>
     {/if}
+
+    <FeatureCards />
 
     {#if has('values') || has('audits')}
       <h2 class="reports-title">Reports</h2>

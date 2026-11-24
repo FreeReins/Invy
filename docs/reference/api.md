@@ -145,6 +145,54 @@ belongs to. Codes are 4 to 6 characters, without look-alikes such as 0 and O.
 | POST | `/api/spaces/{spaceId}/labels/{code}/claim` | editor | Makes a new item with the label on it, in `parentId`: named `name`, or Box and the code; of `typeId`, or none (then it holds items) |
 | POST | `/api/spaces/{spaceId}/labels/{code}/attach` | editor | Sticks an unclaimed label on the existing item `itemId`. A label it had before becomes unclaimed |
 
+## Stock, lending, reminders and moving
+
+These work whatever the space's feature switches say; a switch only hides the feature in the page. An item's
+`lowStockAt`, `reserved`, `isLow`, `lentTo`, `lentAt`, `dueOn` and `destinationId` come with it everywhere, and
+`lowStockAt` is part of the item sent to `PUT /items/{id}` (left out clears it).
+
+| Method | Path | Who | What it does |
+|---|---|---|---|
+| GET | `/api/spaces/{spaceId}/low-stock` | viewer | Counted items at or below their low-stock level, after what projects set aside, by name: `items` and `more` |
+| PUT | `/api/spaces/{spaceId}/items/{id}/low-stock` | editor | Sets a counted item's level `at` (null clears it); `version` optional |
+| GET | `/api/spaces/{spaceId}/loans?overdue=` | viewer | What's lent out, soonest due first; `overdue=true` for only what's past its date |
+| POST | `/api/spaces/{spaceId}/items/{id}/lend` | editor | Lends the item, whole, `to` someone or somewhere, with an optional `dueOn` (yyyy-MM-dd). One `Lent` event |
+| POST | `/api/spaces/{spaceId}/items/{id}/return` | editor | Marks a lent item back. One `Returned` event; nothing when it isn't lent |
+| GET | `/api/spaces/{spaceId}/reminders?days=` | viewer | Reminder dates within `days` (30 by default, up to 365) and overdue upkeep: each with `item`, `fieldId`, `field`, `on`, `upkeep` and `days` |
+| POST | `/api/spaces/{spaceId}/items/{id}/upkeep-done` | editor | Moves the date in `fieldId`, a field that repeats, to today plus its repeat |
+| GET | `/api/spaces/{spaceId}/moving` | viewer | Items with a moving destination, by name |
+| PUT | `/api/spaces/{spaceId}/items/{id}/destination` | editor | Sets where a box goes, `destinationId` (a container in the space), or clears it with null |
+| POST | `/api/spaces/{spaceId}/items/{id}/arrived` | editor | Moves the box into its destination with one `Moved` event, and clears the destination |
+| GET | `/api/spaces/{spaceId}/items/{id}/manifest` | viewer | A box's manifest: `box`, `destination`, `destinationPath`, and what's directly inside |
+| GET | `/api/spaces/{spaceId}/calendar` | viewer | The calendar feed's `url`, or null while it's off |
+| POST | `/api/spaces/{spaceId}/calendar` | owner | Turns the feed on with a new secret address; an older one stops working |
+| DELETE | `/api/spaces/{spaceId}/calendar` | owner | Turns the feed off |
+| GET | `/api/spaces/{spaceId}/calendar/{secret}.ics` | anyone with the address | The feed as iCalendar: reminder dates and loans' due dates as all-day events. 404 when it's off or the secret is wrong |
+
+## Projects
+
+| Method | Path | Who | What it does |
+|---|---|---|---|
+| GET | `/api/spaces/{spaceId}/projects?done=` | viewer | Open projects with what each sets aside; `done=true` adds finished ones |
+| POST | `/api/spaces/{spaceId}/projects` | editor | Starts a project: `name`, `notes` |
+| GET | `/api/spaces/{spaceId}/projects/{projectId}` | viewer | One project |
+| PUT | `/api/spaces/{spaceId}/projects/{projectId}` | editor | Changes its `name` and `notes`; send the `version` you read |
+| POST | `/api/spaces/{spaceId}/projects/{projectId}/reserve` | editor | Sets how much of `itemId` it sets aside, `amount` (1 for a single thing, 0 for none). Refused beyond what other projects leave free |
+| POST | `/api/spaces/{spaceId}/projects/{projectId}/use-up` | editor | Uses `amount` (null for all) of what it set aside of `itemId`: off a counted item's amount, or a single item disposed of |
+| POST | `/api/spaces/{spaceId}/projects/{projectId}/finish` | editor | Marks it done and releases what it still sets aside |
+| DELETE | `/api/spaces/{spaceId}/projects/{projectId}` | editor | Removes it, releasing what it still sets aside |
+| GET | `/api/spaces/{spaceId}/items/{id}/projects` | viewer | The open projects that set aside some of an item |
+
+## Imports
+
+| Method | Path | Who | What it does |
+|---|---|---|---|
+| GET | `/api/spaces/{spaceId}/imports` | viewer | The space's last 50 imports, newest first, with `status`, `total`, `done`, `added` and `problems` |
+| POST | `/api/spaces/{spaceId}/imports` | editor | Uploads a CSV file: `name` and `data` (base64, up to 20 MB). Answers with its `kind` (`Csv` or `Homebox`), `headers`, first rows as `sample`, and a suggested `mapping`. Nothing is added yet |
+| GET | `/api/spaces/{spaceId}/imports/{importId}` | viewer | One import |
+| POST | `/api/spaces/{spaceId}/imports/{importId}/start` | editor | Starts it with `mapping` (each `column` and its `target`: `name`, `marking`, `quantity`, `unit`, `tags`, `notes`, `note`, `location`, `type`, `field:<id>` or `ignore`), `parentId` and `typeId`. It runs in the background |
+| DELETE | `/api/spaces/{spaceId}/imports/{importId}` | editor | Removes an import that isn't running, and its file. What it added stays |
+
 ## Views
 
 A view is a saved search (`query`, written as in the search box) plus how to show it: `display` is `Table`, `Cards`,

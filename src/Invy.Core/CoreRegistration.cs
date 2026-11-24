@@ -52,6 +52,8 @@ public static class CoreRegistration
         services.AddScoped<ILabelAccess, LabelAccess>();
         services.AddScoped<IAttachmentAccess, AttachmentAccess>();
         services.AddScoped<IViewAccess, ViewAccess>();
+        services.AddScoped<IProjectAccess, ProjectAccess>();
+        services.AddScoped<IImportAccess, ImportAccess>();
         services.AddScoped<ISettingsAccess, SettingsAccess>();
         services.AddScoped<IMessageAccess, MessageAccess>();
         var backupFolder = StoragePath(configuration, "Data:Backups", "backups");
@@ -77,6 +79,8 @@ public static class CoreRegistration
         services.AddSingleton<LabelEngine>();
         services.AddSingleton<ImageEngine>();
         services.AddSingleton<ReportEngine>();
+        services.AddSingleton<ImportEngine>();
+        services.AddSingleton<CalendarEngine>();
         services.AddScoped<ValidationEngine>();
 
         // Managers: one per request or message, sharing one database transaction.
@@ -88,6 +92,8 @@ public static class CoreRegistration
         services.AddScoped<ILabelManager, LabelManager>();
         services.AddScoped<IAttachmentManager, AttachmentManager>();
         services.AddScoped<IViewManager, ViewManager>();
+        services.AddScoped<IProjectManager, ProjectManager>();
+        services.AddScoped<IImportManager, ImportManager>();
         services.AddScoped<IReportManager, ReportManager>();
 
         return services;
@@ -124,6 +130,7 @@ public static class CoreRegistration
         wolverine.LocalQueue(MessageQueues.Notifications).UseDurableInbox().MaximumParallelMessages(2);
         wolverine.LocalQueue(MessageQueues.Inbox).UseDurableInbox().Sequential();
         wolverine.LocalQueue(MessageQueues.Rollups).UseDurableInbox().Sequential();
+        wolverine.LocalQueue(MessageQueues.Imports).UseDurableInbox().Sequential();
         wolverine.LocalQueue(MessageQueues.Live).BufferedInMemory();
     }
 

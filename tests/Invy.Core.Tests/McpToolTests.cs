@@ -107,6 +107,32 @@ public class McpToolTests
         await Assert.That(missing!.Message).Contains("view doesn't exist");
     }
 
+    [Test]
+    public async Task An_assistant_lends_tracks_stock_and_moves_boxes()
+    {
+        var space = await ItemSpace.MakeAsync();
+        var caller = Caller(space, space.Owen);
+        var features = new FeatureTools(space.Core.ItemManager(), caller);
+        var projects = new ProjectTools(space.Core.ProjectManager(), caller);
+        var drill = await space.ThingAsync("Drill");
+        var screws = await space.ThingAsync("Screws", quantity: 10);
+        var kitchen = await space.BoxAsync("Kitchen");
+        var box = await space.BoxAsync("Box 4");
+
+        await features.LendItem(drill.Id, "Sam", TestData.Sunday.AddDays(5));
+        await features.SetLowStock(screws.Id, 4);
+        var shelf = await projects.StartProject("Bookshelf");
+        await projects.ReserveForProject(shelf.Id, screws.Id, 7);
+        await features.SetDestination(box.Id, kitchen.Id);
+        var arrived = await features.MarkArrived(box.Id);
+
+        await Assert.That(string.Join(", ", (await features.ListLoans()).Items.Select(item => $"{item.Name} {item.LentTo}"))).IsEqualTo("Drill Sam");
+        await Assert.That(string.Join(", ", (await features.ListLowStock()).Items.Select(item => item.Name))).IsEqualTo("Screws");
+        await Assert.That((await projects.ListProjects()).Single().Items.Single().Amount).IsEqualTo(7);
+        await Assert.That(arrived.ParentId).IsEqualTo(kitchen.Id);
+        await Assert.That((await TestData.Caught<McpException>(() => features.LendItem(drill.Id, "Kim")))!.Message).Contains("already lent to Sam");
+    }
+
     /// <summary>The tools as the token of <paramref name="userId"/> sees them.</summary>
     private static (ItemTools Items, TypeTools Types) Tools(ItemSpace space, Guid userId)
     {

@@ -47,6 +47,9 @@ internal sealed partial class BackupAccess
 
         // Saved views. Empty in backups made before phase 5.
         new BackupTable<ViewEntity>("views", BackupJson.Default.ListViewEntity),
+
+        // Projects, with what each sets aside inside. Empty in backups made before phase 6.
+        new BackupTable<ProjectEntity>("projects", BackupJson.Default.ListProjectEntity, query: rows => rows.Include(project => project.Items)),
     ];
 
     /// <summary>

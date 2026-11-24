@@ -18,6 +18,7 @@
   import Attachments from './Attachments.svelte';
   import PhotoItems from './PhotoItems.svelte';
   import LabelReader from './LabelReader.svelte';
+  import ItemFeatures from './ItemFeatures.svelte';
   import Camera from '@lucide/svelte/icons/camera';
   import ScanText from '@lucide/svelte/icons/scan-text';
   import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
@@ -142,6 +143,7 @@
           {#if item.labelCode}<span class="chip with-icon"><Tag size={12} aria-hidden="true" />Label {item.labelCode}</span>{/if}
           {#if type}<span class="chip info">{type.name}</span>{/if}
           {#if item.status !== 'Active'}<span class="chip warn">{item.status}</span>{/if}
+          {#if item.isLow && has('stock')}<span class="chip warn">Running low</span>{/if}
           {#each item.tags as tag (tag)}<span class="chip">#{tag}</span>{/each}
         </div>
       </div>
@@ -189,6 +191,8 @@
     {#if item.notes}<p class="notes">{item.notes}</p>{/if}
     <p class="muted seen">{item.lastSeenAt ? `Last seen: ${ago(item.lastSeenAt)}` : 'Not seen since it was added'}</p>
   </section>
+
+  <ItemFeatures {spaceId} {item} {type} {gone} onchanged={reload} />
 
   {#if item.holdsItems}
     <section class="card">

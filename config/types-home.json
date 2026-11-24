@@ -18,7 +18,7 @@
       { "key": "serial", "label": "Serial number", "kind": "Text" },
       { "key": "purchased", "label": "Purchased", "kind": "Date", "sortable": true },
       { "key": "price", "label": "Price", "kind": "Money", "sortable": true },
-      { "key": "warranty", "label": "Warranty until", "kind": "Date", "sortable": true },
+      { "key": "warranty", "label": "Warranty until", "kind": "Date", "sortable": true, "remind": 30 },
       { "key": "manual", "label": "Manual", "kind": "Url" }
     ] },
     { "name": "Tool", "icon": "wrench", "colour": "#dc2626", "fields": [
@@ -34,7 +34,7 @@
       { "key": "serial", "label": "Serial number", "kind": "Text" },
       { "key": "purchased", "label": "Purchased", "kind": "Date", "sortable": true },
       { "key": "price", "label": "Price", "kind": "Money", "sortable": true },
-      { "key": "warranty", "label": "Warranty until", "kind": "Date", "sortable": true }
+      { "key": "warranty", "label": "Warranty until", "kind": "Date", "sortable": true, "remind": 30 }
     ] },
     { "name": "Clothing", "icon": "shirt", "colour": "#db2777", "fields": [
       { "key": "size", "label": "Size", "kind": "Text" },
@@ -48,11 +48,11 @@
     ] },
     { "name": "Document", "icon": "file", "colour": "#475569", "fields": [
       { "key": "kind", "label": "Kind", "kind": "Select", "options": ["Passport", "Certificate", "Warranty", "Insurance", "Receipt", "Other"] },
-      { "key": "expires", "label": "Expires", "kind": "Date", "sortable": true }
+      { "key": "expires", "label": "Expires", "kind": "Date", "sortable": true, "remind": 14 }
     ] },
     { "name": "Pantry item", "icon": "jar", "colour": "#ca8a04", "fields": [
       { "key": "barcode", "label": "Barcode", "kind": "Barcode" },
-      { "key": "best_before", "label": "Best before", "kind": "Date", "sortable": true }
+      { "key": "best_before", "label": "Best before", "kind": "Date", "sortable": true, "remind": 3 }
     ] }
   ],
   "places": {
@@ -82,7 +82,7 @@
       "contents": [{ "name": "Wool jumper", "type": "Clothing", "fields": { "season": ["Winter"] } }]
     }
   ],
-  "gettingStarted": ["places", "labels", "pack", "photo", "invite"],
+  "gettingStarted": ["places", "labels", "pack", "photo", "lend", "remind", "invite"],
   "hints": {
     "find": "Search for anything you've added, or add your first things with Add.",
     "browse": "Start with your rooms, then add the furniture and boxes in them.",

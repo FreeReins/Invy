@@ -1,3 +1,4 @@
+using Invy.Core.Managers.Contracts.Messages;
 using Invy.Core.ResourceAccess.Contracts.Messages;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,9 @@ internal sealed partial class ItemAccess
                 HasPutAway = mine.Any(item => item.ParentId != null),
                 HasValues = mine.Any(item => item.Value != null),
                 HasSeen = mine.Any(item => item.LastSeenAt != null),
+                HasLowStockLevels = mine.Any(item => item.LowStockAt != null),
+                HasLent = db.ItemEvents.Any(e => e.SpaceId == spaceId && e.Kind == ItemEventKind.Lent),
+                HasDestinations = mine.Any(item => item.DestinationId != null),
                 ExamplesLeft = db.Items.Count(item => item.SpaceId == spaceId && item.IsExample),
             })
             .FirstOrDefaultAsync(cancellationToken);

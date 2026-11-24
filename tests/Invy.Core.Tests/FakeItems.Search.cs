@@ -74,8 +74,16 @@ internal sealed partial class FakeItems
         QuantityIn quantity => In(item.Quantity, quantity.Range),
         SeenIn seen => (seen.OrNever && item.LastSeenAt is null) || In(item.LastSeenAt, seen.Range),
         AddedIn added => In(item.CreatedAt, added.Range),
+        ReservedFor reserved => ReservedFor(item.Id, reserved.Project),
+        LentTo lent => item.LentTo?.Contains(lent.Text, StringComparison.OrdinalIgnoreCase) == true,
+        LoanDue due => item.LentAt is not null && In(item.DueOn, due.Range),
+        GoingTo going => Rows.Any(place => place.SpaceId == item.SpaceId && place.Id == item.DestinationId
+            && (string.Equals(place.Name, going.Place, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(place.Marking, going.Place, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(place.LabelCode, going.Place, StringComparison.OrdinalIgnoreCase))),
         Flag flag => flag.Kind switch
         {
+            ItemFlag.Low => item.IsLow,
             ItemFlag.Container => item.HoldsItems,
             ItemFlag.Counted => item.Quantity is not null,
             ItemFlag.Unique => item.Quantity is null,

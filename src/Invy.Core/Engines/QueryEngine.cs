@@ -137,11 +137,12 @@ internal sealed partial class QueryEngine
     }
 
     /// <summary>What reading the terms has found so far.</summary>
-    private sealed class BuildState(IReadOnlyList<ItemType> types, DateTimeOffset now)
+    private sealed partial class BuildState(IReadOnlyList<ItemType> types, DateTimeOffset now)
     {
         public bool IncludeGone { get; private set; }
 
         public List<string> Words { get; } = [];
+
 
         public QueryNode Read(Term term) => term.Key switch
         {
@@ -157,6 +158,10 @@ internal sealed partial class QueryEngine
             "qty" => new QuantityIn(NumberRange(term, "qty>5 or qty:2..10")),
             "seen" => ReadSeen(term),
             "added" => new AddedIn(TimeRange(term, "added<30d or added>2026-01-01")),
+            "lent" => new LentTo(Required(term)),
+            "going" => new GoingTo(Required(term)),
+            "due" => ReadDue(term),
+            "project" => new ReservedFor(Required(term)),
             "code" => throw new RuleViolationException("Searching label codes comes with labels, in a later version of Invy."),
             _ => ReadField(term),
         };
@@ -189,10 +194,18 @@ internal sealed partial class QueryEngine
         private QueryNode ReadFlag(Term term)
         {
             var value = Required(term).ToLowerInvariant();
+            switch (value)
+            {
+                case "low":
+                    return new Flag(ItemFlag.Low, []);
+                case "overdue":
+                    return new LoanDue(new Range<DateOnly>(null, false, Today, false));
+            }
+
             var index = Array.IndexOf(Flags, value);
             if (index < 0)
             {
-                throw new RuleViolationException($"Search with is:{string.Join(", is:", Flags)}.");
+                throw new RuleViolationException($"Search with is:{string.Join(", is:", Flags)}, is:low or is:overdue.");
             }
 
             var flag = (ItemFlag)index;

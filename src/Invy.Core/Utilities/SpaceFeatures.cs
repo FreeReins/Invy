@@ -6,17 +6,27 @@ namespace Invy.Core.Utilities;
 /// </summary>
 internal static class SpaceFeatures
 {
+    public const string Stock = "stock";
+
+    public const string Lending = "lending";
+
+    public const string Reminders = "reminders";
+
+    public const string Moving = "moving";
+
+    public const string Projects = "projects";
+
     /// <summary>Every feature, in the order the switches are shown.</summary>
     public static readonly IReadOnlyList<Feature> All =
     [
         new("values", "Values", "Add up what things are worth, in each box and across the space.", Available: true),
         new("audits", "Audits", "Walk round with your phone and tick off what's where.", Available: true),
         new("barcodes", "Barcodes", "Fill in a product's details from its barcode when you add it.", Available: true),
-        new("stock", "Stock", "Get told when something you keep counted is running low.", Available: false),
-        new("lending", "Lending", "Lend things to people and get reminded when they're due back.", Available: false),
-        new("reminders", "Reminders", "Get reminded of warranties, upkeep and expiry dates.", Available: false),
-        new("moving", "Moving", "Pack boxes for a move, with where each one goes and what's in it.", Available: false),
-        new("projects", "Projects", "Set things aside or use them up for a project.", Available: false),
+        new("stock", "Stock", "Get told when something you keep counted is running low.", Available: true),
+        new("lending", "Lending", "Lend things to people and get reminded when they're due back.", Available: true),
+        new("reminders", "Reminders", "Get reminded of warranties, upkeep and expiry dates.", Available: true),
+        new("moving", "Moving", "Pack boxes for a move, with where each one goes and what's in it.", Available: true),
+        new("projects", "Projects", "Set things aside or use them up for a project.", Available: true),
     ];
 
     /// <summary>The feature with this key, or null when there is none.</summary>

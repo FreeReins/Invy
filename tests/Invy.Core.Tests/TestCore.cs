@@ -18,6 +18,7 @@ internal sealed class TestCore
     {
         services = new(Register);
         Attachments.IsExample = id => Items.Rows.Any(item => item.Id == id && item.IsExample);
+        Items.ReservedFor = Projects.Reserves;
     }
 
     public FixedClock Clock { get; } = new();
@@ -37,6 +38,10 @@ internal sealed class TestCore
     public FakeAttachments Attachments { get; } = new();
 
     public FakeViews Views { get; } = new();
+
+    public FakeProjects Projects { get; } = new();
+
+    public FakeImports Imports { get; } = new();
 
     public FakeFiles Files { get; } = new();
 
@@ -68,6 +73,10 @@ internal sealed class TestCore
 
     public ReportManager ReportManager() => Make<ReportManager>();
 
+    public ProjectManager ProjectManager() => Make<ProjectManager>();
+
+    public ImportManager ImportManager() => Make<ImportManager>();
+
     /// <summary>A new manager each call, as each request gets in the app; the fakes and engines are shared.</summary>
     private T Make<T>()
         where T : notnull => services.Value.GetRequiredService<T>();
@@ -85,6 +94,8 @@ internal sealed class TestCore
         services.AddSingleton<ILabelAccess>(Labels);
         services.AddSingleton<IAttachmentAccess>(Attachments);
         services.AddSingleton<IViewAccess>(Views);
+        services.AddSingleton<IProjectAccess>(Projects);
+        services.AddSingleton<IImportAccess>(Imports);
         services.AddSingleton<IFileStoreAccess>(Files);
         services.AddSingleton<IProductAccess>(Products);
         services.AddSingleton<IStarterPackAccess>(TestData.StarterPacks);
@@ -106,6 +117,8 @@ internal sealed class TestCore
         services.AddSingleton<LabelEngine>();
         services.AddSingleton<ImageEngine>();
         services.AddSingleton<ReportEngine>();
+        services.AddSingleton<ImportEngine>();
+        services.AddSingleton<CalendarEngine>();
         services.AddTransient<ValidationEngine>();
 
         // The managers under test.
@@ -118,6 +131,8 @@ internal sealed class TestCore
         services.AddTransient<AttachmentManager>();
         services.AddTransient<ViewManager>();
         services.AddTransient<ReportManager>();
+        services.AddTransient<ProjectManager>();
+        services.AddTransient<ImportManager>();
 
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
     }

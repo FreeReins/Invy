@@ -35,7 +35,22 @@ internal sealed partial class SpaceManager
             [GettingStartedSteps.Values] = progress.HasValues,
             [GettingStartedSteps.Audit] = progress.HasSeen,
             [GettingStartedSteps.Invite] = space.Members.Count > 1,
+            [GettingStartedSteps.Stock] = progress.HasLowStockLevels,
+            [GettingStartedSteps.Lend] = progress.HasLent,
+            [GettingStartedSteps.Destination] = progress.HasDestinations,
         };
+        if (steps.Any(step => step.Key == GettingStartedSteps.Project))
+        {
+            done[GettingStartedSteps.Project] = await projects.AnyAsync(space.Id, cancellationToken);
+        }
+
+        if (steps.Any(step => step.Key == GettingStartedSteps.Remind))
+        {
+            var fields = (await types.ListAsync(space.Id, cancellationToken)).SelectMany(type => type.Fields)
+                .Where(field => field.Remind is not null).Select(field => field.Id).ToList();
+            done[GettingStartedSteps.Remind] = (await items.ListDatesAsync(space.Id, fields, DateOnly.MinValue, DateOnly.MaxValue, 1, cancellationToken)).Count > 0;
+        }
+
         if (steps.Any(step => step.Key == GettingStartedSteps.Labels))
         {
             done[GettingStartedSteps.Labels] = (await labels.ListAsync(space.Id, false, null, 1, cancellationToken)).Count > 0;

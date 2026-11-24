@@ -1,3 +1,4 @@
+using Invy.Core.Managers.Contracts.Messages;
 using Invy.Core.ResourceAccess.Contracts.Messages;
 
 namespace Invy.Core.Tests;
@@ -17,6 +18,9 @@ internal sealed partial class FakeItems
             HasPutAway = mine.Any(item => item.ParentId is not null),
             HasValues = mine.Any(item => item.Value is not null),
             HasSeen = mine.Any(item => item.LastSeenAt is not null),
+            HasLowStockLevels = mine.Any(item => item.LowStockAt is not null),
+            HasLent = Events.Any(e => e.SpaceId == spaceId && e.Kind == ItemEventKind.Lent),
+            HasDestinations = mine.Any(item => item.DestinationId is not null),
             ExamplesLeft = Rows.Count(item => item.SpaceId == spaceId && item.IsExample),
         });
     }

@@ -106,7 +106,7 @@ internal sealed partial class ItemManager
         }
 
         var request = new ItemRequest(
-            item.Name, item.Marking, typeId, null, null, item.Quantity, item.Unit, item.Fields, item.Tags, item.Notes, item.Version);
+            item.Name, item.Marking, typeId, null, null, item.Quantity, item.Unit, item.Fields, item.Tags, item.Notes, item.Version, item.LowStockAt);
         return await UpdateItemAsync(userId, spaceId, id, request, cancellationToken);
     }
 

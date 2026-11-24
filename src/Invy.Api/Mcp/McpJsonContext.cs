@@ -16,6 +16,7 @@ namespace Invy.Api.Mcp;
 [JsonSerializable(typeof(DateOnly?))]
 [JsonSerializable(typeof(decimal?))]
 [JsonSerializable(typeof(int))]
+[JsonSerializable(typeof(int?))]
 [JsonSerializable(typeof(bool))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(IReadOnlyList<Guid>))]

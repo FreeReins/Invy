@@ -85,6 +85,27 @@ namespace Invy.Core.Managers.Contracts;
 [JsonSerializable(typeof(ItemsChanged))]
 [JsonSerializable(typeof(SuggestInboxTypes))]
 [JsonSerializable(typeof(InboxTypesSuggested))]
+// Stock, lending, reminders and moving
+[JsonSerializable(typeof(LowStockRequest))]
+[JsonSerializable(typeof(LendRequest))]
+[JsonSerializable(typeof(UpkeepDoneRequest))]
+[JsonSerializable(typeof(DestinationRequest))]
+[JsonSerializable(typeof(ItemListResponse))]
+[JsonSerializable(typeof(RemindersResponse))]
+[JsonSerializable(typeof(ManifestResponse))]
+[JsonSerializable(typeof(CalendarFeedResponse))]
+// Projects
+[JsonSerializable(typeof(ProjectRequest))]
+[JsonSerializable(typeof(ReserveRequest))]
+[JsonSerializable(typeof(UseUpRequest))]
+[JsonSerializable(typeof(ProjectResponse))]
+[JsonSerializable(typeof(IReadOnlyList<ProjectResponse>))]
+// Imports
+[JsonSerializable(typeof(UploadImportRequest))]
+[JsonSerializable(typeof(StartImportRequest))]
+[JsonSerializable(typeof(ImportResponse))]
+[JsonSerializable(typeof(IReadOnlyList<ImportResponse>))]
+[JsonSerializable(typeof(RunImport))]
 // Attachments
 [JsonSerializable(typeof(AddAttachmentRequest))]
 [JsonSerializable(typeof(AttachmentResponse))]
@@ -117,5 +138,6 @@ namespace Invy.Core.Managers.Contracts;
 [JsonSerializable(typeof(BackupSummary))]
 [JsonSerializable(typeof(SendDueReminders))]
 [JsonSerializable(typeof(SendReminder))]
+[JsonSerializable(typeof(StockRanLow))]
 [JsonSerializable(typeof(RunDueBackup))]
 public sealed partial class ContractJsonContext : JsonSerializerContext;

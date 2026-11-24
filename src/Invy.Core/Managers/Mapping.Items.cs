@@ -12,10 +12,12 @@ internal static partial class Mapping
     public static ItemResponse ToResponse(this Item item) => new(
         item.Id, item.Name, item.Marking, item.TypeId, item.ParentId, item.HoldsItems, item.Quantity, item.Unit,
         item.Fields, item.Tags, item.Notes, item.Status, item.LastSeenAt, item.CreatedAt, item.UpdatedAt, item.Version,
-        item.Value, item.ContentCount, item.ContentValue, item.LabelCode, item.SuggestedTypeId);
+        item.Value, item.ContentCount, item.ContentValue, item.LabelCode, item.SuggestedTypeId, item.LowStockAt, item.Reserved,
+        item.IsLow, item.LentTo, item.LentAt, item.DueOn, item.DestinationId);
 
     public static ItemSummary ToSummary(this Item item) =>
-        new(item.Id, item.Name, item.Marking, item.TypeId, item.HoldsItems, item.Quantity, item.Unit, item.Status, item.ContentCount, item.Value, item.ContentValue, item.LabelCode, item.SuggestedTypeId);
+        new(item.Id, item.Name, item.Marking, item.TypeId, item.HoldsItems, item.Quantity, item.Unit, item.Status, item.ContentCount, item.Value, item.ContentValue, item.LabelCode, item.SuggestedTypeId,
+            item.IsLow, item.LentTo, item.DueOn, item.DestinationId);
 
     public static ItemDetails ToDetails(this Item item, Guid? photoId) =>
         new(item.Fields, item.Tags, item.LastSeenAt, item.CreatedAt, photoId);
@@ -49,6 +51,12 @@ internal static partial class Mapping
         HoldsItems = item.HoldsItems,
         Quantity = item.Quantity,
         Unit = item.Unit,
+        LowStockAt = item.LowStockAt,
+        Reserved = item.Reserved,
+        LentTo = item.LentTo,
+        LentAt = item.LentAt,
+        DueOn = item.DueOn,
+        DestinationId = item.DestinationId,
         Fields = new(item.Fields),
         Tags = [.. item.Tags],
         Notes = item.Notes,

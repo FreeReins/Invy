@@ -51,6 +51,8 @@ internal sealed partial class StarterPackAccess(string folder) : IStarterPackAcc
                     Options = [.. field.Options],
                     Required = field.Required,
                     Sortable = field.Sortable,
+                    Remind = field.Remind,
+                    RepeatMonths = field.RepeatMonths,
                 }).ToList(),
             }).ToList(),
         };
@@ -64,6 +66,7 @@ internal sealed partial class StarterPackAccess(string folder) : IStarterPackAcc
         Place = entry.Place,
         Quantity = entry.Quantity,
         Unit = entry.Unit,
+        LowStockAt = entry.LowStockAt,
         Fields = entry.Fields.ToDictionary(pair => pair.Key, pair => pair.Value.Clone()),
         Contents = entry.Contents.Select(Example).ToList(),
     };
@@ -122,6 +125,8 @@ internal sealed partial class StarterPackAccess(string folder) : IStarterPackAcc
 
         public string? Unit { get; init; }
 
+        public decimal? LowStockAt { get; init; }
+
         public IReadOnlyDictionary<string, JsonElement> Fields { get; init => field = value ?? new Dictionary<string, JsonElement>(); } = new Dictionary<string, JsonElement>();
 
         public IReadOnlyList<ExampleEntry> Contents { get; init => field = value ?? []; } = [];
@@ -157,6 +162,10 @@ internal sealed partial class StarterPackAccess(string folder) : IStarterPackAcc
         public bool Required { get; init; }
 
         public bool Sortable { get; init; }
+
+        public int? Remind { get; init; }
+
+        public int? RepeatMonths { get; init; }
     }
 
     /// <summary>The pack file's JSON shape, made at build time. Kinds are written by name.</summary>

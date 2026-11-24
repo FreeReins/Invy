@@ -34,6 +34,12 @@ in any text editor, or inside Invy itself: press the **?** button at the top of 
 - [Find anything](using/search.md)
 - [Keep a search as a view and pin it to Find](using/views.md)
 - [See what it is all worth, and print an insurance inventory](using/reports.md)
+- [Get told when something is running low](using/stock.md)
+- [Lend things and get reminded when they're due back](using/lending.md)
+- [Get reminded of warranties and upkeep, in my calendar too](using/reminders.md)
+- [Pack boxes for a move and print a manifest for each](using/moving.md)
+- [Set things aside for a project](using/projects.md)
+- [Bring in a spreadsheet or a Homebox export](using/imports.md)
 
 ### Run Invy
 

@@ -13,6 +13,11 @@ internal static class GettingStartedSteps
     public const string Invite = "invite";
     public const string Values = "values";
     public const string Audit = "audit";
+    public const string Stock = "stock";
+    public const string Lend = "lend";
+    public const string Remind = "remind";
+    public const string Destination = "destination";
+    public const string Project = "project";
 
     public static readonly IReadOnlyList<Step> All =
     [
@@ -23,6 +28,11 @@ internal static class GettingStartedSteps
         new(Invite, "Invite someone", "Add someone who shares the space with you.", Feature: null),
         new(Values, "Give something a value", "Fill in a price or value, and see the totals add up.", Feature: "values"),
         new(Audit, "Check what's where", "Mark something as seen, or walk round with the audit.", Feature: "audits"),
+        new(Stock, "Set a low-stock level", "Give something you keep counted a level, and get told when it runs low.", Feature: SpaceFeatures.Stock),
+        new(Lend, "Lend something", "Mark something as lent, with who has it and when it's due back.", Feature: SpaceFeatures.Lending),
+        new(Remind, "Add a warranty or upkeep date", "Fill in a date field that reminds you, such as Warranty until.", Feature: SpaceFeatures.Reminders),
+        new(Destination, "Say where a box is going", "Give a packed box the room it goes to in the new place.", Feature: SpaceFeatures.Moving),
+        new(Project, "Start a project", "Make a project and set aside what it needs.", Feature: SpaceFeatures.Projects),
     ];
 
     /// <summary>The step with this key, or null when there is none.</summary>

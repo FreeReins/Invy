@@ -15,6 +15,9 @@ internal sealed class Space
     /// <summary>The keys of the features switched on (see <c>SpaceFeatures</c>).</summary>
     public List<string> Features { get; set; } = [];
 
+    /// <summary>The secret in the calendar feed's address, or null while the feed is off.</summary>
+    public string? CalendarToken { get; set; }
+
     /// <summary>Everyone who can open the space, with their role.</summary>
     public List<SpaceMember> Members { get; set; } = [];
 }
