@@ -6,9 +6,14 @@ answer shape.
 
 ## How to call it
 
-- **Signing in.** The web page uses a sign-in cookie from `POST /api/account/sign-in`. Programs use an API token
-  instead: make one under **Settings → AI assistants**, or with `POST /api/tokens`, and send it as
-  `Authorization: Bearer <token>`.
+- **Signing in.** The API uses the sign-in cookie from `POST /api/account/sign-in`, so a script signs in with a
+  password and keeps the cookie. API tokens (**Settings → AI assistants**, or `POST /api/tokens`) only work on the MCP
+  server at `/mcp`, sent as `Authorization: Bearer <token>`.
+- **Changes from browsers.** A `POST`, `PUT`, `PATCH` or `DELETE` that a browser says came from another web address
+  (`Sec-Fetch-Site` other than `same-origin`, or an `Origin` for another host) gets 403. Programs outside a browser
+  send neither header and aren't affected.
+- **Limits.** One network address can call sign-in, setup, accept-invite, reset-password and the link lookup 10
+  times a minute; more get 429 with `Retry-After`.
 - **JSON.** Requests and answers are JSON, with names in camelCase and enums as strings (`"Owner"`, `"Money"`).
 - **Errors.** A refused request answers with a status and a plain sentence in `detail`: 400 (a rule is broken),
   401 (not signed in), 403 (your role isn't enough), 404 (not there, or a space you aren't in), 409 (someone changed it
@@ -27,14 +32,15 @@ answer shape.
 |---|---|---|---|
 | GET | `/api/session` | anyone | Whether to show the setup wizard, the sign-in form or the app |
 | POST | `/api/setup/account` | anyone | Setup, step one: creates the first account as an admin and signs it in |
-| POST | `/api/account/sign-in` | anyone | Signs in. Too many wrong passwords in a row lock the account for a while |
+| POST | `/api/account/sign-in` | anyone | Signs in. Too many wrong passwords in a row lock the account for a while, except on devices that signed in to it before |
 | POST | `/api/account/sign-out` | anyone | Signs out |
 | GET | `/api/account/link?token=` | anyone | What an invite or password reset link is for |
 | POST | `/api/account/accept-invite` | anyone | Creates an account from an invite link and signs it in |
-| POST | `/api/account/reset-password` | anyone | Sets a new password from a reset link, unlocks the account and signs it in |
-| POST | `/api/account/password` | | Changes your own password; your other devices are signed out |
-| GET | `/api/tokens` | | Your API tokens, newest first |
-| POST | `/api/tokens` | | Creates an API token that signs in as you; the token is shown only once |
+| POST | `/api/account/reset-password` | anyone | Sets a new password from a reset link, unlocks the account, revokes its API tokens and signs it in |
+| POST | `/api/account/password` | | Changes your own password; your other devices are signed out. `revokeApiTokens: true` revokes your API tokens too |
+| POST | `/api/account/sign-out-everywhere` | | Signs you out on every other device; this one gets a new session. API tokens keep working |
+| GET | `/api/tokens` | | Your API tokens, newest first, with `expiresAt`, `lastUsedAt` and `readOnly` |
+| POST | `/api/tokens` | | Creates an API token that signs in as you; the token is shown only once. `expiresInDays` (1–3650, or null for until revoked) and `readOnly` (only the MCP tools that change nothing) |
 | DELETE | `/api/tokens/{id}` | | Stops one of your API tokens working |
 | GET | `/api/inbox` | | Your messages behind the bell, newest first, and how many are unread |
 | POST | `/api/inbox` | | Adds a note to your own inbox |

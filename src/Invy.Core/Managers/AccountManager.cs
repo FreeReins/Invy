@@ -37,39 +37,47 @@ internal sealed partial class AccountManager(
         return user.ToAccountSession();
     }
 
-    public async Task<AccountSession> SignInAsync(SignInRequest request, CancellationToken cancellationToken)
+    public async Task<AccountSession> SignInAsync(SignInRequest request, Guid? knownDeviceUserId, CancellationToken cancellationToken)
     {
-        var user = await accounts.FindUserByUsernameAsync(Usernames.Normalize(request.Username), cancellationToken)
-            ?? throw new NotSignedInException(SecurityEngine.WrongDetails);
+        // Every refusal says the same and checks a password once, so neither the message nor the time it takes
+        // shows whether the username exists or the account is locked.
+        var password = request.Password ?? string.Empty;
+        var rules = await settings.GetSecurityAsync(cancellationToken);
+        var refused = new NotSignedInException(security.RefusedMessage(rules));
+        var user = await accounts.FindUserByUsernameAsync(Usernames.Normalize(request.Username), cancellationToken);
+        if (user is null)
+        {
+            passwords.VerifyNothing(password);
+            throw refused;
+        }
+
+        // A device the account signed in on before isn't locked out: the lockout is for strangers guessing passwords,
+        // who could otherwise keep the owner out for as long as they liked. Its wrong passwords aren't counted
+        // either; the limit on sign-ins from one address still applies.
+        if (knownDeviceUserId == user.Id)
+        {
+            return passwords.Verify(user.PasswordHash, password) ? user.ToAccountSession() : throw refused;
+        }
 
         var now = clock.GetUtcNow();
         if (security.IsLocked(user, now))
         {
-            throw new NotSignedInException(security.LockedMessage(user, now));
+            passwords.VerifyNothing(password);
+            throw refused;
         }
 
-        var password = request.Password ?? string.Empty;
-        var rules = await settings.GetSecurityAsync(cancellationToken);
         if (!security.CountsSignIns(rules))
         {
-            return passwords.Verify(user.PasswordHash, password)
-                ? user.ToAccountSession()
-                : throw new NotSignedInException(SecurityEngine.WrongDetails);
+            return passwords.Verify(user.PasswordHash, password) ? user.ToAccountSession() : throw refused;
         }
 
         // The attempt is counted in the database before the password is checked, so many sign-ins sent at once
         // can't check more passwords between them than the rules allow. These counters don't wait for a commit.
         var attempt = await accounts.CountSignInAttemptAsync(user.Id, now, cancellationToken);
-        if (attempt.Number is not int number)
+        if (attempt.Number is not int number || security.IsPastLimit(number, rules))
         {
-            throw new NotSignedInException(attempt.LockedUntil is DateTimeOffset until
-                ? security.LockedMessage(until, now)
-                : SecurityEngine.WrongDetails);
-        }
-
-        if (security.IsPastLimit(number, rules))
-        {
-            throw new NotSignedInException(security.LockedMessage(now + TimeSpan.FromMinutes(rules.LockoutMinutes), now));
+            passwords.VerifyNothing(password);
+            throw refused;
         }
 
         if (passwords.Verify(user.PasswordHash, password))
@@ -81,10 +89,9 @@ internal sealed partial class AccountManager(
         if (security.LockAfterWrongPassword(number, rules, now) is DateTimeOffset lockedUntil)
         {
             await accounts.LockAsync(user.Id, lockedUntil, cancellationToken);
-            throw new NotSignedInException(security.LockedMessage(lockedUntil, now));
         }
 
-        throw new NotSignedInException(SecurityEngine.WrongDetails);
+        throw refused;
     }
 
     public async Task<LinkDetails> DescribeLinkAsync(string token, CancellationToken cancellationToken)
@@ -112,6 +119,9 @@ internal sealed partial class AccountManager(
         security.SetPassword(user, passwords.Hash(ValidationEngine.Password(request.Password)));
         await accounts.SaveUserAsync(user, cancellationToken);
         await accounts.RemoveLinkAsync(link.Id, cancellationToken);
+
+        // A reset is how a lost or stolen account is taken back, so whatever its tokens were given to stops working too.
+        await RemoveApiTokensAsync(user.Id, cancellationToken);
         await messages.CommitAsync(cancellationToken);
         return user.ToAccountSession();
     }
@@ -126,6 +136,20 @@ internal sealed partial class AccountManager(
 
         security.SetPassword(user, passwords.Hash(ValidationEngine.Password(request.NewPassword)));
         await accounts.SaveUserAsync(user, cancellationToken);
+        if (request.RevokeApiTokens)
+        {
+            await RemoveApiTokensAsync(user.Id, cancellationToken);
+        }
+
+        await messages.CommitAsync(cancellationToken);
+        return user.ToAccountSession();
+    }
+
+    public async Task<AccountSession> SignOutEverywhereAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await validation.UserAsync(userId, cancellationToken);
+        security.EndSessions(user);
+        await accounts.SaveUserAsync(user, cancellationToken);
         await messages.CommitAsync(cancellationToken);
         return user.ToAccountSession();
     }
@@ -138,10 +162,7 @@ internal sealed partial class AccountManager(
         ValidationEngine.CanRemove(id, actingUserId);
         var user = await validation.UserAsync(id, cancellationToken);
         await RemoveLinksAsync(link => link.UserId == user.Id, cancellationToken);
-        foreach (var token in await accounts.ListApiTokensAsync(user.Id, cancellationToken))
-        {
-            await accounts.RemoveApiTokenAsync(token.Id, cancellationToken);
-        }
+        await RemoveApiTokensAsync(user.Id, cancellationToken);
 
         await inbox.ClearAsync(user.Id, cancellationToken);
         await accounts.RemoveUserAsync(user.Id, cancellationToken);
@@ -242,17 +263,19 @@ internal sealed partial class AccountManager(
     public async Task<IReadOnlyList<ApiTokenResponse>> ListApiTokensAsync(Guid userId, CancellationToken cancellationToken) =>
         (await accounts.ListApiTokensAsync(userId, cancellationToken))
             .OrderByDescending(token => token.CreatedAt)
-            .Select(token => new ApiTokenResponse(token.Id, token.Name, token.CreatedAt))
+            .Select(token => token.ToResponse())
             .ToList();
 
     public async Task<IssuedApiToken> CreateApiTokenAsync(Guid userId, CreateApiTokenRequest request, CancellationToken cancellationToken)
     {
         var name = ValidationEngine.ApiTokenName(request.Name);
+        var days = ValidationEngine.ApiTokenDays(request.ExpiresInDays);
         var user = await validation.UserAsync(userId, cancellationToken);
-        var issued = security.IssueApiToken(user.Id, name, clock.GetUtcNow());
+        var issued = security.IssueApiToken(user.Id, name, days, request.ReadOnly, clock.GetUtcNow());
         await accounts.SaveApiTokenAsync(issued.Token, cancellationToken);
         await messages.CommitAsync(cancellationToken);
-        return new IssuedApiToken(issued.Token.Id, issued.Token.Name, issued.Secret, issued.Token.CreatedAt);
+        var token = issued.Token;
+        return new IssuedApiToken(token.Id, token.Name, issued.Secret, token.CreatedAt, token.ExpiresAt, token.ReadOnly);
     }
 
     public async Task RevokeApiTokenAsync(Guid userId, Guid id, CancellationToken cancellationToken)
@@ -263,15 +286,23 @@ internal sealed partial class AccountManager(
         await messages.CommitAsync(cancellationToken);
     }
 
-    public async Task<SessionInfo?> FindApiTokenSessionAsync(string token, CancellationToken cancellationToken)
+    public async Task<ApiTokenSession?> FindApiTokenSessionAsync(string token, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(token))
         {
             return null;
         }
 
+        var now = clock.GetUtcNow();
         var stored = await accounts.FindApiTokenByHashAsync(security.HashToken(token), cancellationToken);
-        return stored is null ? null : (await accounts.FindUserAsync(stored.UserId, cancellationToken))?.ToSession();
+        if (stored is null || security.IsExpired(stored, now)
+            || await accounts.FindUserAsync(stored.UserId, cancellationToken) is not { } user)
+        {
+            return null;
+        }
+
+        await accounts.MarkApiTokenUsedAsync(stored.Id, now, now - SecurityEngine.LastUsedPrecision, cancellationToken);
+        return new ApiTokenSession(user.ToSession(), stored.ReadOnly);
     }
 
     /// <summary>A new password reset link for an account. Any earlier reset link for it stops working.</summary>
@@ -287,6 +318,14 @@ internal sealed partial class AccountManager(
         await accounts.SaveLinkAsync(issued.Link, cancellationToken);
         await messages.CommitAsync(cancellationToken);
         return new IssuedLink(issued.Link.Id, purpose, issued.Token, issued.Link.ExpiresAt);
+    }
+
+    private async Task RemoveApiTokensAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        foreach (var token in await accounts.ListApiTokensAsync(userId, cancellationToken))
+        {
+            await accounts.RemoveApiTokenAsync(token.Id, cancellationToken);
+        }
     }
 
     private async Task RemoveLinksAsync(Func<AccessLink, bool> which, CancellationToken cancellationToken)

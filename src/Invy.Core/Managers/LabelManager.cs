@@ -71,8 +71,7 @@ internal sealed class LabelManager(
 
     public async Task<LabelResponse> FindLabelAsync(Guid userId, string text, CancellationToken cancellationToken)
     {
-        var label = await validation.LabelAsync(labelEngine.Code(text), cancellationToken);
-        await validation.SpaceRoleAsync(label.SpaceId, userId, SpaceRole.Viewer, cancellationToken);
+        var label = await validation.LabelAsync(labelEngine.Code(text), userId, cancellationToken);
         return label.ToResponse(await OnItemAsync(label, cancellationToken));
     }
 
@@ -80,7 +79,7 @@ internal sealed class LabelManager(
         Guid userId, Guid spaceId, string code, ClaimLabelRequest request, CancellationToken cancellationToken)
     {
         await validation.SpaceRoleAsync(spaceId, userId, SpaceRole.Editor, cancellationToken);
-        var label = await validation.LabelAsync(spaceId, labelEngine.Code(code), cancellationToken);
+        var label = await validation.LabelAsync(spaceId, labelEngine.Code(code), userId, cancellationToken);
         if (await OnItemAsync(label, cancellationToken) is { } on)
         {
             throw new RuleViolationException($"Label {label.Code} is already on {on.Name}. Open it instead.");
@@ -118,7 +117,7 @@ internal sealed class LabelManager(
         Guid userId, Guid spaceId, string code, AttachLabelRequest request, CancellationToken cancellationToken)
     {
         await validation.SpaceRoleAsync(spaceId, userId, SpaceRole.Editor, cancellationToken);
-        var label = await validation.LabelAsync(spaceId, labelEngine.Code(code), cancellationToken);
+        var label = await validation.LabelAsync(spaceId, labelEngine.Code(code), userId, cancellationToken);
         var before = await validation.ItemAsync(spaceId, request.ItemId, cancellationToken);
         if (label.ItemId == before.Id)
         {

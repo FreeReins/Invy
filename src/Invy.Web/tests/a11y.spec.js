@@ -336,6 +336,13 @@ const VIEWS = [
 
   // Settings
   { name: 'settings: login', path: '/settings/login' },
+  {
+    name: 'settings: login, asking before signing out everywhere', path: '/settings/login',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Sign out everywhere' }).click();
+      await page.getByRole('dialog').waitFor();
+    },
+  },
   { name: 'settings: this space, as an owner', path: '/settings/space', act: (page) => page.getByRole('button', { name: 'Remove examples (2)' }).waitFor() },
   { name: 'settings: this space, as a viewer', path: '/settings/space',
     answers: { 'GET /api/spaces': data.spaces().map((space) => ({ ...space, role: 'Viewer' })), 'GET /api/spaces/*/getting-started': data.gettingStarted({ dismissed: true }) },

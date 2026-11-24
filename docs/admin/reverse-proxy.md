@@ -38,7 +38,8 @@ HTTPS, the listed address doesn't match the proxy.
 
 ## What the proxy must do
 
-- **Pass the original `Host` header**, so links Invy makes (such as invites) use your public name.
+- **Pass the original `Host` header**, so links Invy makes (such as invites) use your public name, and so older
+  browsers' changes are recognised as coming from Invy's own page.
 - **Send `X-Forwarded-For` and `X-Forwarded-Proto`.**
 - **Don't buffer `/api/live`.** It's a live stream that tells open pages when something changes on another device.
   Invy sends `X-Accel-Buffering: no` for nginx and a ping every 25 seconds to keep it open. Without it, pages
@@ -92,7 +93,9 @@ Invy is built for a home network. It has password hashing, lockout and HTTPS, bu
 expose it:
 
 - use a strong password for every account;
-- keep the [lockout](people-and-accounts.md#lockout) on;
+- keep the [lockout](people-and-accounts.md#lockout) on, and set `Https__TrustedProxies` so the limit of 10 sign-in
+  tries a minute counts each visitor, not the proxy;
+- give AI assistants [read-only tokens that expire](ai-assistants.md#tokens) where you can;
 - consider a VPN (WireGuard, [Tailscale](tailscale.md)) or your proxy's own sign-in in front of it instead.
 
 Exposing it does let cloud AI assistants reach [MCP](ai-assistants.md).

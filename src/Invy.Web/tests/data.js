@@ -67,6 +67,7 @@ export const linkDetails = (purpose = 'Invite') => ({ purpose, username: purpose
 export const issuedApiToken = (name = 'Workshop tablet') => ({
   id: 'a7f0c2d1-0000-4000-8000-000000000003', name,
   token: 'invy_9e359d02660d4d63bdc9fba67942c7e46a4231d31489474d517c20b37ac3631b', createdAt: '2026-11-08T12:00:00Z',
+  expiresAt: '2027-02-06T12:00:00Z', readOnly: false,
 });
 
 export const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
@@ -138,8 +139,10 @@ export const aiSettings = (withModels = true) => (withModels ? {
 
 /** ApiTokenResponse[] */
 export const apiTokens = () => [
-  { id: 'a7f0c2d1-0000-4000-8000-000000000002', name: 'Claude Code on the laptop', createdAt: '2026-11-02T18:30:00Z' },
-  { id: 'a7f0c2d1-0000-4000-8000-000000000001', name: 'Claude Desktop', createdAt: '2026-10-14T09:00:00Z' },
+  { id: 'a7f0c2d1-0000-4000-8000-000000000002', name: 'Claude Code on the laptop', createdAt: '2026-11-02T18:30:00Z',
+    expiresAt: '2027-01-31T18:30:00Z', lastUsedAt: '2026-11-19T08:15:00Z', readOnly: false },
+  { id: 'a7f0c2d1-0000-4000-8000-000000000001', name: 'Claude Desktop', createdAt: '2026-10-14T09:00:00Z',
+    expiresAt: null, lastUsedAt: null, readOnly: true },
 ];
 
 const spaceIds = { home: '00000000-0000-4000-8000-000000000c01', shop: '00000000-0000-4000-8000-000000000c02' };

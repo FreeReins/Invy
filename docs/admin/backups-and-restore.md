@@ -10,6 +10,9 @@ restore one.
 - Backups are compressed JSON files with all of Invy's own data: accounts, settings, AI
   models with their API keys, spaces and everything in them, and the bell's messages. API tokens for AI assistants
   aren't included.
+- AI API keys are stored encrypted, with the keys in Invy's keys folder (`Data:SessionKeys`), which isn't in the
+  backup. A backup restored on another install, without that folder, has the models but not their API keys.
+- On Linux and macOS, backup files can only be read by the user Invy runs as.
 - Photos and PDFs attached to items aren't inside the backup file. As each backup is made, any attached file not
   copied before is copied into `files` inside the backups folder. Each file is copied once and kept there, even after
   it is removed from Invy or old backups are deleted, so any backup can be restored with its files.
@@ -75,6 +78,8 @@ After a restore:
 - **Everyone signs in again,** the admin who restored included.
 - **Passwords go back** to what they were when the backup was made. Sessions from before the restore stop working.
 - **AI assistants need new tokens.**
+- **AI models need their API keys entered again** if the backup came from another install whose keys folder wasn't
+  copied across. The log says which models.
 - **Attached files come back** from `files` in the backups folder, when they are missing from Invy's own `files`
   folder.
 
@@ -86,7 +91,8 @@ After a restore:
    restore it.
 4. Sign in with your old account.
 
-Devices that trusted the old certificate need the new one. Or copy the keys volume across too, to keep it.
+Devices that trusted the old certificate need the new one. Or copy the keys volume across too, to keep it: that
+also keeps the AI models' API keys readable and everyone's known devices.
 
 ## If something goes wrong
 

@@ -153,8 +153,25 @@ public class LabelTests
         var olga = space.Core.Accounts.User("olga").Id;
 
         var error = await TestData.Caught<NotFoundException>(() => space.Core.LabelManager().FindLabelAsync(olga, code, default));
+        var missing = await TestData.Caught<NotFoundException>(() => space.Core.LabelManager().FindLabelAsync(olga, "WXY347", default));
 
-        await Assert.That(error).IsNotNull();
+        // Told exactly what a code that was never made gets, so codes can't be used to find out what other spaces hold.
+        await Assert.That(error!.Message).IsEqualTo(missing!.Message.Replace("WXY347", code, StringComparison.Ordinal));
+    }
+
+    [Test]
+    public async Task Someone_outside_the_space_cant_claim_its_labels_through_their_own()
+    {
+        var space = await ItemSpace.MakeAsync();
+        var code = await LabelAsync(space);
+        space.Core.Accounts.Users.Add(new UserAccount { Username = "olga", DisplayName = "Olga" });
+        var olga = space.Core.Accounts.User("olga").Id;
+        var hers = await space.Core.SpaceManager().CreateSpaceAsync(olga, new CreateSpaceRequest("Olga's", null), default);
+
+        var error = await TestData.Caught<NotFoundException>(
+            () => space.Core.LabelManager().ClaimLabelAsync(olga, hers.Id, code, new ClaimLabelRequest(null, null, null), default));
+
+        await Assert.That(error!.Message).DoesNotContain("another space");
     }
 
     [Test]

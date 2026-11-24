@@ -35,7 +35,7 @@ This page records decisions. It changes only when a decision changes. Progress l
 | HTTP | Wolverine HTTP endpoints, each a one-line call to one manager. Exceptions mapped to ProblemDetails | routes are under `/api/spaces/{spaceId}/…` |
 | Messaging | Wolverine durable local queues on PostgreSQL with the EF outbox. `[StickyHandler]`, `[MessageIdentity("invy.<name>.v1")]`, the same retry and dead-letter policies | new queues `rollups`, `search`, `images`, `ai` |
 | Live updates | Server-sent events at `/api/live` that send topic names only | topics are per space |
-| Sign-in | Cookie sessions, `AdminPolicy` (whoever runs the install), API tokens for `/mcp`, lockout, invites | adds space roles (below) |
+| Sign-in | Cookie sessions, `AdminPolicy` (whoever runs the install), API tokens for `/mcp`, lockout, invites | adds space roles (below); security hardening (below) |
 | Database | Bundled PostgreSQL 17 started by the app (`Database:Mode=Bundled`, or `External`), EF Core migrations applied at start | port 54339. Needs the `ltree` and `pg_trgm` extensions in both the image and the Windows zip |
 | Backups | Nightly gzip JSON through `BackupAccess.Tables`, one-click restore | must stream in batches (millions of rows) |
 | AI | `IAiAccess`: Anthropic SDK (default `claude-opus-5-5`) or any OpenAI-compatible service (Ollama, LM Studio). A model per task, JSON schema answers | new tasks (below) |
@@ -46,6 +46,25 @@ This page records decisions. It changes only when a decision changes. Progress l
 | Docs | MkDocs Material at `/help` and on GitHub Pages, ChefBot's section layout and `docs/AGENTS.md` rules | none |
 
 The one deliberate departure: ChefBot searches with `ILIKE`. Invy uses real indexes (see [Search](#search)).
+
+### Security hardening
+
+From the 2026-11-24 security design review:
+
+- **API tokens** have an optional expiry (`expires_at`), a last-used time recorded at most every 5 minutes
+  (`last_used_at`) and a `read_only` flag. A read-only token is shown and allowed only the MCP tools marked
+  `ReadOnly = true` (`ReadOnlyTokens`, an MCP request filter), so an unmarked new tool is refused by default. A
+  password reset revokes the account's tokens; a password change does when asked.
+- **Sign-in** gives one message for an unknown username, a wrong password and a locked account, and checks one
+  password hash on every path. A browser that signed in to an account carries an encrypted `invy.device` cookie for a
+  year; lockout doesn't apply to that account from it and doesn't count its mistakes. Sign-in, setup, invites, resets
+  and link lookups are limited to 10 a minute per address (an IPv6 /64), after trusted-proxy headers.
+- **Changes from browsers** (any method but GET, HEAD and OPTIONS) are refused when `Sec-Fetch-Site` isn't
+  `same-origin` or `none`, or, without it, `Origin` names another host. `/mcp` is left out: it signs in with a token.
+- **Stored secrets**: AI API keys are sealed with Data Protection (`SecretBox`, prefix `dp1:`) under the session keys
+  folder; plain keys from before are sealed on first read. Backup files are created `0600` outside Windows.
+- **Sessions** can be ended everywhere (`POST /api/account/sign-out-everywhere`), which bumps `SessionVersion`.
+- **Labels** in a space the person isn't in are reported exactly as a code that doesn't exist.
 
 ## Spaces and roles
 

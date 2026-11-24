@@ -37,6 +37,7 @@ namespace Invy.Core.Managers.Contracts;
 [JsonSerializable(typeof(CreateApiTokenRequest))]
 [JsonSerializable(typeof(IssuedApiToken))]
 [JsonSerializable(typeof(IReadOnlyList<ApiTokenResponse>))]
+[JsonSerializable(typeof(ApiTokenSession))]
 // The inbox
 [JsonSerializable(typeof(InboxNoteRequest))]
 [JsonSerializable(typeof(InboxResponse))]

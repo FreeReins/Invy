@@ -40,6 +40,7 @@ if (OperatingSystem.IsWindows())
 
 builder.Services.AddInvy(builder.Configuration);
 builder.Services.AddInvySignIn(builder.Configuration);
+builder.Services.AddInvySignInLimits();
 builder.Logging.AddInvyLogViewer();
 
 // HTTP always; HTTPS too when Https:Mode is SelfSigned or Certificate.
@@ -75,7 +76,9 @@ builder.Services.AddMcpServer(mcp => mcp.ServerInfo = new() { Name = "Invy", Ver
     .WithTools<TypeTools>(McpJsonContext.ToolOptions)
     .WithTools<ViewTools>(McpJsonContext.ToolOptions)
     .WithTools<FeatureTools>(McpJsonContext.ToolOptions)
-    .WithTools<ProjectTools>(McpJsonContext.ToolOptions);
+    .WithTools<ProjectTools>(McpJsonContext.ToolOptions)
+    // A read-only API token only sees and runs the tools marked ReadOnly.
+    .WithRequestFilters(ReadOnlyTokens.Add);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<McpCaller>();
 
@@ -84,6 +87,8 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseInvySecurityHeaders();
 app.UseInvyProxyHeaders();
+app.UseInvyCrossSiteCheck();
+app.UseRateLimiter();
 app.UseInvyHttpsRedirect();
 app.UseInvyWebPage();
 app.UseAuthentication();

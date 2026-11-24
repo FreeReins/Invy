@@ -54,6 +54,8 @@ public static class CoreRegistration
         services.AddScoped<IViewAccess, ViewAccess>();
         services.AddScoped<IProjectAccess, ProjectAccess>();
         services.AddScoped<IImportAccess, ImportAccess>();
+        services.AddDataProtection();
+        services.AddSingleton<SecretBox>();
         services.AddScoped<ISettingsAccess, SettingsAccess>();
         services.AddScoped<IMessageAccess, MessageAccess>();
         var backupFolder = StoragePath(configuration, "Data:Backups", "backups");
