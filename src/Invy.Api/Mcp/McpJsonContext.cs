@@ -20,6 +20,9 @@ namespace Invy.Api.Mcp;
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(IReadOnlyList<Guid>))]
 [JsonSerializable(typeof(IReadOnlyList<string>))]
+[JsonSerializable(typeof(IReadOnlyDictionary<string, string>))]
+[JsonSerializable(typeof(IReadOnlyList<NewField>))]
+[JsonSerializable(typeof(decimal))]
 public sealed partial class McpJsonContext : JsonSerializerContext
 {
     /// <summary>Options for the tools: their parameters, Invy's contracts, then the protocol's own types.</summary>

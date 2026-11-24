@@ -1,4 +1,5 @@
 using Invy.Core.Engines;
+using Invy.Core.Engines.Transformation;
 using Invy.Core.Managers.Contracts;
 using Invy.Core.Managers.Contracts.Messages;
 using Invy.Core.Managers.Contracts.Services;
@@ -7,7 +8,8 @@ using Invy.Core.ResourceAccess.Contracts.Services;
 namespace Invy.Core.Managers;
 
 /// <inheritdoc cref="ITypeManager"/>
-internal sealed class TypeManager(ITypeAccess types, IMessageAccess messages, ValidationEngine validation) : ITypeManager
+internal sealed class TypeManager(
+    ITypeAccess types, ISettingsAccess settings, IAiAccess ai, IMessageAccess messages, ValidationEngine validation) : ITypeManager
 {
     public async Task<IReadOnlyList<ItemTypeResponse>> ListTypesAsync(Guid userId, Guid spaceId, CancellationToken cancellationToken)
     {
@@ -56,5 +58,24 @@ internal sealed class TypeManager(ITypeAccess types, IMessageAccess messages, Va
         await validation.TypeAsync(spaceId, typeId, cancellationToken);
         await types.RemoveAsync(spaceId, typeId, cancellationToken);
         await messages.CommitAsync(cancellationToken);
+    }
+
+    public async Task<FieldSuggestionsResponse> SuggestFieldsAsync(
+        Guid userId, Guid spaceId, SuggestFieldsRequest request, CancellationToken cancellationToken)
+    {
+        await validation.SpaceRoleAsync(spaceId, userId, SpaceRole.Editor, cancellationToken);
+        var name = request.Name?.Trim() ?? string.Empty;
+        if (name.Length is 0 or > ValidationEngine.TypeNameLength)
+        {
+            throw new RuleViolationException("Name the type first, such as Lego sets, then ask for fields.");
+        }
+
+        var existing = (request.ExistingKeys ?? []).Select(key => key.Trim().ToLowerInvariant()).Where(key => key.Length > 0).Distinct().ToList();
+        var model = ValidationEngine.AiModelFor(AiTask.SuggestTypeFields, await settings.GetAiAsync(cancellationToken));
+        var answer = await ai.AskAsync(model, TransformationEngine.TypeFieldsQuestion(name, existing), cancellationToken);
+        var fields = TransformationEngine.ReadTypeFields(answer, existing.Concat(ValidationEngine.ReservedFieldKeys))
+            .Where(ValidationEngine.FieldFits)
+            .ToList();
+        return new FieldSuggestionsResponse(fields, model.Name);
     }
 }

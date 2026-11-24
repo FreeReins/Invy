@@ -72,6 +72,13 @@ function defaults() {
     'GET /api/spaces/*/attachments/*/thumbnail': reply(200, Buffer.from(data.TINY_PNG, 'base64'), 'image/png'),
     'GET /api/spaces/*/attachments/*/file': reply(200, Buffer.from(data.TINY_PNG, 'base64'), 'image/png'),
     'POST /api/spaces/*/quick-add': [],
+    // AI suggestions, once a test sets 'GET /api/ai/features' to data.aiReady().
+    'POST /api/spaces/*/items/from-photo': data.photoItems(),
+    'POST /api/spaces/*/items/*/details-from-photo': data.photoDetails(),
+    'POST /api/spaces/*/types/suggest-fields': data.fieldSuggestions(),
+    'POST /api/spaces/*/inbox/suggest-types': reply(202, null),
+    'POST /api/spaces/*/items/*/suggested-type/*': (request) => ({ ...data.itemDetail(data.itemIds.drill).item, id: data.itemIds.cable, name: 'Mystery cable', parentId: null,
+      typeId: request.url().endsWith('accept') ? '00000000-0000-4000-8000-000000000d03' : null, suggestedTypeId: null }),
     // Labels: 7K3Q is on Box F, other codes aren't on anything yet, and XXXX isn't a label Invy has.
     'GET /api/labels/*': (request) => data.labelFor(decodeURIComponent(new URL(request.url()).pathname.split('/').pop()))
       ?? reply(404, { detail: 'There is no label XXXX. Check the code, or scan it again.' }),

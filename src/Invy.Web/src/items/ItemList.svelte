@@ -1,5 +1,6 @@
 <!-- A list of items (ItemSummary[]), each a link to its page, with what's inside a container or a counted item's amount.
-     "Show more" asks for the next page when there is one. -->
+     "Show more" asks for the next page when there is one. `extra` adds something after an item's link, such as the
+     Inbox's suggested type. -->
 <script>
   import { amount, label } from '../lib/items.js';
   import { plural } from '../lib/format.js';
@@ -8,8 +9,8 @@
   import Package from '@lucide/svelte/icons/package';
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
 
-  /** items: ItemSummary[]. name: what the list is, for screen readers. onmore: loads the next page, or null. */
-  let { items, name, onmore = null } = $props();
+  /** items: ItemSummary[]. name: what the list is, for screen readers. onmore: loads the next page, or null. extra(item): a snippet. */
+  let { items, name, onmore = null, extra = null } = $props();
 </script>
 
 <ul class="items" aria-label={name}>
@@ -25,6 +26,7 @@
         {/if}
         <ChevronRight size={16} aria-hidden="true" />
       </a>
+      {#if extra}{@render extra(item)}{/if}
     </li>
   {/each}
 </ul>
@@ -35,7 +37,8 @@
 <style>
   .items { list-style: none; margin: 0; padding: 0; }
   .items li + li { border-top: 1px solid var(--line); }
-  .items a { display: flex; align-items: center; gap: .6rem; padding: .55rem .25rem; color: var(--ink); text-decoration: none; min-width: 0; }
+  .items li { display: flex; flex-wrap: wrap; align-items: center; column-gap: .5rem; }
+  .items a { flex: 1 1 14rem; display: flex; align-items: center; gap: .6rem; padding: .55rem .25rem; color: var(--ink); text-decoration: none; min-width: 0; }
   .items a:hover { background: color-mix(in srgb, var(--area-browse) 8%, transparent); }
   .items a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   .icon { display: inline-flex; color: var(--area-browse); flex: none; }

@@ -1,4 +1,4 @@
-# Phase 6: scale hardening
+# Phase 7: scale hardening
 
 **Goal:** prove the design's scale targets and fix what doesn't meet them.
 
@@ -14,7 +14,8 @@
 - [ ] Monthly partitioning of `item_events`, if the benchmark shows it's needed.
 - [ ] Docs: `docs/reference/limits.md` with the measured numbers.
 
-**Done when:** the benchmark meets the design's targets on a Raspberry Pi 5-class machine, and the numbers are
-recorded here.
+**Done when:** the agent runs the seed tool and the benchmark against the bundled PostgreSQL, the results meet the
+design's targets on that machine (with its CPU and memory written down), and the numbers are recorded here and in
+`docs/reference/limits.md`.
 
 ## Session log

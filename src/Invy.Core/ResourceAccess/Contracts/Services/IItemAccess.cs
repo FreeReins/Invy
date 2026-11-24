@@ -21,6 +21,18 @@ internal interface IItemAccess
     /// <summary>The Inbox: items at the top with no type that hold nothing, by name then id, paged like the above.</summary>
     Task<List<Item>> ListInboxAsync(Guid spaceId, ItemCursor? after, int limit, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Inbox items with no suggested type that no model was asked about, or (with <paramref name="askedBefore"/>) was
+    /// last asked about before then, oldest first, at most <paramref name="limit"/>.
+    /// </summary>
+    Task<List<Item>> ListInboxToSuggestAsync(Guid spaceId, DateTimeOffset? askedBefore, int limit, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Keeps the type suggested for each item (null for none, or to ignore one) and when it was asked, in one statement
+    /// per suggested type, in the request's transaction. Versions don't change, so nobody's edit conflicts.
+    /// </summary>
+    Task SuggestTypesAsync(Guid spaceId, IReadOnlyDictionary<Guid, Guid?> suggestions, DateTimeOffset at, CancellationToken cancellationToken);
+
     /// <summary>How many items (not disposed or archived) are directly in each of these containers.</summary>
     Task<Dictionary<Guid, int>> CountChildrenAsync(Guid spaceId, IReadOnlyCollection<Guid> parentIds, CancellationToken cancellationToken);
 

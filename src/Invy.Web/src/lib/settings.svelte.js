@@ -31,3 +31,6 @@ export async function loadSystem() {
 export async function loadAiFeatures() {
   app.aiFeatures = await api('GET', '/api/ai/features');
 }
+
+/** True when an AI task (AiTask name, such as 'ItemsFromPhoto') has a model, so the page can offer it. */
+export const aiReady = (task) => app.aiFeatures.ready.includes(task);

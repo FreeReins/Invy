@@ -13,4 +13,6 @@ namespace Invy.Api.Messaging;
 public static class LiveTopicsHandler
 {
     public static void Handle(InboxChanged message, LiveUpdates live) => live.Broadcast(LiveTopics.Inbox);
+
+    public static void Handle(InboxTypesSuggested message, LiveUpdates live) => live.Broadcast(LiveTopics.InboxItems);
 }

@@ -73,6 +73,7 @@ answer shape.
 | POST | `/api/spaces/{spaceId}/types` | editor | Adds a type |
 | PUT | `/api/spaces/{spaceId}/types/{typeId}` | editor | Replaces a type's name, look and fields; send the `version` you read (409 if it changed) |
 | DELETE | `/api/spaces/{spaceId}/types/{typeId}` | editor | Removes a type; its items keep their values |
+| POST | `/api/spaces/{spaceId}/types/suggest-fields` | editor | Asks the AI model for fields that suit a type called `name`, leaving out `existingKeys`. Nothing is saved |
 
 ## Items
 
@@ -83,7 +84,9 @@ answer shape.
 | GET | `/api/spaces/{spaceId}/items/{id}` | viewer | An item and the chain of containers it is in |
 | POST | `/api/spaces/{spaceId}/items` | editor | Adds an item, in `parentId` or at the top |
 | PUT | `/api/spaces/{spaceId}/items/{id}` | editor | Changes an item's details and fields; send the `version` you read (409 if it changed) |
+| PATCH | `/api/spaces/{spaceId}/items/{id}` | editor | Changes only what is sent: `name`, `marking`, `typeId`, `notes`, `tags`, and `fields` as text by search name (`{"price": "129.99"}`; `""` clears). No `version` needed |
 | POST | `/api/spaces/{spaceId}/items/{id}/move` | editor | Moves an item and everything inside it to `parentId` (null for the top) |
+| POST | `/api/spaces/{spaceId}/items/move` | editor | Moves the items in `itemIds` (1 to 100), each with what's inside it, to `parentId`, in one go |
 | POST | `/api/spaces/{spaceId}/items/{id}/quantity` | editor | Adds `delta` to a counted item's amount (negative takes away) |
 | POST | `/api/spaces/{spaceId}/items/{id}/dispose` | editor | Marks an item disposed of; refused while anything is inside it |
 | POST | `/api/spaces/{spaceId}/items/{id}/restore` | editor | Brings a disposed or archived item back |
@@ -92,8 +95,17 @@ answer shape.
 | POST | `/api/spaces/{spaceId}/items/{id}/seen` | editor | Marks an item seen, and when it holds items, what is directly inside. One `Seen` event; again within 10 minutes changes nothing |
 | POST | `/api/spaces/{spaceId}/items/{id}/audit` | editor | Finishes an audit of a container: `present` lists the ids ticked. Unticked contents become `Missing`; ticked missing ones are found. Answers with the `missing`, `found` and `elsewhere` lists. Up to 2,000 items |
 | GET | `/api/spaces/{spaceId}/barcodes/{code}` | editor | Looks a UPC or EAN barcode up online (once an admin turned that on): `name`, `brand`, `imageUrl`, `source`. 404 when no database knows it |
+| POST | `/api/spaces/{spaceId}/items/from-photo` | editor | Asks the AI model what is in `photos` (1 to 4 images, base64) of an open box: `items` with `name`, `typeId`, `quantity`, `unit` and `fields`. Nothing is added |
+| POST | `/api/spaces/{spaceId}/items/{id}/details-from-photo` | editor | Asks the AI model to read the item's fields from `photos` of a label or nameplate: `fields` by field id. Nothing is saved |
+| POST | `/api/spaces/{spaceId}/inbox/suggest-types` | editor | Asks for a type for every Inbox item without a suggestion, in the background. Answers 202; items' `suggestedTypeId` fills in as answers come |
+| POST | `/api/spaces/{spaceId}/items/{id}/suggested-type/accept` | editor | Gives an Inbox item its suggested type, as an edit would |
+| POST | `/api/spaces/{spaceId}/items/{id}/suggested-type/ignore` | editor | Drops an Inbox item's suggested type |
+| GET | `/api/spaces/{spaceId}/where-is?q=` | viewer | The best 10 matches for `q` (search syntax works), each with `where`: its containers as text, such as `Garage › Box F` |
 | GET | `/api/spaces/{spaceId}/activity?before=` | viewer | The space's timeline, newest first, 50 at a time |
 | GET | `/api/spaces/{spaceId}/search?q=&sort=&after=` | viewer | Finds items, 50 at a time; `sort` is `relevance`, `name` or `recent`. The first page has a `total`. See [Search](../using/search.md) for what `q` can hold |
+
+The AI calls answer 400 when no AI model is set up and 502 when the model can't be reached. Their answers are
+suggestions only, and the model's name comes back as `model`.
 
 An item's `contentCount` and `contentValue` (everything inside it, at any depth) are recounted in the background
 shortly after a change, so they can lag a moment behind.

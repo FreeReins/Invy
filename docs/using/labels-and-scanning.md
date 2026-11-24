@@ -53,7 +53,7 @@ camera and press **Go**. The camera needs a secure connection (HTTPS); without o
 | **Open** | Opens the item a label is on, and marks it seen. A product barcode (UPC or EAN) searches for it on **Find** |
 | **Move** | Scan the thing, then scan where it's going. It moves there with everything inside it |
 | **Claim** | Each new label becomes a box in the place you're adding to |
-| **Add** | Makes the scanned container the place you're adding to, then **Quick add** puts things in it. A product barcode adds that product (below) |
+| **Add** | Makes the scanned container the place you're adding to, then **Quick add** or **Add from a photo of what's inside** puts things in it (see [Items](items.md#add-items)). A product barcode adds that product (below) |
 | **Audit** | Opens the scanned container's audit, to tick what's in it. See [Last seen and audits](audits.md) |
 
 Viewers see only **Open**.

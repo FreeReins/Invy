@@ -28,6 +28,13 @@ public static class TypeEndpoints
         CancellationToken cancellationToken) =>
         types.CreateTypeAsync(Sessions.RequireUserId(principal), spaceId, request, cancellationToken);
 
+    /// <summary>Asks the AI model which fields a type could have. Nothing is saved until the type is.</summary>
+    [WolverinePost("/api/spaces/{spaceId}/types/suggest-fields")]
+    public static Task<FieldSuggestionsResponse> SuggestFields(
+        Guid spaceId, SuggestFieldsRequest request, ClaimsPrincipal principal, [FromServices] ITypeManager types,
+        CancellationToken cancellationToken) =>
+        types.SuggestFieldsAsync(Sessions.RequireUserId(principal), spaceId, request, cancellationToken);
+
     /// <summary>Replaces a type's name, look and fields. Send the version you opened; 409 if someone changed it since.</summary>
     [WolverinePut("/api/spaces/{spaceId}/types/{typeId}")]
     public static Task<ItemTypeResponse> Update(

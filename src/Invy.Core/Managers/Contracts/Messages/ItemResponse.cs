@@ -23,6 +23,7 @@ namespace Invy.Core.Managers.Contracts.Messages;
 /// <param name="ContentCount">How many items are inside it, at any depth. Updated shortly after a change.</param>
 /// <param name="ContentValue">The total value of what is inside it, at any depth. Currencies aren't converted.</param>
 /// <param name="LabelCode">The code of the QR label stuck on it, such as 7K3Q, or null.</param>
+/// <param name="SuggestedTypeId">While it is in the Inbox: the type an AI model suggested, to accept or ignore, or null.</param>
 public sealed record ItemResponse(
     Guid Id,
     string Name,
@@ -43,4 +44,5 @@ public sealed record ItemResponse(
     decimal? Value,
     int ContentCount,
     decimal ContentValue,
-    string? LabelCode);
+    string? LabelCode,
+    Guid? SuggestedTypeId = null);

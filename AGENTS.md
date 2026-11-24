@@ -23,8 +23,8 @@ run them or `podman build --target test`.
 
 ## Checklists
 
-A new table, manager operation, web screen, field kind, MCP tool, AI task or docs change has a checklist skill in
-`.claude/skills/`: follow it.
+A new table, manager operation, web screen, field kind, MCP tool, AI task, space feature or docs change has a checklist
+skill in `.claude/skills/`: follow it.
 
 ## Rules the code doesn't make obvious
 

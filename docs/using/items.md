@@ -14,11 +14,21 @@ Everything in Invy is an **item**: a place (the shed), a container (box F) or a 
 - **Several at once:** type them into **Quick add**, separated by commas: `baseball, glove, 2 bats`. A number in
   front makes a counted item (*Bats*, 2), and so does a unit (`3.5 kg filament`) or a count after (`screws x200`).
   In a container they go inside it; on the top of **Browse** they go to the **Inbox**.
+- **From a photo:** open a container and press **Add from a photo** (or use **Scan** in **Add** mode). Take or choose
+  up to 4 photos of what's inside, and press **Look at the photo**. An AI model lists what it sees, with a type and
+  field values where it can tell. Untick anything that's wrong, fix names, types and amounts, then press
+  **Add … items**. Nothing is added until you do. This shows once an admin has
+  [set up an AI model](../admin/ai-assistants.md#ai-models-invy-uses).
 
 ## The Inbox
 
 Things with no place and no type wait in the **Inbox**, at the bottom of **Browse**. Open one, then **Edit** it to
 give it a type, or **Move** it into a container.
+
+With an AI model set up, Invy suggests a type for things a couple of minutes after they land in the Inbox. A
+suggestion shows next to the item as the type's name with a question mark: press **Accept** to give it that type, or
+**Ignore** to drop the suggestion. **Suggest types** asks again for everything in the Inbox without a suggestion,
+including ones ignored before. Suggestions appear as they come in.
 
 ## Look inside
 
@@ -43,6 +53,10 @@ An item's page has **Photos and files**. Press **Add a photo or PDF** to attach 
 PDFs, such as a receipt or a manual, up to 10 MB each. On a phone it offers the camera. Photos are made smaller before
 they are sent, and show as thumbnails; press one to open the whole file. Adding a photo writes an entry in the item's
 timeline.
+
+To fill in fields from a label, nameplate, box or receipt, press **Read a label** on an item that has a type with
+fields. Take or choose a photo and press **Read it**. Tick the values to keep (ones that would replace a value it
+already has start unticked), then press **Fill in**. This saves the item as an edit, with an entry in its timeline.
 
 The files are kept in Invy's data folder and backed up with everything else (see
 [Backups and restore](../admin/backups-and-restore.md)). Viewers can look at them; editors and owners add and remove

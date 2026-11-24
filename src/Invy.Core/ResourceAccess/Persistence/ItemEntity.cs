@@ -50,5 +50,9 @@ internal sealed class ItemEntity
 
     public decimal ContentValue { get; set; }
 
+    public Guid? SuggestedTypeId { get; set; }
+
+    public DateTimeOffset? TypeSuggestedAt { get; set; }
+
     public int Version { get; set; }
 }

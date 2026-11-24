@@ -1,5 +1,6 @@
 using Invy.Api;
 using Invy.Api.Database;
+using Invy.Api.Mcp;
 using Invy.Core;
 using Invy.Core.Managers.Contracts;
 using JasperFx;
@@ -66,9 +67,14 @@ builder.Services.UseInvyGeneratedCode();
 builder.Services.AddWolverineHttp();
 
 // The MCP server at /mcp, for assistants signed in with an API token (Settings, AI assistants). Its tools call the
-// managers just as the endpoints do. The tools come with the features they use (the add-mcp-tool skill).
+// managers just as the endpoints do (the add-mcp-tool skill). McpCaller reads who is calling and which space.
 builder.Services.AddMcpServer(mcp => mcp.ServerInfo = new() { Name = "Invy", Version = "1.0" })
-    .WithHttpTransport(mcp => mcp.Stateless = true);
+    .WithHttpTransport(mcp => mcp.Stateless = true)
+    .WithTools<SpaceTools>(McpJsonContext.ToolOptions)
+    .WithTools<ItemTools>(McpJsonContext.ToolOptions)
+    .WithTools<TypeTools>(McpJsonContext.ToolOptions);
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<McpCaller>();
 
 var app = builder.Build();
 

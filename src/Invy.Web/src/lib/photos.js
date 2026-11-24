@@ -34,3 +34,13 @@ export async function shrinkPhoto(file, longest = 1600) {
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
   return blob ? base64(blob) : base64(file);
 }
+
+/** The most photos sent with one AI question, as the server checks it. */
+export const MAX_AI_PHOTOS = 4;
+
+/** Photos chosen for an AI model, made smaller, as PhotoRequest. An error says when there are too many. */
+export async function photoRequest(files) {
+  const chosen = [...files];
+  if (chosen.length > MAX_AI_PHOTOS) throw new Error(`Choose up to ${MAX_AI_PHOTOS} photos at a time.`);
+  return { photos: await Promise.all(chosen.map((file) => shrinkPhoto(file))) };
+}

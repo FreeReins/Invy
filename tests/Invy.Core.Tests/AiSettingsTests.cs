@@ -3,7 +3,7 @@ using Invy.Core.Managers.Contracts.Messages;
 
 namespace Invy.Core.Tests;
 
-/// <summary>Setting up AI models and testing one. Choosing a model per task is tested with the first <see cref="AiTask"/>.</summary>
+/// <summary>Setting up AI models, choosing one per task, and testing one.</summary>
 public class AiSettingsTests
 {
     private static readonly AiModelDraft Claude = new(null, "Claude", AiProvider.Anthropic, "claude-opus-5-5", ApiKey: "sk-ant-secret");
@@ -37,6 +37,54 @@ public class AiSettingsTests
 
         await core.MaintenanceManager().SaveAiSettingsAsync(new([Ollama with { Id = id, ApiKey = "" }], "Ollama"), default);
         await Assert.That(core.Settings.Ai.Models.Single().ApiKey).IsEqualTo(string.Empty);
+    }
+
+    [Test]
+    public async Task Every_task_is_listed_and_one_can_use_another_model()
+    {
+        var core = new TestCore();
+
+        var saved = await core.MaintenanceManager().SaveAiSettingsAsync(
+            new([Claude, Ollama], "Claude", [new(AiTask.SuggestType, "Ollama"), new(AiTask.ItemsFromPhoto, "Claude")]), default);
+
+        await Assert.That(string.Join(", ", saved.Tasks.Select(task => $"{task.Task}={task.Model ?? "default"}")))
+            .IsEqualTo("ItemsFromPhoto=default, ItemDetailsFromPhoto=default, SuggestTypeFields=default, SuggestType=Ollama");
+        await Assert.That(core.Settings.Ai.Routes.Count).IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task Removing_a_model_sends_its_tasks_back_to_the_default()
+    {
+        var core = new TestCore();
+        await core.MaintenanceManager().SaveAiSettingsAsync(new([Claude, Ollama], "Claude", [new(AiTask.SuggestType, "Ollama")]), default);
+        var claude = core.Settings.Ai.Models.Single(model => model.Name == "Claude");
+
+        var saved = await core.MaintenanceManager().SaveAiSettingsAsync(new([Claude with { Id = claude.Id }], "Claude"), default);
+
+        await Assert.That(saved.Tasks.All(task => task.Model is null)).IsTrue();
+        await Assert.That(core.Settings.Ai.Routes).IsEmpty();
+    }
+
+    [Test]
+    public async Task A_task_can_name_only_a_model_that_is_set_up()
+    {
+        var manager = new TestCore().MaintenanceManager();
+
+        var unknown = (await TestData.Caught<RuleViolationException>(() =>
+            manager.SaveAiSettingsAsync(new([Claude], "Claude", [new(AiTask.ItemsFromPhoto, "Gemini")]), default)))!;
+
+        await Assert.That(unknown.Message).Contains("no AI model called Gemini");
+    }
+
+    [Test]
+    public async Task Every_feature_is_ready_once_any_model_is_set_up()
+    {
+        var core = new TestCore();
+        await core.MaintenanceManager().SaveAiSettingsAsync(new([Ollama], "Ollama"), default);
+
+        var ready = (await core.MaintenanceManager().GetAiFeaturesAsync(default)).Ready;
+
+        await Assert.That(ready.Count).IsEqualTo(Enum.GetValues<AiTask>().Length);
     }
 
     [Test]

@@ -14,6 +14,7 @@ internal sealed partial class ItemManager(
     IAccountAccess accounts,
     ISettingsAccess settings,
     IProductAccess products,
+    IAiAccess ai,
     IMessageAccess messages,
     ValidationEngine validation,
     ItemEngine itemEngine,
@@ -69,6 +70,7 @@ internal sealed partial class ItemManager(
         await items.SaveAsync(item, Derived(item, type), cancellationToken);
         await items.AddEventAsync(Event(item, userId, ItemEventKind.Created, now, to: parent?.Id), cancellationToken);
         await RecountLaterAsync(spaceId, item.Path);
+        await SuggestTypesLaterAsync(spaceId, [item], cancellationToken);
         await messages.CommitAsync(cancellationToken);
         return item.ToResponse();
     }
@@ -87,6 +89,11 @@ internal sealed partial class ItemManager(
         var item = before.Copy();
         ValidationEngine.ItemDetails(item, request, type);
         item.Fields = await validation.FieldValuesAsync(spaceId, type, request.Fields, before.Fields, cancellationToken);
+        if (item.TypeId is not null)
+        {
+            item.SuggestedTypeId = null;
+        }
+
         if (before.HoldsItems && !item.HoldsItems)
         {
             await validation.EmptyAsync(item, "turn off Holds items", cancellationToken);

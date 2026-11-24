@@ -12,6 +12,9 @@ internal sealed partial class ValidationEngine
 
     private const int MaxAiModelName = 60;
 
+    /// <summary>The most photos sent with one question.</summary>
+    public const int MaxAiPhotos = 4;
+
     /// <summary>
     /// Checks the AI models to save: each has its own name and a model id, an OpenAI-compatible one has an address, an
     /// Anthropic one has an API key (a new one, or one already saved for it in <paramref name="current"/>), one of them
@@ -114,4 +117,35 @@ internal sealed partial class ValidationEngine
     public static AiModel AiModel(AiSettings settings, Guid id) =>
         settings.Models.FirstOrDefault(model => model.Id == id)
         ?? throw new NotFoundException("That AI model isn't set up any more. Reload the page and choose another.");
+
+    /// <summary>Checks photos to send to a model: one to <see cref="MaxAiPhotos"/> pictures, each one a browser shows and up to the attachment size.</summary>
+    /// <returns>The photos with their media types, in order.</returns>
+    public static IReadOnlyList<AiImage> AiPhotos(PhotoRequest request)
+    {
+        if (request.Photos is not { Count: > 0 } photos)
+        {
+            throw new RuleViolationException("Take or choose a photo first.");
+        }
+
+        if (photos.Count > MaxAiPhotos)
+        {
+            throw new RuleViolationException($"Choose up to {MaxAiPhotos} photos at a time.");
+        }
+
+        return photos.Select(photo =>
+        {
+            if (photo is not { Length: > 0 })
+            {
+                throw new RuleViolationException("One of the photos is empty. Take or choose it again.");
+            }
+
+            if (photo.Length > MaxAttachmentBytes)
+            {
+                throw new RuleViolationException($"Photos can be up to {MaxAttachmentBytes / (1024 * 1024)} MB. Take a smaller one, or crop it.");
+            }
+
+            return new AiImage(photo, ImageFormat.Detect(photo)
+                ?? throw new RuleViolationException("That file isn't a photo Invy can read. Choose a JPEG, PNG, WebP or GIF image."));
+        }).ToList();
+    }
 }

@@ -37,6 +37,19 @@ public interface IItemManager
     /// </summary>
     Task<ItemResponse> MoveItemAsync(Guid userId, Guid spaceId, Guid id, MoveItemRequest request, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Moves several items into one container (or the top), in order, as <see cref="MoveItemAsync"/> does for each.
+    /// Each move is saved on its own, so when one is refused the ones before it stay moved.
+    /// </summary>
+    Task<IReadOnlyList<ItemResponse>> MoveItemsAsync(Guid userId, Guid spaceId, MoveItemsRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Changes only what the request names, as <see cref="UpdateItemAsync"/> would with the rest left as it is. Field
+    /// values are given as text by search name and read as their field's kind.
+    /// </summary>
+    /// <exception cref="RuleViolationException">A field name isn't one of its type's, or a value can't be read as its kind.</exception>
+    Task<ItemResponse> ChangeItemAsync(Guid userId, Guid spaceId, Guid id, ItemChangesRequest request, CancellationToken cancellationToken);
+
     /// <summary>Adds to or takes from a counted item's amount. Writes a QuantityChanged event.</summary>
     Task<ItemResponse> AdjustQuantityAsync(Guid userId, Guid spaceId, Guid id, AdjustQuantityRequest request, CancellationToken cancellationToken);
 
@@ -72,6 +85,42 @@ public interface IItemManager
     /// <exception cref="WebSourceException">The databases couldn't be reached.</exception>
     Task<ProductResponse> LookUpBarcodeAsync(Guid userId, Guid spaceId, string barcode, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Asks an AI model what is in photos of an open box, matched to the space's types and fields. Editors only. The
+    /// answer is only suggestions: nothing is added until the person adds the ones they keep.
+    /// </summary>
+    /// <exception cref="RuleViolationException">No photo, a file that isn't one, or no AI model is set up.</exception>
+    /// <exception cref="AiUnavailableException">The model couldn't be reached or gave no answer Invy can read.</exception>
+    Task<ItemSuggestionsResponse> SuggestFromPhotoAsync(Guid userId, Guid spaceId, PhotoRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Asks an AI model to read an item's fields (brand, model, serial) from photos of a label or nameplate. Editors
+    /// only. Nothing is saved: the person keeps the values they want and saves the item.
+    /// </summary>
+    /// <exception cref="RuleViolationException">The item's type has no fields, no photo, or no AI model is set up.</exception>
+    /// <exception cref="AiUnavailableException">The model couldn't be reached or gave no answer Invy can read.</exception>
+    Task<DetailSuggestionsResponse> SuggestDetailsFromPhotoAsync(Guid userId, Guid spaceId, Guid id, PhotoRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Asks for a type for every Inbox item without a suggestion, again for ones asked about before, on the ai queue.
+    /// Suggestions appear in the Inbox as they come. Editors only.
+    /// </summary>
+    /// <exception cref="RuleViolationException">No AI model is set up, or the space has no types.</exception>
+    Task SuggestInboxTypesAsync(Guid userId, Guid spaceId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Asks an AI model for the types of a batch of Inbox items and keeps each answer as a suggestion; queues the next
+    /// batch when there may be more. Does nothing without a model or types. Safe to run twice.
+    /// </summary>
+    Task SweepInboxTypesAsync(SuggestInboxTypes message, CancellationToken cancellationToken);
+
+    /// <summary>Gives an Inbox item the type suggested for it, as changing its type on its page would (a Changed event).</summary>
+    /// <exception cref="RuleViolationException">It has no suggestion, or the suggested type was removed.</exception>
+    Task<ItemResponse> AcceptSuggestedTypeAsync(Guid userId, Guid spaceId, Guid id, CancellationToken cancellationToken);
+
+    /// <summary>Drops the type suggested for an Inbox item. It isn't suggested again unless someone asks for suggestions again.</summary>
+    Task<ItemResponse> IgnoreSuggestedTypeAsync(Guid userId, Guid spaceId, Guid id, CancellationToken cancellationToken);
+
     /// <summary>How long after being marked seen an item is marked again, so opening a box twice writes one event.</summary>
     static TimeSpan SeenAgainAfter => TimeSpan.FromMinutes(10);
 
@@ -85,6 +134,12 @@ public interface IItemManager
     /// </summary>
     /// <exception cref="RuleViolationException">A term can't be read; the message says how to write it.</exception>
     Task<SearchResponse> SearchAsync(Guid userId, Guid spaceId, string? text, string? sort, string? after, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Where the things matching <paramref name="text"/> are: a search (with the same syntax) whose best 10 matches
+    /// come back with their containers as text. Any member can ask.
+    /// </summary>
+    Task<WhereIsResponse> WhereIsAsync(Guid userId, Guid spaceId, string text, CancellationToken cancellationToken);
 
     /// <summary>Recounts the contents and value totals of the containers an <see cref="ItemsChanged"/> names. Safe to run twice.</summary>
     Task UpdateRollupsAsync(ItemsChanged message, CancellationToken cancellationToken);

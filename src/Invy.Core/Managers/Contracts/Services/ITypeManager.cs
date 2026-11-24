@@ -23,6 +23,14 @@ public interface ITypeManager
     Task<ItemTypeResponse> UpdateTypeAsync(
         Guid userId, Guid spaceId, Guid typeId, ItemTypeRequest request, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Asks an AI model which fields a type called <see cref="SuggestFieldsRequest.Name"/> could have. Editors only.
+    /// Nothing is saved: the person adds the ones they want and saves the type.
+    /// </summary>
+    /// <exception cref="RuleViolationException">No name, or no AI model is set up.</exception>
+    /// <exception cref="AiUnavailableException">The model couldn't be reached or gave no answer Invy can read.</exception>
+    Task<FieldSuggestionsResponse> SuggestFieldsAsync(Guid userId, Guid spaceId, SuggestFieldsRequest request, CancellationToken cancellationToken);
+
     /// <summary>Removes a type. Items of that type keep their values.</summary>
     Task DeleteTypeAsync(Guid userId, Guid spaceId, Guid typeId, CancellationToken cancellationToken);
 }

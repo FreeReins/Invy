@@ -7,6 +7,7 @@
   <ItemGroup>
     <PackageReference Include="TUnit" />
     <ProjectReference Include="../../src/Invy.Core/Invy.Core.csproj" />
+    <ProjectReference Include="../../src/Invy.Api/Invy.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
     <!-- The shipped data files, so tests can check they agree with each other. -->

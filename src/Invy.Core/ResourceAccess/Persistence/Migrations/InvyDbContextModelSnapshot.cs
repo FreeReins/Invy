@@ -329,12 +329,18 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<Guid?>("SuggestedTypeId")
+                        .HasColumnType("uuid");
+
                     b.PrimitiveCollection<List<string>>("Tags")
                         .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<Guid?>("TypeId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("TypeSuggestedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Unit")
                         .HasColumnType("text");

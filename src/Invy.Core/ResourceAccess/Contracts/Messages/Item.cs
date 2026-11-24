@@ -62,6 +62,12 @@ internal sealed class Item
     /// <summary>The total value of what is inside it, at any depth. Kept up to date by the rollups queue.</summary>
     public decimal ContentValue { get; set; }
 
+    /// <summary>The type an AI model suggested for it while it was in the Inbox, or null for none (or ignored).</summary>
+    public Guid? SuggestedTypeId { get; set; }
+
+    /// <summary>When a model was last asked for its type, so the Inbox sweep asks about each item once.</summary>
+    public DateTimeOffset? TypeSuggestedAt { get; set; }
+
     /// <summary>Goes up with each change; the database refuses a save from an older version.</summary>
     public int Version { get; set; }
 }

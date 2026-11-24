@@ -8,6 +8,12 @@ const signedOut = { 'GET /api/session': { setupRequired: false, user: null } };
 const asMember = { 'GET /api/session': data.session(data.member()) };
 
 /** { name, path, answers?: routes for api.set(), act?: async (page, api) => {} run before checking } */
+/** Once an AI model is set up, every AI task is offered. */
+const ai = { 'GET /api/ai/features': data.aiReady() };
+
+/** Chooses a small photo in the dialog's file box. */
+const choosePhoto = (page) => page.getByLabel(/^Photos/).setInputFiles({ name: 'box.png', mimeType: 'image/png', buffer: Buffer.from(data.TINY_PNG, 'base64') });
+
 const VIEWS = [
   // Before signing in
   { name: 'sign in', path: '/', answers: signedOut },
@@ -73,6 +79,9 @@ const VIEWS = [
   { name: 'browse: the top of a space', path: '/browse', act: (page) => page.getByText('Mystery cable').waitFor() },
   { name: 'browse: nothing yet', path: '/browse',
     answers: { 'GET /api/spaces/*/items': { items: [], next: null }, 'GET /api/spaces/*/inbox': { items: [], next: null } } },
+  { name: 'browse: a type suggested for an Inbox item', path: '/browse',
+    answers: { ...ai, 'GET /api/spaces/*/inbox': { items: [{ ...data.inboxItems().items[0], suggestedTypeId: '00000000-0000-4000-8000-000000000d03' }], next: null } },
+    act: (page) => page.getByRole('button', { name: 'Accept' }).waitFor() },
   { name: 'browse: a new item', path: '/browse', act: (page) => page.getByRole('button', { name: 'New item' }).click() },
   { name: 'item: a box with things inside', path: `/browse/${data.itemIds.f}`, act: (page) => page.getByText('Where it has been').waitFor() },
   { name: 'item: a tool with fields', path: `/browse/${data.itemIds.drill}`, act: (page) => page.getByText('DeWalt').first().waitFor() },
@@ -92,6 +101,30 @@ const VIEWS = [
       await page.getByRole('button', { name: 'Audit' }).click();
       await page.getByRole('button', { name: 'Finish the audit' }).click();
       await page.getByText('Found again').waitFor();
+    } },
+  { name: 'item: adding from a photo', path: `/browse/${data.itemIds.f}`, answers: ai,
+    act: (page) => page.getByRole('button', { name: 'Add from a photo' }).click().then(() => page.getByRole('dialog').waitFor()) },
+  { name: 'item: what the AI model saw in a photo', path: `/browse/${data.itemIds.f}`, answers: ai,
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Add from a photo' }).click();
+      await choosePhoto(page);
+      await page.getByRole('button', { name: 'Look at the photo' }).click();
+      await page.getByRole('button', { name: 'Add 3 items' }).waitFor();
+    } },
+  { name: "item: the AI model saw nothing", path: `/browse/${data.itemIds.f}`,
+    answers: { ...ai, 'POST /api/spaces/*/items/from-photo': { model: 'Claude', items: [] } },
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Add from a photo' }).click();
+      await choosePhoto(page);
+      await page.getByRole('button', { name: 'Look at the photo' }).click();
+      await page.getByText("didn't see anything").waitFor();
+    } },
+  { name: 'item: reading a label', path: `/browse/${data.itemIds.drill}`, answers: ai,
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Read a label' }).click();
+      await choosePhoto(page);
+      await page.getByRole('button', { name: 'Read it' }).click();
+      await page.getByRole('button', { name: /^Fill in/ }).waitFor();
     } },
   { name: 'item: sticking on a label', path: `/browse/${data.itemIds.drill}`,
     act: (page) => page.getByRole('button', { name: 'Stick on a label' }).click().then(() => page.getByRole('dialog').waitFor()) },
@@ -181,6 +214,15 @@ const VIEWS = [
       await page.getByRole('button', { name: 'New type' }).click();
       await page.getByRole('button', { name: 'Add a field' }).click();
       await page.getByLabel('Kind').selectOption('Select');
+    },
+  },
+  {
+    name: 'types: suggested fields', path: '/types', answers: ai,
+    act: async (page) => {
+      await page.getByRole('button', { name: 'New type' }).click();
+      await page.getByLabel('Name', { exact: true }).fill('Lego sets');
+      await page.getByRole('button', { name: 'Suggest fields' }).click();
+      await page.getByRole('button', { name: 'Add the ticked fields' }).waitFor();
     },
   },
   {

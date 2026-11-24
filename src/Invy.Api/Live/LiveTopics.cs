@@ -11,4 +11,10 @@ public static class LiveTopics
     /// inbox, so a page whose inbox didn't change loads the same list again.
     /// </summary>
     public const string Inbox = "inbox";
+
+    /// <summary>
+    /// A space's Inbox items, after an AI model suggested types for them. Sent to every page, like <see cref="Inbox"/>;
+    /// a page showing another space's Inbox loads the same list again.
+    /// </summary>
+    public const string InboxItems = "inbox-items";
 }

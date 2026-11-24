@@ -20,9 +20,12 @@ The argument is a phase or session id (`0b`, `1`, `1c`). Without one, use the fi
 ## Work
 
 - Each box names the skill to follow (`add-stored-entity`, `add-core-operation`, `add-web-screen`, `add-field-kind`,
-  `add-mcp-tool`, `add-ai-task`, `update-docs`). Load the skill when you reach the box, not before.
+  `add-mcp-tool`, `add-ai-task`, `add-space-feature`, `update-docs`). Load the skill when you reach the box, not before.
 - To copy something from ChefBot, search `../chef-bot` for the class or file name; don't browse its folders.
 - Run the checks in `AGENTS.md` after each box, not only at the end.
+- A phase's **Done when** holds only checks an agent runs: the build, TUnit tests, web tests with axe, and the strict
+  docs build. Never write a step for a person to do by hand (a real phone, a dev run, a fresh install). Turn one you
+  find into an automated test.
 - If the design is wrong or missing something, stop and ask the user. Record their answer in the README's
   **Decisions** list and in `design.md`, in the same commit as the code.
 

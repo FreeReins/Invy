@@ -13,10 +13,49 @@ internal sealed partial class ItemManager
         await validation.SpaceRoleAsync(spaceId, userId, SpaceRole.Editor, cancellationToken);
         var item = await validation.ItemAsync(spaceId, id, cancellationToken);
         var target = await validation.ContainerAsync(spaceId, request.ParentId, cancellationToken);
+        var moved = await MoveAsync(item, target, userId, cancellationToken);
+        await messages.CommitAsync(cancellationToken);
+        return moved.ToResponse();
+    }
+
+    public async Task<IReadOnlyList<ItemResponse>> MoveItemsAsync(Guid userId, Guid spaceId, MoveItemsRequest request, CancellationToken cancellationToken)
+    {
+        await validation.SpaceRoleAsync(spaceId, userId, SpaceRole.Editor, cancellationToken);
+        var ids = (request.ItemIds ?? []).Distinct().ToList();
+        if (ids.Count is 0 or > MaxMovedAtOnce)
+        {
+            throw new RuleViolationException($"Move 1 to {MaxMovedAtOnce} items at a time.");
+        }
+
+        var target = await validation.ContainerAsync(spaceId, request.ParentId, cancellationToken);
+        var chosen = new List<Item>();
+        foreach (var id in ids)
+        {
+            chosen.Add(await validation.ItemAsync(spaceId, id, cancellationToken));
+        }
+
+        // Something inside another chosen item goes with it, so only the outermost ones are moved.
+        var outermost = chosen.Where(item => !ItemPaths.AncestorIds(item.Path).Any(ids.Contains)).ToList();
+        var moved = new List<Item>();
+        foreach (var item in outermost)
+        {
+            moved.Add(await MoveAsync(item, target, userId, cancellationToken));
+        }
+
+        await messages.CommitAsync(cancellationToken);
+        return moved.Select(item => item.ToResponse()).ToList();
+    }
+
+    /// <summary>The most items <see cref="MoveItemsAsync"/> moves in one go.</summary>
+    public const int MaxMovedAtOnce = 100;
+
+    /// <summary>Moves one item and what's inside it, without committing. Writes one Moved event; nothing when it is already there.</summary>
+    private async Task<Item> MoveAsync(Item item, Item? target, Guid userId, CancellationToken cancellationToken)
+    {
         ValidationEngine.MoveTarget(item, target);
         if (item.ParentId == target?.Id)
         {
-            return item.ToResponse();
+            return item;
         }
 
         var now = clock.GetUtcNow();
@@ -27,12 +66,11 @@ internal sealed partial class ItemManager
         item.UpdatedAt = now;
 
         // The item is saved as usual; what's inside it follows in one statement, with no event of its own.
-        await items.MoveContentsAsync(spaceId, oldPath, item.Path, cancellationToken);
+        await items.MoveContentsAsync(item.SpaceId, oldPath, item.Path, cancellationToken);
         await items.SaveAsync(item, await ValuesAsync(item, cancellationToken), cancellationToken);
         await items.AddEventAsync(Event(item, userId, ItemEventKind.Moved, now, from, target?.Id), cancellationToken);
-        await RecountLaterAsync(spaceId, oldPath, item.Path);
-        await messages.CommitAsync(cancellationToken);
-        return item.ToResponse();
+        await RecountLaterAsync(item.SpaceId, oldPath, item.Path);
+        return item;
     }
 
     public async Task<ItemResponse> AdjustQuantityAsync(
@@ -107,7 +145,7 @@ internal sealed partial class ItemManager
         }
 
         var now = clock.GetUtcNow();
-        var made = new List<ItemResponse>();
+        var made = new List<Item>();
         foreach (var entry in parsed)
         {
             var item = new Item { SpaceId = spaceId, Status = ItemStatus.Active, CreatedAt = now, UpdatedAt = now, Version = 1 };
@@ -115,7 +153,7 @@ internal sealed partial class ItemManager
             Place(item, parent);
             await items.SaveAsync(item, [], cancellationToken);
             await items.AddEventAsync(Event(item, userId, ItemEventKind.Created, now, to: parent?.Id), cancellationToken);
-            made.Add(item.ToResponse());
+            made.Add(item);
         }
 
         if (parent is not null)
@@ -123,8 +161,9 @@ internal sealed partial class ItemManager
             await RecountLaterAsync(spaceId, ItemPaths.Ids(parent.Path));
         }
 
+        await SuggestTypesLaterAsync(spaceId, made, cancellationToken);
         await messages.CommitAsync(cancellationToken);
-        return made;
+        return made.Select(item => item.ToResponse()).ToList();
     }
 
     private async Task<ItemResponse> SetStatusAsync(

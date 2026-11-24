@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Invy.Core.Managers.Contracts;
 using Invy.Core.Managers.Contracts.Messages;
 using Invy.Core.ResourceAccess.Contracts.Messages;
+using Invy.Core.Utilities;
 
 namespace Invy.Core.Engines;
 
@@ -102,6 +103,20 @@ internal sealed partial class ValidationEngine
         };
     }
 
+    /// <summary>True when a suggested field would pass the checks the Types editor's save makes.</summary>
+    public static bool FieldFits(FieldDefinition field)
+    {
+        try
+        {
+            Field(field);
+            return true;
+        }
+        catch (RuleViolationException)
+        {
+            return false;
+        }
+    }
+
     private static TypeField Field(FieldDefinition field)
     {
         var label = Trimmed(field.Label);
@@ -111,6 +126,11 @@ internal sealed partial class ValidationEngine
         }
 
         var key = Trimmed(field.Key).ToLowerInvariant();
+        if (key.Length == 0)
+        {
+            key = FieldKeys.FromLabel(label) ?? string.Empty;
+        }
+
         if (!ValidFieldKey.IsMatch(key))
         {
             throw new RuleViolationException(

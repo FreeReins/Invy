@@ -85,18 +85,56 @@ export const inbox = ({ read = false } = {}) => ({
   unread: read ? 0 : 1,
 });
 
-/** AiFeaturesResponse: no AI task exists yet, so none is ready. */
+/** AiFeaturesResponse: no AI model is set up, so no task is ready. */
 export const aiFeatures = () => ({ ready: [] });
 
-/** AiSettingsResponse. Invy has no AI tasks yet, so the list of tasks is empty. */
+/** AiFeaturesResponse once a model is set up: every task is ready. */
+export const aiReady = () => ({ ready: ['ItemsFromPhoto', 'ItemDetailsFromPhoto', 'SuggestTypeFields', 'SuggestType'] });
+
+/** ItemSuggestionsResponse: what the model saw in a photo of Box F. */
+export const photoItems = () => ({
+  model: 'Claude',
+  items: [
+    { name: 'Cordless drill', typeId: '00000000-0000-4000-8000-000000000d03', quantity: null, unit: null,
+      fields: { '00000000-0000-4000-8000-000000000e02': 'Makita', '00000000-0000-4000-8000-000000000e04': 'Cordless' } },
+    { name: 'AA batteries', typeId: null, quantity: 12, unit: null, fields: {} },
+    { name: 'Baseball glove', typeId: null, quantity: null, unit: null, fields: {} },
+  ],
+});
+
+/** DetailSuggestionsResponse: what the model read on the drill's nameplate. */
+export const photoDetails = () => ({
+  model: 'Claude',
+  fields: { '00000000-0000-4000-8000-000000000e02': 'Makita', '00000000-0000-4000-8000-000000000e03': 129.99 },
+});
+
+/** FieldSuggestionsResponse for Lego sets. */
+export const fieldSuggestions = () => ({
+  model: 'Claude',
+  fields: [
+    { id: null, key: 'set_number', label: 'Set number', kind: 'Text', unit: null, options: [], required: false, sortable: true },
+    { id: null, key: 'theme', label: 'Theme', kind: 'Select', unit: null, options: ['City', 'Technic', 'Star Wars'], required: false, sortable: false },
+    { id: null, key: 'pieces', label: 'Pieces', kind: 'Number', unit: null, options: [], required: false, sortable: true },
+  ],
+});
+
+/** AiTaskResponse[]: every task on the default model but the Inbox sweep, which uses Ollama. */
+const aiTasks = () => [
+  { task: 'ItemsFromPhoto', label: 'Listing things in photos', description: 'Lists what is in a photo of an open box, with types and field values, for you to tick. Needs a model that can see images.', model: null },
+  { task: 'ItemDetailsFromPhoto', label: 'Reading labels and nameplates', description: 'Reads brand, model, serial and other fields from a photo of a label or nameplate. Needs a model that can see images.', model: null },
+  { task: 'SuggestTypeFields', label: 'Suggesting fields for types', description: 'Suggests the fields a new item type could have, such as set number and pieces for Lego sets.', model: null },
+  { task: 'SuggestType', label: 'Suggesting types for the Inbox', description: 'Suggests a type for each item in the Inbox, in the background, for you to accept or ignore.', model: 'Ollama' },
+];
+
+/** AiSettingsResponse. */
 export const aiSettings = (withModels = true) => (withModels ? {
   models: [
     { id: '00000000-0000-4000-8000-000000000b01', name: 'Claude', provider: 'Anthropic', model: 'claude-opus-5-5', endpoint: '', hasApiKey: true },
     { id: '00000000-0000-4000-8000-000000000b02', name: 'Ollama', provider: 'OpenAiCompatible', model: 'qwen2.5vl', endpoint: 'http://ollama.local:11434/v1', hasApiKey: false },
   ],
   defaultModel: 'Claude',
-  tasks: [],
-} : { models: [], defaultModel: null, tasks: [] });
+  tasks: aiTasks(),
+} : { models: [], defaultModel: null, tasks: aiTasks().map((task) => ({ ...task, model: null })) });
 
 /** ApiTokenResponse[] */
 export const apiTokens = () => [

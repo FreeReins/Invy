@@ -7,8 +7,8 @@ timeline, and find anything by search.
 [Data model](../developers/design.md#data-model), [Search](../developers/design.md#search) (not Views),
 [Web screens](../developers/design.md#web-screens).
 
-**Out of scope:** labels and scanning (phase 2), AI and MCP (phase 3), saved views (phase 4), lending and stock
-alerts (phase 5).
+**Out of scope:** labels and scanning (phase 2), AI and MCP (phase 3), saved views (phase 5), lending and stock
+alerts (phase 6).
 
 ## 1a Spaces and types
 

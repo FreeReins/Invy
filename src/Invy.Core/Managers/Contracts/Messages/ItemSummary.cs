@@ -13,6 +13,7 @@ namespace Invy.Core.Managers.Contracts.Messages;
 /// <param name="Value">Its type's first money field times its amount (1 when unique), or null without one.</param>
 /// <param name="ContentValue">The total value of what is inside it, at any depth. Currencies aren't converted.</param>
 /// <param name="LabelCode">The code of the QR label stuck on it, such as 7K3Q, or null.</param>
+/// <param name="SuggestedTypeId">While it is in the Inbox: the type an AI model suggested, to accept or ignore, or null.</param>
 public sealed record ItemSummary(
     Guid Id,
     string Name,
@@ -25,4 +26,5 @@ public sealed record ItemSummary(
     int Contents,
     decimal? Value,
     decimal ContentValue,
-    string? LabelCode);
+    string? LabelCode,
+    Guid? SuggestedTypeId = null);

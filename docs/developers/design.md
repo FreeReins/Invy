@@ -62,6 +62,73 @@ The install's admin (ChefBot's `AdminPolicy`) runs the server: HTTPS, backups, A
 grant access to a space. `ValidationEngine` checks the role on every manager call, and every space-owned query in the
 accessors filters by `space_id`.
 
+## Tailored spaces
+
+Every space has a **kind** and a set of **features**. The kind is the starter pack it was made with. It sets the starting
+types, features, suggested places, examples, getting-started steps and empty-state hints. Features are switched on and off per
+space, so any space can use any feature: a home can track pantry stock, and a shop can use moving mode.
+
+### Setup steps
+
+First-run setup keeps steps 1 and 2. Steps 3 to 5 set up the first space, and **New space** runs the same three
+steps in its modal.
+
+| # | Step | Asks |
+|---|---|---|
+| 1 | Your account | The admin account |
+| 2 | Secure connection | HTTPS, skipped when it's off |
+| 3 | Your space | A name, and one of the kinds as cards (icon, one line, a few of its types) |
+| 4 | What you'll use | The kind's feature switches, already set, one plain line each |
+| 5 | Places | Likely places for the kind as chips to tick, your own, and **Add a few example items**. Skippable |
+
+Answers stay in a draft while moving between steps, and the space is made once, when the last step finishes.
+
+### Kinds
+
+| Kind | Pack | Starts with |
+|---|---|---|
+| Home | `types-home.json` | `values`, `barcodes`, `lending`, `reminders` |
+| Hobby | `types-hobby.json` | `barcodes`, `stock`, `reminders`, `projects` |
+| Collection | `types-collection.json` | `values`, `lending` |
+| Business | `types-business.json` | `values`, `audits`, `barcodes`, `stock`, `lending`, `reminders` |
+
+A pack file holds everything about its kind, so adding a kind means adding one file. These fields are optional and
+only add to the format: `icon`, `features`, `places` (`type` and `suggest` names), `examples` (items with a type, a place and
+contents), `gettingStarted` (step keys) and `hints` (text per tab). `spaces.preset` holds the kind. Changing the kind
+later changes only the hints and getting-started steps, never the types.
+
+### Features
+
+| Key | Shows | Built in phase |
+|---|---|---|
+| `values` | Value rollups and totals, the insurance report | 1, 5 |
+| `audits` | The audit walk, Scan's **Audit** mode, stocktakes | 2 |
+| `barcodes` | Product lookup when adding (the admin's install switch still applies) | 2 |
+| `stock` | Low-stock thresholds and alerts | 6 |
+| `lending` | Lending and check-out, due dates | 6 |
+| `reminders` | Warranty, upkeep and expiry dates in notifications and the calendar feed | 6 |
+| `moving` | Destination rooms and box manifests | 6 |
+| `projects` | Reserving or using up items for a project | 6 |
+
+- Keys are listed in `Utilities/SpaceFeatures.cs` and checked by `ValidationEngine`. A key is offered only once its
+  feature is built (`Available`). The checklist for adding one is the `add-space-feature` skill.
+- A feature that is off is **hidden, not blocked**. Its data and fields stay, the API and MCP tools still work, and
+  switching it back on shows everything again. Its scheduled work (reminders, alerts) skips the space.
+- Labels, scanning, Find, Browse, Types and Activity are always on. AI capture shows whenever the install has a
+  model. Neither is a switch.
+
+### After setup
+
+- **Places** from step 5 are top-level containers of the pack's place type, made in the same commit as the space.
+- **Example items** carry `items.is_example`. Editing one clears it. **Remove examples** deletes the examples that are left,
+  and their events, in one statement.
+- **Getting started** is a card on **Find** with the kind's steps (for a home: add your rooms, print labels, pack a box,
+  try a photo, invite someone). Each step is worked out from data that already exists, never stored. Each member can dismiss
+  it (`space_members.getting_started_dismissed`), and it hides once every step is done.
+- **Hints:** empty Browse, Scan, Types and Find use the kind's `hints` text, and generic text when there is none.
+- **Settings → This space:** name, kind, feature switches (owners change them, others see them), **Remove examples** and
+  **Show getting started again**. **Types → Add from another pack** copies one type from any pack into the space.
+
 ## Data model
 
 Every space-owned table carries `space_id`. Ids are `Guid.CreateVersion7()`.
@@ -200,16 +267,25 @@ Each task can use its own model, as in ChefBot (`AiTask`, `AiRouteEntity`).
 
 AI answers are always suggestions that a person confirms. Nothing AI suggests is saved on its own.
 
+The Inbox sweep keeps its answer on the item, in `suggested_type_id` and `type_suggested_at`, without changing the
+item's version. It runs on the `ai` queue two minutes after things land in the Inbox, and again when someone presses
+**Suggest types**. Each item is asked about once, unless someone asks again; ignoring a suggestion clears the id but
+keeps the time. Accepting one changes the type as an edit does, with a `Changed` event.
+
 ## MCP tools
 
 | Group | Tools |
 |---|---|
 | Finding | `find_items`, `where_is`, `get_item`, `list_contents`, `item_history` |
 | Changing | `add_items`, `update_item`, `move_items`, `adjust_quantity`, `mark_seen` |
-| Types and views | `list_types`, `define_type`, `list_views`, `run_view` |
+| Types and views | `list_types`, `define_type`, `list_views`, `run_view` (the views tools come with views) |
 | Spaces | `list_spaces` |
 
-Every tool takes an optional `space`, defaulting to the token owner's default space. Tools honour space roles.
+Every tool takes an optional `space`, a space's name or id. Without one, a tool uses the token owner's only space;
+someone in several spaces is told their names, so the assistant asks which. Tools honour space roles. A tool calls
+one manager, after `McpCaller` reads the token's owner and the `space`. `where_is` answers with each match's
+containers as text, `update_item` takes field values as text by search name, and `move_items` moves several things
+into one container in one commit.
 
 ## Web screens
 
@@ -222,7 +298,10 @@ Every tool takes an optional `space`, defaulting to the token owner's default sp
 | **Activity** | The space's timeline |
 | **Types** | Item types and their fields |
 | **People** | Members and roles |
-| **Settings** | Spaces, labels and printing, AI assistants, barcode lookup, notifications, backups, HTTPS, logs |
+| **Settings** | This space (kind and features), spaces, labels and printing, AI assistants, barcode lookup, notifications, backups, HTTPS, logs |
+
+Before the tabs come the setup steps (see [Tailored spaces](#setup-steps)). A feature that is off hides its tabs,
+buttons and sections.
 
 On phones the bottom bar shows **Find**, **Browse**, **Scan** (in the middle), **Views** and **More**.
 
@@ -243,8 +322,9 @@ condition fields, purchase date and depreciation, several sites, scheduled stock
 
 **Imports:** CSV, and Homebox backups (as ChefBot imports Mealie).
 
-**Starter packs:** `config/types-home.json`, `config/types-hobby.json` and `config/types-business.json`, chosen when a
-space is created.
+**Starter packs:** `config/types-home.json`, `config/types-hobby.json`, `config/types-collection.json` and
+`config/types-business.json`, one per kind (see [Tailored spaces](#tailored-spaces)). Each idea above hides behind a
+feature switch, so a space shows only the ones it uses.
 
 ## Scale targets
 
@@ -253,4 +333,4 @@ space is created.
 - Moving a container costs the same whatever it holds, apart from one subtree `path` update.
 - Backups and imports stream in batches and never load a whole table into memory. Imports use `COPY`.
 
-Phase 6 adds a seed tool and a benchmark that check these numbers.
+Phase 7 adds a seed tool and a benchmark that check these numbers.

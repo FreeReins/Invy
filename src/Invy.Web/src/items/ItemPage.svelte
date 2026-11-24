@@ -2,7 +2,7 @@
      timeline with where it has been. Editors add, change, move, count and dispose from here. -->
 <script>
   import { onMount } from 'svelte';
-  import { app, run, ask, toast, canEdit, stickyPlace, setStickyPlace } from '../lib/app.svelte.js';
+  import { app, run, ask, toast, canEdit, stickyPlace, setStickyPlace, aiReady } from '../lib/app.svelte.js';
   import { api } from '../lib/api.js';
   import { pendingClick } from '../lib/pending.js';
   import { amount, display, label, chainText } from '../lib/items.js';
@@ -15,6 +15,10 @@
   import EventLine from './EventLine.svelte';
   import AuditWalk from './AuditWalk.svelte';
   import Attachments from './Attachments.svelte';
+  import PhotoItems from './PhotoItems.svelte';
+  import LabelReader from './LabelReader.svelte';
+  import Camera from '@lucide/svelte/icons/camera';
+  import ScanText from '@lucide/svelte/icons/scan-text';
   import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
   import Plus from '@lucide/svelte/icons/plus';
@@ -31,13 +35,14 @@
   let types = $state([]);
   let contents = $state(null);
   let history = $state(null);
-  /** 'edit', 'add', 'move', 'label', 'audit' or null. */
+  /** 'edit', 'add', 'move', 'label', 'audit', 'photo', 'read' or null. */
   let dialog = $state(null);
 
   const item = $derived(detail?.item);
   const type = $derived(types.find((candidate) => candidate.id === item?.typeId) ?? null);
   const shown = $derived(type?.fields.filter((field) => item?.fields[field.id] != null) ?? []);
   const others = $derived(Object.keys(item?.fields ?? {}).filter((fieldId) => !type?.fields.some((field) => field.id === fieldId)));
+  const readable = $derived(type?.fields.some((field) => field.kind !== 'Item') && aiReady('ItemDetailsFromPhoto'));
   const gone = $derived(item && (item.status === 'Disposed' || item.status === 'Archived'));
 
   async function load() {
@@ -136,6 +141,7 @@
           {:else}
             <button type="button" class="with-icon" onclick={() => { dialog = 'edit'; }}><SquarePen size={16} aria-hidden="true" />Edit</button>
             <button type="button" class="with-icon" onclick={() => { dialog = 'move'; }}><Move size={16} aria-hidden="true" />Move</button>
+            {#if readable}<button type="button" class="with-icon" onclick={() => { dialog = 'read'; }}><ScanText size={16} aria-hidden="true" />Read a label</button>{/if}
             <button type="button" class="with-icon" onclick={() => { dialog = 'label'; }}><Tag size={16} aria-hidden="true" />{item.labelCode ? 'New label' : 'Stick on a label'}</button>
             <button type="button" onclick={pendingClick(dispose)}>Dispose</button>
           {/if}
@@ -178,6 +184,7 @@
           <span class="actions">
             <button type="button" class="small with-icon" onclick={addHere} disabled={addingHere}><MapPin size={14} aria-hidden="true" />{addingHere ? 'Adding here' : 'Add things here'}</button>
             <button type="button" class="small with-icon" onclick={() => { dialog = 'add'; }}><Plus size={14} aria-hidden="true" />Add an item</button>
+            {#if aiReady('ItemsFromPhoto')}<button type="button" class="small with-icon" onclick={() => { dialog = 'photo'; }}><Camera size={14} aria-hidden="true" />Add from a photo</button>{/if}
             <button type="button" class="small with-icon" onclick={() => { dialog = 'audit'; }}><ClipboardCheck size={14} aria-hidden="true" />Audit</button>
           </span>
         {/if}
@@ -221,6 +228,10 @@
     <MoveDialog {spaceId} {item} chain={detail.chain} onmoved={done} onclose={() => { dialog = null; }} />
   {:else if dialog === 'audit'}
     <AuditWalk {spaceId} container={item} ondone={reload} onclose={() => { dialog = null; }} />
+  {:else if dialog === 'photo'}
+    <PhotoItems {spaceId} parent={item} {types} onadded={done} onclose={() => { dialog = null; }} />
+  {:else if dialog === 'read'}
+    <LabelReader {spaceId} {item} {type} onsaved={done} onclose={() => { dialog = null; }} />
   {:else if dialog === 'label'}
     <AttachLabel {spaceId} {item} onattached={done} onclose={() => { dialog = null; }} />
   {/if}

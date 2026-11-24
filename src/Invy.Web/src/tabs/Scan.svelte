@@ -1,13 +1,13 @@
 <!-- The Scan tab: the camera, in one of five modes. Open goes to what a label is on (or searches for a product barcode),
      marking it seen;
      Move takes two scans, the thing and then where it's going; Claim turns each new label into a box in the sticky place;
-     Add makes the scanned container the sticky place, then quick add fills it, and a product barcode is looked up online
+     Add makes the scanned container the sticky place, then quick add or a photo of what's inside fills it, and a product barcode is looked up online
      (when an admin turned that on) to add it there with its name and photo; Audit opens the scanned container's audit
      walk. /l/<code> for a label that isn't on
      anything yet lands here, offering to claim it. -->
 <script>
   import { onMount } from 'svelte';
-  import { app, run, currentSpace, canEdit, stickyPlace, setStickyPlace, labelCode, findLabel, showSpaceOf } from '../lib/app.svelte.js';
+  import { app, run, currentSpace, canEdit, stickyPlace, setStickyPlace, labelCode, findLabel, showSpaceOf, aiReady } from '../lib/app.svelte.js';
   import { go } from '../lib/addresses.js';
   import { api } from '../lib/api.js';
   import { pendingClick } from '../lib/pending.js';
@@ -18,6 +18,8 @@
   import StickyPlace from '../items/StickyPlace.svelte';
   import QuickAdd from '../items/QuickAdd.svelte';
   import ItemForm from '../items/ItemForm.svelte';
+  import PhotoItems from '../items/PhotoItems.svelte';
+  import Camera from '@lucide/svelte/icons/camera';
   import PackageSearch from '@lucide/svelte/icons/package-search';
   import Tag from '@lucide/svelte/icons/tag';
 
@@ -40,6 +42,8 @@
   let types = $state(null);
   /** True while the form to add the product is open. */
   let addingProduct = $state(false);
+  /** True while adding from a photo of the sticky place's contents. */
+  let photographing = $state(false);
   /** What happened, newest first: { id, text, href? }. */
   let log = $state([]);
   let nextId = 0;
@@ -77,6 +81,16 @@
     types ??= await api('GET', `/api/spaces/${app.spaceId}/types`);
     addingProduct = true;
   });
+
+  const photograph = () => run(async () => {
+    types ??= await api('GET', `/api/spaces/${app.spaceId}/types`);
+    photographing = true;
+  });
+
+  function photoAdded(made) {
+    photographing = false;
+    note(`${plural(made.length, 'item')} added ${where} from a photo.`, place ? `/browse/${place.id}` : null);
+  }
 
   const productAdded = (made) => run(async () => {
     addingProduct = false;
@@ -213,7 +227,15 @@
       typeLabel={mode === 'open' || mode === 'add' ? 'Or type a label code or barcode' : 'Or type the label code'} />
 
     {#if mode === 'add' && editor && place}
-      <div class="card"><QuickAdd spaceId={app.spaceId} parent={place} onadded={(made) => note(`${plural(made.length, 'item')} added to ${place.name}.`, `/browse/${place.id}`)} /></div>
+      <div class="card"><QuickAdd spaceId={app.spaceId} parent={place} onadded={(made) => note(`${plural(made.length, 'item')} added to ${place.name}.`, `/browse/${place.id}`)} />
+        {#if aiReady('ItemsFromPhoto')}
+          <button type="button" class="with-icon" onclick={pendingClick(photograph)}><Camera size={16} aria-hidden="true" />Add from a photo of what's inside</button>
+        {/if}
+      </div>
+    {/if}
+
+    {#if photographing}
+      <PhotoItems spaceId={app.spaceId} parent={place} types={types ?? []} onadded={photoAdded} onclose={() => { photographing = false; }} />
     {/if}
 
     {#if addingProduct && product}

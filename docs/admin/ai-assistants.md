@@ -7,12 +7,25 @@ AI works with Invy in two ways, both under **Settings → AI assistants**:
 - **Connect your assistant** (everyone): Invy is an [MCP](https://modelcontextprotocol.io) server, so AI
   assistants such as Claude can connect to it with a token you make.
 
-> [!NOTE]
-> This version has no AI tasks and no MCP tools yet. Models and tokens set up now keep working when they arrive.
-
 ## AI models Invy uses
 
-This part is for admins. Nothing is sent to a model until someone asks.
+This part is for admins. Nothing is sent to a model until someone asks, except the Inbox sweep below, which runs
+once a model is set up.
+
+### What Invy asks models to do
+
+Everything a model answers is a suggestion that someone confirms. Invy never saves it on its own.
+
+| Task | What it does | Where people use it | Needs a model that can see images |
+|---|---|---|---|
+| **Listing things in photos** | Lists what is in a photo of an open box, with a type from the space and field values | **Add from a photo** on a container's page, and in **Scan**'s **Add** mode | Yes |
+| **Reading labels and nameplates** | Reads an item's fields, such as brand, model and serial, from a photo of its label | **Read a label** on an item's page | Yes |
+| **Suggesting fields for types** | Suggests fields from a type's name, such as set number and pieces for Lego sets | **Suggest fields** in the **Types** editor | No |
+| **Suggesting types for the Inbox** | Suggests a type for things in the Inbox, a couple of minutes after they arrive, for someone to **Accept** or **Ignore** | The **Inbox** on **Browse** | No |
+
+Only editors and owners of a space can use them. The model sees the photos, the names, fields and choices of the
+space's types, and for the Inbox, the names, markings, tags and notes of the things it sorts.
+
 
 **At a glance** lists each task and the model it uses, marked **Default** when it falls back to the default model,
 or **Not set up** when there is no model yet. Under **Models**, each model is one row showing its service, model
@@ -46,7 +59,7 @@ API keys are never shown again after saving. Leave the key field empty to keep t
 
 With two or more models, **Which model does each task** lists each task. Pick a model for one, or leave it on **The
 default model**. For example, read photos with a local model and use Claude for the rest. Removing a model sends its
-tasks back to the default. Until Invy has AI tasks, the list is empty.
+tasks back to the default.
 
 ### Keys and backups
 
@@ -56,8 +69,28 @@ API keys are kept in Invy's database and in [backups](backups-and-restore.md). K
 
 ### What an assistant can do
 
-Nothing yet: Invy's MCP server answers, but offers no tools in this version. Finding, adding and moving things come
-with the inventory itself. Admin settings (people, backups and so on) won't be offered.
+Once connected, you can ask things like *"Where is my baseball?"*, *"Put the glove in box F"* or *"I used 3 AA
+batteries"*. The assistant uses these tools:
+
+| Tool | What it does |
+|---|---|
+| `where_is` | Finds things by name and says which containers each is in, such as *Garage › Box F* |
+| `find_items` | Searches with the same words and filters as **Find** (see [Search](../using/search.md)) |
+| `get_item` | Everything about one item, and where it is |
+| `list_contents` | What is directly inside a container, or the places at the top |
+| `item_history` | An item's timeline and the places it has been |
+| `add_items` | Adds things, several at once, to a container or the Inbox: `baseball, glove, 2 bats` |
+| `update_item` | Changes an item's name, marking, type, notes, tags or field values |
+| `move_items` | Puts things into a container, or takes them out to the top |
+| `adjust_quantity` | Adds to or takes from a counted item's amount |
+| `mark_seen` | Records that something was just seen where Invy says it is |
+| `list_types` | The space's types and their fields |
+| `define_type` | Adds a type with its fields |
+| `list_spaces` | The spaces you're in, and your role in each |
+
+An assistant can do only what its token's owner can: a viewer of a space can find things there but not change
+them. If you're in more than one space, the assistant asks which one, or you can name it (*"in Workshop, where is
+the drill?"*). Admin settings (people, backups and so on) aren't offered.
 
 ### Connect one
 

@@ -30,6 +30,23 @@ internal sealed partial class FakeItems : IItemAccess
     public Task<List<Item>> ListInboxAsync(Guid spaceId, ItemCursor? after, int limit, CancellationToken cancellationToken) =>
         Page(Current(spaceId).Where(item => item.ParentId is null && item.TypeId is null && !item.HoldsItems), after, limit);
 
+    public Task<List<Item>> ListInboxToSuggestAsync(Guid spaceId, DateTimeOffset? askedBefore, int limit, CancellationToken cancellationToken) =>
+        Task.FromResult(Current(spaceId)
+            .Where(item => item.ParentId is null && item.TypeId is null && !item.HoldsItems && item.SuggestedTypeId is null)
+            .Where(item => item.TypeSuggestedAt is null || item.TypeSuggestedAt < askedBefore)
+            .OrderBy(item => item.Id).Take(limit).Select(Copy).ToList());
+
+    public Task SuggestTypesAsync(Guid spaceId, IReadOnlyDictionary<Guid, Guid?> suggestions, DateTimeOffset at, CancellationToken cancellationToken)
+    {
+        foreach (var item in Rows.Where(item => item.SpaceId == spaceId && suggestions.ContainsKey(item.Id)))
+        {
+            item.SuggestedTypeId = suggestions[item.Id];
+            item.TypeSuggestedAt = at;
+        }
+
+        return Task.CompletedTask;
+    }
+
     public Task<Dictionary<Guid, int>> CountChildrenAsync(Guid spaceId, IReadOnlyCollection<Guid> parentIds, CancellationToken cancellationToken) =>
         Task.FromResult(Current(spaceId).Where(item => item.ParentId is Guid parent && parentIds.Contains(parent))
             .GroupBy(item => item.ParentId!.Value).ToDictionary(group => group.Key, group => group.Count()));
@@ -116,6 +133,8 @@ internal sealed partial class FakeItems : IItemAccess
         Value = item.Value,
         ContentCount = item.ContentCount,
         ContentValue = item.ContentValue,
+        SuggestedTypeId = item.SuggestedTypeId,
+        TypeSuggestedAt = item.TypeSuggestedAt,
         Version = item.Version,
     };
 }

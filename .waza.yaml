@@ -21,6 +21,7 @@ tokens:
       ".claude/skills/add-field-kind/SKILL.md": 700
       ".claude/skills/add-mcp-tool/SKILL.md": 600
       ".claude/skills/add-ai-task/SKILL.md": 600
+      ".claude/skills/add-space-feature/SKILL.md": 600
       # Loaded at the start of every roadmap session.
       ".claude/skills/phase/SKILL.md": 600
       # Roadmap index read by every /phase session.

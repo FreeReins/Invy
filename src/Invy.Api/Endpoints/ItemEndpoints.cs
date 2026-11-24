@@ -76,6 +76,59 @@ public static class ItemEndpoints
         Guid spaceId, string code, ClaimsPrincipal principal, [FromServices] IItemManager items, CancellationToken cancellationToken) =>
         items.LookUpBarcodeAsync(Sessions.RequireUserId(principal), spaceId, code, cancellationToken);
 
+    /// <summary>Changes only what the request names; field values are text by search name. No version needed.</summary>
+    [WolverinePatch("/api/spaces/{spaceId}/items/{id}")]
+    public static Task<ItemResponse> Change(
+        Guid spaceId, Guid id, ItemChangesRequest request, ClaimsPrincipal principal, [FromServices] IItemManager items,
+        CancellationToken cancellationToken) =>
+        items.ChangeItemAsync(Sessions.RequireUserId(principal), spaceId, id, request, cancellationToken);
+
+    /// <summary>Moves several items, each with what's inside it, into one container or the top.</summary>
+    [WolverinePost("/api/spaces/{spaceId}/items/move")]
+    public static Task<IReadOnlyList<ItemResponse>> MoveMany(
+        Guid spaceId, MoveItemsRequest request, ClaimsPrincipal principal, [FromServices] IItemManager items,
+        CancellationToken cancellationToken) =>
+        items.MoveItemsAsync(Sessions.RequireUserId(principal), spaceId, request, cancellationToken);
+
+    /// <summary>Where the best 10 matches for <c>q</c> are, with their containers as text.</summary>
+    [WolverineGet("/api/spaces/{spaceId}/where-is")]
+    public static Task<WhereIsResponse> WhereIs(
+        Guid spaceId, string? q, ClaimsPrincipal principal, [FromServices] IItemManager items, CancellationToken cancellationToken) =>
+        items.WhereIsAsync(Sessions.RequireUserId(principal), spaceId, q ?? string.Empty, cancellationToken);
+
+    /// <summary>Asks the AI model what is in photos of an open box. Only suggestions come back; nothing is added.</summary>
+    [WolverinePost("/api/spaces/{spaceId}/items/from-photo")]
+    public static Task<ItemSuggestionsResponse> FromPhoto(
+        Guid spaceId, PhotoRequest request, ClaimsPrincipal principal, [FromServices] IItemManager items, CancellationToken cancellationToken) =>
+        items.SuggestFromPhotoAsync(Sessions.RequireUserId(principal), spaceId, request, cancellationToken);
+
+    /// <summary>Asks the AI model to read an item's fields from photos of a label or nameplate. Nothing is saved.</summary>
+    [WolverinePost("/api/spaces/{spaceId}/items/{id}/details-from-photo")]
+    public static Task<DetailSuggestionsResponse> DetailsFromPhoto(
+        Guid spaceId, Guid id, PhotoRequest request, ClaimsPrincipal principal, [FromServices] IItemManager items, CancellationToken cancellationToken) =>
+        items.SuggestDetailsFromPhotoAsync(Sessions.RequireUserId(principal), spaceId, id, request, cancellationToken);
+
+    /// <summary>Asks for types for the Inbox items, in the background. Answers 202; suggestions show in the Inbox as they come.</summary>
+    [WolverinePost("/api/spaces/{spaceId}/inbox/suggest-types")]
+    public static async Task<IResult> SuggestInboxTypes(
+        Guid spaceId, ClaimsPrincipal principal, [FromServices] IItemManager items, CancellationToken cancellationToken)
+    {
+        await items.SuggestInboxTypesAsync(Sessions.RequireUserId(principal), spaceId, cancellationToken);
+        return Results.Accepted();
+    }
+
+    /// <summary>Gives an Inbox item the type suggested for it.</summary>
+    [WolverinePost("/api/spaces/{spaceId}/items/{id}/suggested-type/accept")]
+    public static Task<ItemResponse> AcceptSuggestedType(
+        Guid spaceId, Guid id, ClaimsPrincipal principal, [FromServices] IItemManager items, CancellationToken cancellationToken) =>
+        items.AcceptSuggestedTypeAsync(Sessions.RequireUserId(principal), spaceId, id, cancellationToken);
+
+    /// <summary>Drops the type suggested for an Inbox item.</summary>
+    [WolverinePost("/api/spaces/{spaceId}/items/{id}/suggested-type/ignore")]
+    public static Task<ItemResponse> IgnoreSuggestedType(
+        Guid spaceId, Guid id, ClaimsPrincipal principal, [FromServices] IItemManager items, CancellationToken cancellationToken) =>
+        items.IgnoreSuggestedTypeAsync(Sessions.RequireUserId(principal), spaceId, id, cancellationToken);
+
     /// <summary>Marks an item seen, and what is directly inside it. The web page calls it when a container is opened or scanned.</summary>
     [WolverinePost("/api/spaces/{spaceId}/items/{id}/seen")]
     public static Task<ItemResponse> Seen(
