@@ -9,4 +9,7 @@ internal sealed class SpaceMember
     public Guid UserId { get; set; }
 
     public SpaceRole Role { get; set; }
+
+    /// <summary>True once they have put the getting-started card away.</summary>
+    public bool GettingStartedDismissed { get; set; }
 }

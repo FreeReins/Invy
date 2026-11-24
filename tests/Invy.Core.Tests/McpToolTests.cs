@@ -51,6 +51,9 @@ public class McpToolTests
     public async Task With_several_spaces_the_assistant_has_to_say_which()
     {
         var space = await ItemSpace.MakeAsync();
+
+        // Spaces are listed oldest first; made in the same millisecond, their ids have no order.
+        space.Core.Clock.Now += TimeSpan.FromMinutes(1);
         await space.Core.SpaceManager().CreateSpaceAsync(space.Owen, new("Workshop", null), default);
         await space.ThingAsync("Glove");
         var (items, types) = Tools(space, space.Owen);

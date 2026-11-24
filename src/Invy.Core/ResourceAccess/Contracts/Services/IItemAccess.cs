@@ -67,6 +67,15 @@ internal interface IItemAccess
     /// </summary>
     Task MarkSeenAsync(Guid spaceId, IReadOnlyCollection<Guid> ids, Guid? contentsOf, DateTimeOffset at, CancellationToken cancellationToken);
 
+    /// <summary>What the space has so far, apart from its examples, in one query.</summary>
+    Task<SpaceProgress> ProgressAsync(Guid spaceId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Deletes the space's examples, with their events and values, in one statement in the request's transaction. An
+    /// example with something of the person's own inside it, at any depth, is kept. Returns the removed items' paths.
+    /// </summary>
+    Task<List<string>> RemoveExamplesAsync(Guid spaceId, CancellationToken cancellationToken);
+
     Task AddEventAsync(ItemEvent itemEvent, CancellationToken cancellationToken);
 
     /// <summary>An item's own events and what went in and out of it, newest first, at most <paramref name="limit"/>.</summary>

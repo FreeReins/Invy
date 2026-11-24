@@ -22,7 +22,13 @@ public static class SpaceEndpoints
     [WolverineGet("/api/starter-packs")]
     public static IReadOnlyList<StarterPackResponse> StarterPacks([FromServices] ISpaceManager spaces) => spaces.ListStarterPacks();
 
-    /// <summary>Makes a space with you as its owner, optionally filled with a starter pack of types.</summary>
+    /// <summary>The features a space can switch on and off, in the order their switches are shown.</summary>
+    [WolverineGet("/api/space-features")]
+    public static IReadOnlyList<SpaceFeatureResponse> Features([FromServices] ISpaceManager spaces) => spaces.ListFeatures();
+
+    /// <summary>
+    /// Makes a space with you as its owner, optionally from a starter pack, with its features, places and examples.
+    /// </summary>
     [WolverinePost("/api/spaces")]
     public static Task<SpaceResponse> Create(
         CreateSpaceRequest request, ClaimsPrincipal principal, [FromServices] ISpaceManager spaces, CancellationToken cancellationToken) =>
@@ -65,4 +71,42 @@ public static class SpaceEndpoints
     public static Task<IReadOnlyList<SpaceMemberResponse>> RemoveMember(
         Guid spaceId, Guid memberId, ClaimsPrincipal principal, [FromServices] ISpaceManager spaces, CancellationToken cancellationToken) =>
         spaces.RemoveMemberAsync(Sessions.RequireUserId(principal), spaceId, memberId, cancellationToken);
+
+    /// <summary>Switches a space's features on and off: the ones sent are on, the rest off. Owners only.</summary>
+    [WolverinePut("/api/spaces/{spaceId}/features")]
+    public static Task<SpaceResponse> SetFeatures(
+        Guid spaceId, SpaceFeaturesRequest request, ClaimsPrincipal principal, [FromServices] ISpaceManager spaces,
+        CancellationToken cancellationToken) =>
+        spaces.SetFeaturesAsync(Sessions.RequireUserId(principal), spaceId, request, cancellationToken);
+
+    /// <summary>Changes a space's kind: its hints and getting-started steps, never its types. Owners only.</summary>
+    [WolverinePut("/api/spaces/{spaceId}/kind")]
+    public static Task<SpaceResponse> SetKind(
+        Guid spaceId, SpaceKindRequest request, ClaimsPrincipal principal, [FromServices] ISpaceManager spaces,
+        CancellationToken cancellationToken) =>
+        spaces.SetKindAsync(Sessions.RequireUserId(principal), spaceId, request, cancellationToken);
+
+    /// <summary>Removes the space's example items. One still holding your own things is kept. Editors and owners.</summary>
+    [WolverineDelete("/api/spaces/{spaceId}/examples")]
+    public static Task<RemoveExamplesResponse> RemoveExamples(
+        Guid spaceId, ClaimsPrincipal principal, [FromServices] ISpaceManager spaces, CancellationToken cancellationToken) =>
+        spaces.RemoveExamplesAsync(Sessions.RequireUserId(principal), spaceId, cancellationToken);
+
+    /// <summary>Your getting-started card for a space: its kind's steps, each ticked from what the space has.</summary>
+    [WolverineGet("/api/spaces/{spaceId}/getting-started")]
+    public static Task<GettingStartedResponse> GettingStarted(
+        Guid spaceId, ClaimsPrincipal principal, [FromServices] ISpaceManager spaces, CancellationToken cancellationToken) =>
+        spaces.GetGettingStartedAsync(Sessions.RequireUserId(principal), spaceId, cancellationToken);
+
+    /// <summary>Puts your getting-started card away. Nobody else's changes.</summary>
+    [WolverinePost("/api/spaces/{spaceId}/getting-started/dismiss")]
+    public static Task<GettingStartedResponse> DismissGettingStarted(
+        Guid spaceId, ClaimsPrincipal principal, [FromServices] ISpaceManager spaces, CancellationToken cancellationToken) =>
+        spaces.DismissGettingStartedAsync(Sessions.RequireUserId(principal), spaceId, true, cancellationToken);
+
+    /// <summary>Shows your getting-started card again.</summary>
+    [WolverinePost("/api/spaces/{spaceId}/getting-started/show")]
+    public static Task<GettingStartedResponse> ShowGettingStarted(
+        Guid spaceId, ClaimsPrincipal principal, [FromServices] ISpaceManager spaces, CancellationToken cancellationToken) =>
+        spaces.DismissGettingStartedAsync(Sessions.RequireUserId(principal), spaceId, false, cancellationToken);
 }

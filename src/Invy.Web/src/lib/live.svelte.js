@@ -43,7 +43,7 @@ function connect() {
     if (opened) for (const topic of loaders.keys()) announce(topic);
     opened = true;
   });
-  for (const topic of ['backups', 'inbox']) {
+  for (const topic of ['backups', 'inbox', 'inbox-items', 'items']) {
     source.addEventListener(topic, () => announce(topic));
   }
   return () => {

@@ -13,7 +13,7 @@ and one phase file. Run a phase with `/phase <id>` (`.claude/skills/phase/SKILL.
 | 1 Core inventory | [phase-1-core-inventory.md](phase-1-core-inventory.md) | Done |
 | 2 Capture | [phase-2-capture.md](phase-2-capture.md) | Done |
 | 3 AI and MCP | [phase-3-ai-and-mcp.md](phase-3-ai-and-mcp.md) | Done |
-| 4 Tailored spaces | [phase-4-tailored-spaces.md](phase-4-tailored-spaces.md) | Not started |
+| 4 Tailored spaces | [phase-4-tailored-spaces.md](phase-4-tailored-spaces.md) | In progress |
 | 5 Views and reports | [phase-5-views-and-reports.md](phase-5-views-and-reports.md) | Not started |
 | 6 Audience features | [phase-6-audience-features.md](phase-6-audience-features.md) | Not started |
 | 7 Scale hardening | [phase-7-scale-hardening.md](phase-7-scale-hardening.md) | Not started |
@@ -35,3 +35,4 @@ Add one line per decision that changes `design.md`, newest last, and update `des
 - 2026-11-24: the Inbox type sweep stores its suggestion on the item (`suggested_type_id`, `type_suggested_at`), runs two minutes after things land in the Inbox and on **Suggest types**, and asks about each item once unless asked again.
 - 2026-11-24: spaces have a kind (home, hobby, collection, business) that sets their starting types, features, places, examples, getting-started steps and hints. Features are per space; one that is off is hidden, not blocked, and any space can switch on any feature.
 - 2026-11-24: an MCP tool without `space` uses the token owner's only space and asks which when they have several; `list_views` and `run_view` move to phase 5 with views.
+- 2026-11-24: removing examples keeps an example that holds something of the person's own; an example's place that wasn't ticked is made as an example; getting-started steps of a feature that is off are left off the card.

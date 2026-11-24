@@ -54,5 +54,7 @@ internal sealed class ItemEntity
 
     public DateTimeOffset? TypeSuggestedAt { get; set; }
 
+    public bool IsExample { get; set; }
+
     public int Version { get; set; }
 }

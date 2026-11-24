@@ -11,7 +11,13 @@ internal static partial class EntityMapping
         Name = entity.Name,
         Preset = entity.Preset,
         CreatedAt = entity.CreatedAt,
-        Members = entity.Members.Select(member => new SpaceMember { UserId = member.UserId, Role = member.Role }).ToList(),
+        Features = [.. entity.Features],
+        Members = entity.Members.Select(member => new SpaceMember
+        {
+            UserId = member.UserId,
+            Role = member.Role,
+            GettingStartedDismissed = member.GettingStartedDismissed,
+        }).ToList(),
     };
 
     public static SpaceEntity ToEntity(this Space space) => new()
@@ -20,6 +26,13 @@ internal static partial class EntityMapping
         Name = space.Name,
         Preset = space.Preset,
         CreatedAt = space.CreatedAt,
-        Members = space.Members.Select(member => new SpaceMemberEntity { SpaceId = space.Id, UserId = member.UserId, Role = member.Role }).ToList(),
+        Features = [.. space.Features],
+        Members = space.Members.Select(member => new SpaceMemberEntity
+        {
+            SpaceId = space.Id,
+            UserId = member.UserId,
+            Role = member.Role,
+            GettingStartedDismissed = member.GettingStartedDismissed,
+        }).ToList(),
     };
 }

@@ -17,4 +17,10 @@ public static class LiveTopics
     /// a page showing another space's Inbox loads the same list again.
     /// </summary>
     public const string InboxItems = "inbox-items";
+
+    /// <summary>
+    /// A space's items, after things were added, moved or removed in a container. Sent to every page; a page showing
+    /// another space loads the same thing again. The getting-started card on Find listens for it.
+    /// </summary>
+    public const string Items = "items";
 }

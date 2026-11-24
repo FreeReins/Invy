@@ -37,7 +37,7 @@ its guide; elsewhere use `<HelpLink page="…">` from `src/components/HelpLink.s
 
 ## Troubleshooting
 
-- Svelte drops a space before `{#if}`; put the separator inside an expression: ``{` · ${text}`}``.
+- Svelte drops a space before `{#if}` and at the end of an element's text (`<span class="sr-only">Done: </span>`); put it inside an expression: ``{` · ${text}`}``, `{'Done: '}`.
 - A keyed `{#each}` throws on duplicate keys when older pages repeat items.
 - Entrance animations are fine (axe waits). Respect `prefers-reduced-motion`.
 - A screen that loads in `$effect` (to follow `app.spaceId`) hangs the page: `run()` reads `app.busy`, so the effect

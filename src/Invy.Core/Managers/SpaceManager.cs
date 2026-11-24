@@ -3,18 +3,23 @@ using Invy.Core.Managers.Contracts.Messages;
 using Invy.Core.Managers.Contracts.Services;
 using Invy.Core.ResourceAccess.Contracts.Messages;
 using Invy.Core.ResourceAccess.Contracts.Services;
+using Invy.Core.Utilities;
 
 namespace Invy.Core.Managers;
 
 /// <inheritdoc cref="ISpaceManager"/>
-internal sealed class SpaceManager(
+internal sealed partial class SpaceManager(
     ISpaceAccess spaces,
     ITypeAccess types,
+    IItemAccess items,
+    ILabelAccess labels,
+    IAttachmentAccess attachments,
     IAccountAccess accounts,
     IStarterPackAccess starterPacks,
     IFileStoreAccess files,
     IMessageAccess messages,
     ValidationEngine validation,
+    ItemEngine itemEngine,
     TimeProvider clock) : ISpaceManager
 {
     public async Task<IReadOnlyList<SpaceResponse>> ListSpacesAsync(Guid userId, CancellationToken cancellationToken) =>
@@ -23,30 +28,8 @@ internal sealed class SpaceManager(
     public IReadOnlyList<StarterPackResponse> ListStarterPacks() =>
         starterPacks.All().Select(pack => pack.ToResponse()).ToList();
 
-    public async Task<SpaceResponse> CreateSpaceAsync(Guid userId, CreateSpaceRequest request, CancellationToken cancellationToken)
-    {
-        await validation.UserAsync(userId, cancellationToken);
-        var pack = validation.StarterPack(request.Preset);
-        var space = new Space
-        {
-            Name = ValidationEngine.SpaceName(request.Name),
-            Preset = pack?.Key,
-            CreatedAt = clock.GetUtcNow(),
-            Members = [new SpaceMember { UserId = userId, Role = SpaceRole.Owner }],
-        };
-        await spaces.SaveAsync(space, cancellationToken);
-
-        // The pack's types go through the same checks as types made by hand, and get their own ids here.
-        foreach (var template in pack?.Types ?? [])
-        {
-            var type = ValidationEngine.TypeDraft(space.Id, Guid.CreateVersion7(), template.ToRequest());
-            type.Version = 1;
-            await types.SaveAsync(type, cancellationToken);
-        }
-
-        await messages.CommitAsync(cancellationToken);
-        return space.ToResponse(userId);
-    }
+    public IReadOnlyList<SpaceFeatureResponse> ListFeatures() =>
+        SpaceFeatures.All.Select(feature => new SpaceFeatureResponse(feature.Key, feature.Name, feature.Description, feature.Available)).ToList();
 
     public async Task<SpaceResponse> RenameSpaceAsync(Guid userId, Guid spaceId, RenameSpaceRequest request, CancellationToken cancellationToken)
     {

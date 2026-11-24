@@ -18,6 +18,11 @@ public interface ITypeManager
     /// <exception cref="ConflictException">Another type has the name.</exception>
     Task<ItemTypeResponse> CreateTypeAsync(Guid userId, Guid spaceId, ItemTypeRequest request, CancellationToken cancellationToken);
 
+    /// <summary>Copies one type, with its fields, from any starter pack into the space. Editors only.</summary>
+    /// <exception cref="RuleViolationException">There is no such pack, or it has no such type.</exception>
+    /// <exception cref="ConflictException">The space already has a type with the name.</exception>
+    Task<ItemTypeResponse> CopyPackTypeAsync(Guid userId, Guid spaceId, PackTypeRequest request, CancellationToken cancellationToken);
+
     /// <summary>Replaces a type's name, look and fields.</summary>
     /// <exception cref="ConflictException">Someone changed it since <see cref="ItemTypeRequest.Version"/>, or another type has the name.</exception>
     Task<ItemTypeResponse> UpdateTypeAsync(

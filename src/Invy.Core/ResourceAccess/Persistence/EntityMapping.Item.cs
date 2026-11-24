@@ -34,6 +34,7 @@ internal static partial class EntityMapping
         ContentValue = entity.ContentValue,
         SuggestedTypeId = entity.SuggestedTypeId,
         TypeSuggestedAt = entity.TypeSuggestedAt,
+        IsExample = entity.IsExample,
         Version = entity.Version,
     };
 
@@ -63,6 +64,7 @@ internal static partial class EntityMapping
         ContentValue = item.ContentValue,
         SuggestedTypeId = item.SuggestedTypeId,
         TypeSuggestedAt = item.TypeSuggestedAt,
+        IsExample = item.IsExample,
         Version = item.Version,
     };
 

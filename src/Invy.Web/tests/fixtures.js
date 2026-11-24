@@ -35,10 +35,21 @@ function defaults() {
     // Spaces: the shop, where Alex is a viewer, answers the same as Home.
     'GET /api/spaces': data.spaces(),
     'GET /api/starter-packs': data.starterPacks(),
-    'POST /api/spaces': (request) => ({ ...data.spaces()[0], id: '00000000-0000-4000-8000-000000000c09', ...request.postDataJSON(), role: 'Owner' }),
+    'GET /api/space-features': data.spaceFeatures(),
+    'POST /api/spaces': (request) => {
+      const { name, preset, features } = request.postDataJSON();
+      return { ...data.spaces()[0], id: '00000000-0000-4000-8000-000000000c09', name, preset, features, role: 'Owner' };
+    },
     'PUT /api/spaces/*': (request) => ({ ...data.spaces()[0], ...request.postDataJSON() }),
     'DELETE /api/spaces/*': null,
+    'PUT /api/spaces/*/features': (request) => ({ ...data.spaces()[0], features: request.postDataJSON().features }),
+    'PUT /api/spaces/*/kind': (request) => ({ ...data.spaces()[0], preset: request.postDataJSON().kind }),
+    'DELETE /api/spaces/*/examples': { removed: 2 },
+    'GET /api/spaces/*/getting-started': data.gettingStarted(),
+    'POST /api/spaces/*/getting-started/dismiss': data.gettingStarted({ dismissed: true }),
+    'POST /api/spaces/*/getting-started/show': data.gettingStarted(),
     'GET /api/spaces/*/types': data.itemTypes(),
+    'POST /api/spaces/*/types/from-pack': (request) => ({ ...data.itemTypes()[1], id: '00000000-0000-4000-8000-000000000d08', name: request.postDataJSON().type }),
     'POST /api/spaces/*/types': (request) => ({ ...request.postDataJSON(), id: '00000000-0000-4000-8000-000000000d09', version: 1 }),
     'PUT /api/spaces/*/types/*': (request) => ({ ...request.postDataJSON(), id: new URL(request.url()).pathname.split('/').pop(), version: request.postDataJSON().version + 1 }),
     'DELETE /api/spaces/*/types/*': null,

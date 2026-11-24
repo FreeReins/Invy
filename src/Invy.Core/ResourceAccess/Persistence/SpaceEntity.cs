@@ -10,5 +10,8 @@ internal sealed class SpaceEntity
 
     public DateTimeOffset CreatedAt { get; set; }
 
+    /// <summary>A text[] column.</summary>
+    public List<string> Features { get; set; } = [];
+
     public List<SpaceMemberEntity> Members { get; set; } = [];
 }

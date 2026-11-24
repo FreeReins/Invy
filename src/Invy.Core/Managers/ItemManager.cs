@@ -116,6 +116,8 @@ internal sealed partial class ItemManager(
             return before.ToResponse();
         }
 
+        // Editing an example makes it the person's own, so removing examples leaves it.
+        item.IsExample = false;
         item.Version = before.Version + 1;
         item.UpdatedAt = now;
         await items.SaveAsync(item, Derived(item, type), cancellationToken);

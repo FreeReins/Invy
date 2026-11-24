@@ -2,15 +2,16 @@
      marking it seen;
      Move takes two scans, the thing and then where it's going; Claim turns each new label into a box in the sticky place;
      Add makes the scanned container the sticky place, then quick add or a photo of what's inside fills it, and a product barcode is looked up online
-     (when an admin turned that on) to add it there with its name and photo; Audit opens the scanned container's audit
-     walk. /l/<code> for a label that isn't on
+     (when an admin turned that on, and the space has barcodes switched on) to add it there with its name and photo; Audit,
+     shown while the space has audits on, opens the scanned container's audit walk. /l/<code> for a label that isn't on
      anything yet lands here, offering to claim it. -->
 <script>
   import { onMount } from 'svelte';
-  import { app, run, currentSpace, canEdit, stickyPlace, setStickyPlace, labelCode, findLabel, showSpaceOf, aiReady } from '../lib/app.svelte.js';
+  import { app, run, currentSpace, canEdit, kindHint, stickyPlace, setStickyPlace, labelCode, findLabel, showSpaceOf, aiReady } from '../lib/app.svelte.js';
   import { go } from '../lib/addresses.js';
   import { api } from '../lib/api.js';
   import { pendingClick } from '../lib/pending.js';
+  import { has } from '../lib/features.js';
   import { plural } from '../lib/format.js';
   import NoSpace from '../components/NoSpace.svelte';
   import HelpLink from '../components/HelpLink.svelte';
@@ -27,7 +28,8 @@
     { key: 'open', label: 'Open', hint: 'Scan a label to open what it is on, or a product barcode to search for it.' },
     { key: 'move', label: 'Move', hint: 'Scan the thing, then scan where it is going.' },
     { key: 'claim', label: 'Claim', hint: 'Scan new labels. Each one becomes a box in the place below.' },
-    { key: 'add', label: 'Add', hint: 'Scan a box or shelf to add things to it, then type what goes in or scan their barcodes.' },
+    { key: 'add', label: 'Add', hint: 'Scan a box or shelf to add things to it, then type what goes in or scan their barcodes.',
+      plainHint: 'Scan a box or shelf to add things to it, then type what goes in.' },
     { key: 'audit', label: 'Audit', hint: 'Scan a box or shelf to check what is in it.' },
   ];
 
@@ -50,8 +52,11 @@
 
   const space = $derived(currentSpace());
   const editor = $derived(canEdit());
-  const modes = $derived(editor ? MODES : MODES.slice(0, 1));
-  const current = $derived(MODES.find((candidate) => candidate.key === mode));
+  const barcodes = $derived(has('barcodes'));
+  const modes = $derived(editor ? MODES.filter((option) => option.key !== 'audit' || has('audits')) : MODES.slice(0, 1));
+  // A mode the space no longer shows (audits switched off meanwhile) falls back to Open.
+  const current = $derived(modes.find((candidate) => candidate.key === mode) ?? modes[0]);
+  const hint = $derived(!barcodes && current.plainHint ? current.plainHint : current.hint);
   const place = $derived(stickyPlace());
   /** Where new things go, in words: "in Box F" or "at the top". */
   const where = $derived(place ? `in ${place.name}` : 'at the top');
@@ -121,7 +126,7 @@
   }
 
   const scanned = (text) => run(async () => {
-    if (mode === 'open') {
+    if (current.key === 'open') {
       const code = labelCode(text);
       if (!code) {
         await go(`/find?q=${encodeURIComponent(text)}`);
@@ -135,17 +140,17 @@
       return;
     }
 
-    if (mode === 'add' && !labelCode(text) && isBarcode(text)) {
+    if (current.key === 'add' && barcodes && !labelCode(text) && isBarcode(text)) {
       product = null;
       product = await api('GET', `/api/spaces/${app.spaceId}/barcodes/${encodeURIComponent(text.replace(/[\s-]/g, ''))}`);
       return;
     }
 
     const label = await labelHere(text);
-    if (mode === 'claim') {
+    if (current.key === 'claim') {
       if (label.item) note(`Label ${label.code} is already on ${label.item.name}.`, `/browse/${label.item.id}`);
       else await claim(label.code);
-    } else if (mode === 'move') {
+    } else if (current.key === 'move') {
       if (!label.item) throw new Error(`Label ${label.code} isn't on anything yet. Claim it first.`);
       if (!moving) {
         moving = label.item;
@@ -156,11 +161,11 @@
         note(`Moved ${moving.name} into ${label.item.name}.`, `/browse/${moving.id}`);
         moving = null;
       }
-    } else if (mode === 'audit') {
+    } else if (current.key === 'audit') {
       if (!label.item) throw new Error(`Label ${label.code} isn't on anything yet. Claim it first.`);
       app.auditItem = label.item.id;
       await go(`/browse/${label.item.id}`);
-    } else if (mode === 'add') {
+    } else if (current.key === 'add') {
       const container = label.item ?? await claim(label.code);
       setStickyPlace(container);
       note(`Adding to ${container.name}.`, `/browse/${container.id}`);
@@ -176,15 +181,15 @@
     <fieldset class="modes">
       <legend class="sr-only">What scanning does</legend>
       {#each modes as option (option.key)}
-        <label class:on={mode === option.key}>
-          <input type="radio" name="scan-mode" value={option.key} checked={mode === option.key} onchange={() => change(option.key)} />
+        <label class:on={current.key === option.key}>
+          <input type="radio" name="scan-mode" value={option.key} checked={current.key === option.key} onchange={() => change(option.key)} />
           {option.label}
         </label>
       {/each}
     </fieldset>
-    <p class="muted">{current.hint}</p>
+    <p class="muted">{hint}</p>
 
-    {#if editor && (mode === 'claim' || mode === 'add' || mode === 'move')}<StickyPlace />{/if}
+    {#if editor && (current.key === 'claim' || current.key === 'add' || current.key === 'move')}<StickyPlace />{/if}
 
     {#if unclaimed}
       <div class="card unclaimed" role="status">
@@ -223,10 +228,10 @@
         <button type="button" class="small" onclick={() => { moving = null; }}>Cancel</button></p>
     {/if}
 
-    <Scanner onscan={scanned} prompt={moving ? `Scan where ${moving.name} is going` : current.hint.replace(/\.$/, '')}
-      typeLabel={mode === 'open' || mode === 'add' ? 'Or type a label code or barcode' : 'Or type the label code'} />
+    <Scanner onscan={scanned} prompt={moving ? `Scan where ${moving.name} is going` : hint.replace(/\.$/, '')}
+      typeLabel={current.key === 'open' || (current.key === 'add' && barcodes) ? 'Or type a label code or barcode' : 'Or type the label code'} />
 
-    {#if mode === 'add' && editor && place}
+    {#if current.key === 'add' && editor && place}
       <div class="card"><QuickAdd spaceId={app.spaceId} parent={place} onadded={(made) => note(`${plural(made.length, 'item')} added to ${place.name}.`, `/browse/${place.id}`)} />
         {#if aiReady('ItemsFromPhoto')}
           <button type="button" class="with-icon" onclick={pendingClick(photograph)}><Camera size={16} aria-hidden="true" />Add from a photo of what's inside</button>
@@ -242,7 +247,9 @@
       <ItemForm spaceId={app.spaceId} {types} parent={place} {product} onsaved={productAdded} onclose={() => { addingProduct = false; }} />
     {/if}
 
-    {#if log.length}
+    {#if !log.length && kindHint('scan')}
+      <p class="muted">{kindHint('scan')}</p>
+    {:else if log.length}
       <h3>Just now</h3>
       <ul class="log plain" aria-live="polite">
         {#each log as entry (entry.id)}

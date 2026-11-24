@@ -1,0 +1,68 @@
+{
+  "name": "Collection",
+  "description": "Display cases, binders and sets, with a collectible type for series, condition and value.",
+  "position": 3,
+  "icon": "star",
+  "features": ["values", "lending"],
+  "types": [
+    { "name": "Display case", "icon": "cabinet", "colour": "#64748b", "holdsItems": true, "fields": [
+      { "key": "location", "label": "Where it is", "kind": "Text" }
+    ] },
+    { "name": "Binder", "icon": "book", "colour": "#a16207", "holdsItems": true, "fields": [
+      { "key": "pages", "label": "Pages", "kind": "Number" }
+    ] },
+    { "name": "Set", "icon": "layers", "colour": "#7c3aed", "holdsItems": true, "fields": [
+      { "key": "series", "label": "Series", "kind": "Text", "sortable": true },
+      { "key": "complete", "label": "Complete", "kind": "Bool" }
+    ] },
+    { "name": "Collectible", "icon": "star", "colour": "#db2777", "fields": [
+      { "key": "series", "label": "Series", "kind": "Text", "sortable": true },
+      { "key": "year", "label": "Year", "kind": "Number", "sortable": true },
+      { "key": "condition", "label": "Condition", "kind": "Select", "options": ["Mint", "Good", "Fair", "Poor"] },
+      { "key": "value", "label": "Value", "kind": "Money", "sortable": true },
+      { "key": "acquired", "label": "Acquired", "kind": "Date", "sortable": true },
+      { "key": "paid", "label": "Paid", "kind": "Money", "sortable": true }
+    ] }
+  ],
+  "places": { "type": "Display case", "suggest": ["Living room cabinet", "Study shelves", "Glass case", "Storage boxes"] },
+  "examples": [
+    {
+      "name": "Trading cards",
+      "type": "Binder",
+      "place": "Study shelves",
+      "fields": { "pages": 20 },
+      "contents": [
+        {
+          "name": "Holo dragon card",
+          "type": "Collectible",
+          "fields": { "series": "First edition", "year": 1999, "condition": "Good", "value": 40 }
+        },
+        {
+          "name": "Water starter card",
+          "type": "Collectible",
+          "fields": { "series": "First edition", "year": 1999, "condition": "Mint", "value": 15 }
+        }
+      ]
+    },
+    {
+      "name": "Coins of the year",
+      "type": "Set",
+      "place": "Glass case",
+      "fields": { "series": "Mint set", "complete": false },
+      "contents": [
+        {
+          "name": "Silver crown",
+          "type": "Collectible",
+          "fields": { "year": 1977, "condition": "Fair", "value": 25 }
+        }
+      ]
+    }
+  ],
+  "gettingStarted": ["places", "values", "photo", "labels", "invite"],
+  "hints": {
+    "find": "Search your collection by name, series or year, or add your first pieces with Add.",
+    "browse": "Start with your display cases, then add the binders and sets in them.",
+    "scan": "Scan a QR label on a case or binder to open it, or a blank one to make it a new one.",
+    "types": "Types such as Collectible give items their own fields, like a series, a condition and a value."
+  }
+}

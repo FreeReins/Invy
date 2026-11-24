@@ -132,6 +132,7 @@ internal sealed class InvyDbContext(DbContextOptions<InvyDbContext> options) : D
             item.HasIndex(i => i.Tags, "IX_Items_Tags").HasMethod("gin");
             item.HasIndex(i => i.SpaceId, "IX_Items_Containers").HasFilter("\"HoldsItems\"");
             item.HasIndex(i => i.SpaceId, "IX_Items_Counted").HasFilter("\"Quantity\" IS NOT NULL");
+            item.HasIndex(i => i.SpaceId, "IX_Items_Examples").HasFilter("\"IsExample\"");
             item.HasIndex(i => new { i.SpaceId, i.Status }, "IX_Items_NotActive").HasFilter("\"Status\" <> 'Active'");
             item.Property(i => i.LabelCode).HasMaxLength(6);
             item.HasIndex(i => i.LabelCode).IsUnique().HasFilter("\"LabelCode\" IS NOT NULL");

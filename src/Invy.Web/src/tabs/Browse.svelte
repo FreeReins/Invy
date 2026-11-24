@@ -2,7 +2,7 @@
      whose contents lead one level further down. Nothing is loaded below the level shown. -->
 <script>
   import { untrack } from 'svelte';
-  import { app, run, toast, currentSpace, canEdit, aiReady, onLive } from '../lib/app.svelte.js';
+  import { app, run, toast, currentSpace, canEdit, aiReady, onLive, kindHint } from '../lib/app.svelte.js';
   import { pendingClick } from '../lib/pending.js';
   import { api } from '../lib/api.js';
   import NoSpace from '../components/NoSpace.svelte';
@@ -95,7 +95,7 @@
         <div class="empty">
           <span class="empty-icon" style="--area: var(--area-browse)" aria-hidden="true"><FolderTree size={26} /></span>
           <h3>No places yet</h3>
-          <p class="muted">Start with the big places, such as a shed, a garage or a room. Then put boxes in them, and things in the boxes.</p>
+          <p class="muted">{kindHint('browse', 'Start with the big places, such as a shed, a garage or a room. Then put boxes in them, and things in the boxes.')}</p>
         </div>
       {:else}
         <ItemList items={top.items} name="Places in {space.name}" onmore={top.next ? () => more(top, 'items') : null} />

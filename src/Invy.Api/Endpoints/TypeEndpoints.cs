@@ -28,6 +28,13 @@ public static class TypeEndpoints
         CancellationToken cancellationToken) =>
         types.CreateTypeAsync(Sessions.RequireUserId(principal), spaceId, request, cancellationToken);
 
+    /// <summary>Copies one type, with its fields, from any starter pack into the space.</summary>
+    [WolverinePost("/api/spaces/{spaceId}/types/from-pack")]
+    public static Task<ItemTypeResponse> CopyFromPack(
+        Guid spaceId, PackTypeRequest request, ClaimsPrincipal principal, [FromServices] ITypeManager types,
+        CancellationToken cancellationToken) =>
+        types.CopyPackTypeAsync(Sessions.RequireUserId(principal), spaceId, request, cancellationToken);
+
     /// <summary>Asks the AI model which fields a type could have. Nothing is saved until the type is.</summary>
     [WolverinePost("/api/spaces/{spaceId}/types/suggest-fields")]
     public static Task<FieldSuggestionsResponse> SuggestFields(

@@ -34,6 +34,9 @@ internal sealed class FakeSpaces : ISpaceAccess
         Name = space.Name,
         Preset = space.Preset,
         CreatedAt = space.CreatedAt,
-        Members = space.Members.Select(member => new SpaceMember { UserId = member.UserId, Role = member.Role }).ToList(),
+        Features = [.. space.Features],
+        Members = space.Members
+            .Select(member => new SpaceMember { UserId = member.UserId, Role = member.Role, GettingStartedDismissed = member.GettingStartedDismissed })
+            .ToList(),
     };
 }

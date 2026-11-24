@@ -1,3 +1,4 @@
+using Invy.Core.Managers.Contracts.Messages;
 using Invy.Core.ResourceAccess.Contracts.Messages;
 using Invy.Core.ResourceAccess.Contracts.Services;
 using Invy.Core.ResourceAccess.Persistence;
@@ -10,6 +11,12 @@ internal sealed class AttachmentAccess(InvyDbContext db) : IAttachmentAccess
 {
     public async Task<Attachment?> FindAsync(Guid spaceId, Guid id, CancellationToken cancellationToken) =>
         (await TrackedAsync(spaceId, id, cancellationToken))?.ToContract();
+
+    public Task<bool> AnyPhotoAsync(Guid spaceId, CancellationToken cancellationToken) =>
+        db.Attachments.AsNoTracking().AnyAsync(
+            attachment => attachment.SpaceId == spaceId && attachment.Kind == AttachmentKind.Photo
+                && db.Items.Any(item => item.Id == attachment.ItemId && !item.IsExample),
+            cancellationToken);
 
     public async Task<List<Attachment>> ListAsync(Guid spaceId, Guid itemId, CancellationToken cancellationToken) =>
         (await db.Attachments.AsNoTracking()

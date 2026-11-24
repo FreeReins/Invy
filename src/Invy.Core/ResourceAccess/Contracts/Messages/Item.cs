@@ -68,6 +68,9 @@ internal sealed class Item
     /// <summary>When a model was last asked for its type, so the Inbox sweep asks about each item once.</summary>
     public DateTimeOffset? TypeSuggestedAt { get; set; }
 
+    /// <summary>True for an example a starter pack added. Editing it makes it the person's own.</summary>
+    public bool IsExample { get; set; }
+
     /// <summary>Goes up with each change; the database refuses a save from an older version.</summary>
     public int Version { get; set; }
 }

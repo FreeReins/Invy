@@ -9,5 +9,5 @@
   <p class="muted">HTTPS keeps passwords private on your network. You can change any of this later on the Settings tab.</p>
   <HttpsPanel />
   <p class="muted"><HelpLink page="admin/https-and-certificates">What the browser warning means, and how to trust Invy on your devices</HelpLink></p>
-  <SetupNav>The last step. Finish opens Invy.</SetupNav>
+  <SetupNav>Next, your first space.</SetupNav>
 </section>

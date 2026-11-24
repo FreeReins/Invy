@@ -40,7 +40,7 @@ answer shape.
 | POST | `/api/inbox` | | Adds a note to your own inbox |
 | POST | `/api/inbox/read` | | Marks your whole inbox read |
 | DELETE | `/api/inbox` | | Empties your inbox |
-| GET | `/api/live` | | Server-sent events naming what changed (`backups`, `inbox`), with a `ping` every 25 seconds |
+| GET | `/api/live` | | Server-sent events naming what changed (`backups`, `inbox`, `inbox-items`, `items`), with a `ping` every 25 seconds |
 
 ## People (admin)
 
@@ -60,10 +60,17 @@ answer shape.
 | Method | Path | Who | What it does |
 |---|---|---|---|
 | GET | `/api/spaces` | | The spaces you are in, with your role in each |
-| GET | `/api/starter-packs` | | The starter packs of types a new space can begin with |
-| POST | `/api/spaces` | | Makes a space with you as its owner, from a starter pack (`preset`) or none |
+| GET | `/api/starter-packs` | | The kinds of space: each starter pack's types, icon, features, suggested places, examples, getting-started steps and hints |
+| GET | `/api/space-features` | | The features a space can switch on and off; `available` is false for ones not built yet |
+| POST | `/api/spaces` | | Makes a space with you as its owner, from a starter pack (`preset`) or none, with `features` (the kind's when left out), `places` to make at the top and, with `examples: true`, the kind's example items |
 | PUT | `/api/spaces/{spaceId}` | owner | Renames a space |
 | DELETE | `/api/spaces/{spaceId}` | owner | Deletes a space and everything in it |
+| PUT | `/api/spaces/{spaceId}/features` | owner | Sets which features are on: the `features` sent are on, the rest off |
+| PUT | `/api/spaces/{spaceId}/kind` | owner | Changes the space's `kind`, which changes its hints and getting-started steps, never its types |
+| DELETE | `/api/spaces/{spaceId}/examples` | editor | Removes the example items and their timelines; one still holding your own things is kept |
+| GET | `/api/spaces/{spaceId}/getting-started` | viewer | Your getting-started card: the kind's steps, each `done` from what the space has, and `examplesLeft` |
+| POST | `/api/spaces/{spaceId}/getting-started/dismiss` | viewer | Puts your getting-started card away; nobody else's changes |
+| POST | `/api/spaces/{spaceId}/getting-started/show` | viewer | Shows your getting-started card again |
 | GET | `/api/spaces/{spaceId}/members` | viewer | The people in a space, owners first |
 | POST | `/api/spaces/{spaceId}/members` | owner | Adds someone with an account here, by username |
 | PUT | `/api/spaces/{spaceId}/members/{memberId}` | owner | Changes a member's role; a space keeps at least one owner |
@@ -73,6 +80,7 @@ answer shape.
 | POST | `/api/spaces/{spaceId}/types` | editor | Adds a type |
 | PUT | `/api/spaces/{spaceId}/types/{typeId}` | editor | Replaces a type's name, look and fields; send the `version` you read (409 if it changed) |
 | DELETE | `/api/spaces/{spaceId}/types/{typeId}` | editor | Removes a type; its items keep their values |
+| POST | `/api/spaces/{spaceId}/types/from-pack` | editor | Copies the type called `type` from the starter pack `pack`, with its fields; 409 if the space has a type of that name |
 | POST | `/api/spaces/{spaceId}/types/suggest-fields` | editor | Asks the AI model for fields that suit a type called `name`, leaving out `existingKeys`. Nothing is saved |
 
 ## Items

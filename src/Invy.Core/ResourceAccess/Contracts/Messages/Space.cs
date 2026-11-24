@@ -12,6 +12,9 @@ internal sealed class Space
 
     public DateTimeOffset CreatedAt { get; set; }
 
+    /// <summary>The keys of the features switched on (see <c>SpaceFeatures</c>).</summary>
+    public List<string> Features { get; set; } = [];
+
     /// <summary>Everyone who can open the space, with their role.</summary>
     public List<SpaceMember> Members { get; set; } = [];
 }

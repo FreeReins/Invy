@@ -1,7 +1,9 @@
 {
   "name": "Business",
   "description": "Sites, rooms, racks and bins, with types for stock you sell, equipment you own and the documents behind them.",
-  "position": 3,
+  "position": 4,
+  "icon": "building",
+  "features": ["values", "audits", "barcodes", "stock", "lending", "reminders"],
   "types": [
     { "name": "Site", "icon": "building", "colour": "#64748b", "holdsItems": true, "fields": [
       { "key": "address", "label": "Address", "kind": "LongText" }
@@ -32,5 +34,41 @@
       { "key": "kind", "label": "Kind", "kind": "Select", "options": ["Invoice", "Contract", "Warranty", "Licence", "Other"] },
       { "key": "expires", "label": "Expires", "kind": "Date", "sortable": true }
     ] }
-  ]
+  ],
+  "places": { "type": "Site", "suggest": ["Shop", "Warehouse", "Office", "Workshop", "Stockroom"] },
+  "examples": [
+    {
+      "name": "Rack A",
+      "type": "Rack",
+      "place": "Warehouse",
+      "fields": { "aisle": "1" },
+      "contents": [
+        {
+          "name": "Bin A1",
+          "type": "Bin",
+          "contents": [
+            {
+              "name": "Blue mug",
+              "type": "Product",
+              "quantity": 24,
+              "fields": { "sku": "MUG-BLU", "cost": 3.5, "price": 9, "reorder_at": 10 }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Office laptop",
+      "type": "Equipment",
+      "place": "Office",
+      "fields": { "asset_tag": "IT-001", "cost": 900, "condition": "Good" }
+    }
+  ],
+  "gettingStarted": ["places", "labels", "pack", "audit", "invite"],
+  "hints": {
+    "find": "Search stock, equipment and documents by name, SKU or asset tag, or add the first ones with Add.",
+    "browse": "Start with your sites, then add the rooms, racks and bins in them.",
+    "scan": "Scan a QR label on a rack or bin to open it, or use Audit to tick off what's where.",
+    "types": "Types such as Product and Equipment give items their own fields, like a SKU or an asset tag."
+  }
 }

@@ -1,3 +1,4 @@
+using Invy.Core.Managers.Contracts.Messages;
 using Invy.Core.ResourceAccess.Contracts.Messages;
 using Invy.Core.ResourceAccess.Contracts.Services;
 
@@ -7,6 +8,12 @@ namespace Invy.Core.Tests;
 internal sealed class FakeAttachments : IAttachmentAccess
 {
     public List<Attachment> Rows { get; } = [];
+
+    /// <summary>Whether an item is an example; <see cref="TestCore"/> points it at its items.</summary>
+    public Func<Guid, bool> IsExample { get; set; } = _ => false;
+
+    public Task<bool> AnyPhotoAsync(Guid spaceId, CancellationToken cancellationToken) =>
+        Task.FromResult(Rows.Any(row => row.SpaceId == spaceId && row.Kind == AttachmentKind.Photo && !IsExample(row.ItemId)));
 
     public Task<Attachment?> FindAsync(Guid spaceId, Guid id, CancellationToken cancellationToken) =>
         Task.FromResult(Rows.FirstOrDefault(row => row.SpaceId == spaceId && row.Id == id) is { } row ? Copy(row) : null);

@@ -147,15 +147,47 @@ export { spaceIds };
 
 /** SpaceResponse[]: Alex owns Home and can only look in the shop. */
 export const spaces = () => [
-  { id: spaceIds.home, name: 'Home', preset: 'home', role: 'Owner', createdAt: '2026-11-01T10:00:00Z' },
-  { id: spaceIds.shop, name: 'Corner shop', preset: 'business', role: 'Viewer', createdAt: '2026-11-05T10:00:00Z' },
+  { id: spaceIds.home, name: 'Home', preset: 'home', role: 'Owner', createdAt: '2026-11-01T10:00:00Z', features: ['values', 'audits', 'barcodes', 'lending'] },
+  { id: spaceIds.shop, name: 'Corner shop', preset: 'business', role: 'Viewer', createdAt: '2026-11-05T10:00:00Z', features: ['values', 'audits', 'barcodes', 'stock'] },
 ];
 
-/** StarterPackResponse[] */
+/** The spaces, with only these features on in each. */
+export const spacesWith = (features) => spaces().map((space) => ({ ...space, features }));
+
+/** GettingStartedResponse: a home's card with two of five steps done and two examples left. */
+export const gettingStarted = (extra = {}) => ({
+  steps: [
+    { key: 'places', title: 'Add your places', description: 'Add the rooms, shelves or cupboards things live in.', done: true },
+    { key: 'labels', title: 'Print labels', description: 'Print QR labels to stick on boxes, so a scan opens them.', done: true },
+    { key: 'pack', title: 'Put something away', description: 'Add something inside a box or a place.', done: false },
+    { key: 'photo', title: 'Try a photo', description: "Add a photo to an item, or let AI list what's in a photo of a box.", done: false },
+    { key: 'invite', title: 'Invite someone', description: 'Add someone who shares the space with you.', done: false },
+  ],
+  examplesLeft: 2, dismissed: false, ...extra,
+});
+
+/** SpaceFeatureResponse[]: the catalogue, two of which aren't built yet. */
+export const spaceFeatures = () => [
+  { key: 'values', name: 'Values', description: 'Add up what things are worth, in each box and across the space.', available: true },
+  { key: 'audits', name: 'Audits', description: "Walk round with your phone and tick off what's where.", available: true },
+  { key: 'barcodes', name: 'Barcodes', description: "Fill in a product's details from its barcode when you add it.", available: true },
+  { key: 'stock', name: 'Stock', description: 'Get told when something you keep counted is running low.', available: false },
+  { key: 'lending', name: 'Lending', description: "Lend things to people and get reminded when they're due back.", available: false },
+];
+
+/** StarterPackResponse[]: every kind, one without places or examples. */
 export const starterPacks = () => [
-  { key: 'home', name: 'Home', description: 'Rooms, furniture and boxes, with types for appliances, tools and more.', types: ['Room', 'Furniture', 'Box', 'Tool'] },
-  { key: 'hobby', name: 'Hobby', description: 'Bins and drawers for a workshop or craft room.', types: ['Bin', 'Part', 'Kit'] },
-  { key: 'business', name: 'Business', description: 'Sites, racks and bins, with stock and equipment.', types: ['Site', 'Rack', 'Product'] },
+  { key: 'home', name: 'Home', description: 'Rooms, furniture and boxes, with types for appliances, tools and more.', types: ['Room', 'Furniture', 'Box', 'Tool', 'Book'],
+    icon: 'house', features: ['values', 'barcodes', 'lending'], places: { type: 'Room', suggest: ['Kitchen', 'Garage', 'Loft'] },
+    examples: ['Toolbox', 'Toaster'], gettingStarted: ['places', 'labels'], hints: { browse: 'Start with your rooms.' } },
+  { key: 'hobby', name: 'Hobby', description: 'Bins and drawers for a workshop or craft room.', types: ['Bin', 'Part', 'Kit'],
+    icon: 'palette', features: ['barcodes', 'stock'], places: { type: 'Workspace', suggest: ['Workbench', 'Shelves'] },
+    examples: ['Parts bin'], gettingStarted: ['places'], hints: {} },
+  { key: 'collection', name: 'Collection', description: 'Display cases, binders and sets of collectibles.', types: ['Display case', 'Binder', 'Collectible'],
+    icon: 'star', features: ['values', 'lending'], places: null, examples: [], gettingStarted: [], hints: {} },
+  { key: 'business', name: 'Business', description: 'Sites, racks and bins, with stock and equipment.', types: ['Site', 'Rack', 'Product'],
+    icon: 'building', features: ['values', 'audits', 'barcodes', 'stock'], places: { type: 'Site', suggest: ['Shop floor', 'Stock room'] },
+    examples: ['Till'], gettingStarted: ['places'], hints: {} },
 ];
 
 /** ItemTypeResponse[]: a container, a type with every kind of extra (unit, options) and one with no fields. */
@@ -226,7 +258,7 @@ const item = (id, name, extra = {}) => ({
 /** ItemDetailResponse for each item the tests open. */
 export const itemDetail = (id) => ({
   [itemIds.f]: {
-    item: item(itemIds.f, 'Box F', { marking: 'F', typeId: boxType, parentId: itemIds.garage, holdsItems: true, labelCode: '7K3Q',
+    item: item(itemIds.f, 'Box F', { marking: 'F', typeId: boxType, parentId: itemIds.garage, holdsItems: true, labelCode: '7K3Q', contentValue: 129.5,
       fields: { '00000000-0000-4000-8000-000000000e01': 'Large' }, tags: ['sports'] }),
     chain: [{ id: itemIds.garage, name: 'Garage', marking: null }],
     contents: 3,

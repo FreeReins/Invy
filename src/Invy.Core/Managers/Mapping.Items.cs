@@ -58,6 +58,7 @@ internal static partial class Mapping
         ContentValue = item.ContentValue,
         SuggestedTypeId = item.SuggestedTypeId,
         TypeSuggestedAt = item.TypeSuggestedAt,
+        IsExample = item.IsExample,
         Version = item.Version,
     };
 

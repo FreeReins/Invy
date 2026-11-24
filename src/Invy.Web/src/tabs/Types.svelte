@@ -2,17 +2,21 @@
      member can look; editors and owners add, change and remove types in TypeEditor.svelte. -->
 <script>
   import { untrack } from 'svelte';
-  import { app, run, currentSpace, canEdit } from '../lib/app.svelte.js';
+  import { app, run, currentSpace, canEdit, kindHint } from '../lib/app.svelte.js';
   import { api } from '../lib/api.js';
   import NoSpace from '../components/NoSpace.svelte';
   import HelpLink from '../components/HelpLink.svelte';
   import TypeEditor from '../types/TypeEditor.svelte';
+  import PackTypes from '../types/PackTypes.svelte';
+  import PackagePlus from '@lucide/svelte/icons/package-plus';
   import Shapes from '@lucide/svelte/icons/shapes';
   import Plus from '@lucide/svelte/icons/plus';
 
   let types = $state(null);
   /** The type being edited: an ItemTypeResponse, 'new', or null while the editor is closed. */
   let editing = $state(null);
+  /** True while Add from another pack is open. */
+  let fromPack = $state(false);
 
   const space = $derived(currentSpace());
 
@@ -47,7 +51,10 @@
         <p class="muted">The kinds of things in {space.name}, and the fields each one has.</p>
       </div>
       {#if canEdit()}
-        <button type="button" class="primary with-icon" onclick={() => { editing = 'new'; }}><Plus size={16} aria-hidden="true" />New type</button>
+        <div class="actions">
+          <button type="button" class="with-icon" onclick={() => { fromPack = true; }}><PackagePlus size={16} aria-hidden="true" />Add from another pack</button>
+          <button type="button" class="primary with-icon" onclick={() => { editing = 'new'; }}><Plus size={16} aria-hidden="true" />New type</button>
+        </div>
       {/if}
     </div>
 
@@ -59,7 +66,7 @@
       <div class="card empty">
         <span class="empty-icon" style="--area: var(--area-types)" aria-hidden="true"><Shapes size={26} /></span>
         <h3>No types yet</h3>
-        <p class="muted">A type says what fields a kind of thing has, such as a Tool with a brand and a price.
+        <p class="muted">{kindHint('types', 'A type says what fields a kind of thing has, such as a Tool with a brand and a price.')}
           {canEdit() ? 'Add one to get started.' : 'An editor of this space can add them.'}</p>
       </div>
     {:else}
@@ -84,6 +91,11 @@
     {/if}
     <p class="muted"><HelpLink page="using/types-and-fields">Types and fields</HelpLink></p>
   </section>
+{/if}
+
+{#if fromPack}
+  <PackTypes spaceId={app.spaceId} have={(types ?? []).map((type) => type.name)}
+    onadded={(type) => { saved(type); }} onclose={() => { fromPack = false; }} />
 {/if}
 
 {#if editing}

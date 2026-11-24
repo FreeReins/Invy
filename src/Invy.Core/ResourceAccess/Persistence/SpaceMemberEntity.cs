@@ -9,4 +9,6 @@ internal sealed class SpaceMemberEntity
     public Guid UserId { get; set; }
 
     public SpaceRole Role { get; set; }
+
+    public bool GettingStartedDismissed { get; set; }
 }

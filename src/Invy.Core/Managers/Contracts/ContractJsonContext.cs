@@ -50,7 +50,13 @@ namespace Invy.Core.Managers.Contracts;
 [JsonSerializable(typeof(SpaceMemberRoleRequest))]
 [JsonSerializable(typeof(IReadOnlyList<SpaceMemberResponse>))]
 [JsonSerializable(typeof(IReadOnlyList<StarterPackResponse>))]
+[JsonSerializable(typeof(IReadOnlyList<SpaceFeatureResponse>))]
+[JsonSerializable(typeof(SpaceFeaturesRequest))]
+[JsonSerializable(typeof(SpaceKindRequest))]
+[JsonSerializable(typeof(GettingStartedResponse))]
+[JsonSerializable(typeof(RemoveExamplesResponse))]
 // Item types
+[JsonSerializable(typeof(PackTypeRequest))]
 [JsonSerializable(typeof(ItemTypeRequest))]
 [JsonSerializable(typeof(ItemTypeResponse))]
 [JsonSerializable(typeof(IReadOnlyList<ItemTypeResponse>))]

@@ -1,15 +1,17 @@
 <!-- The Find tab, Invy's start screen: one search box (docs/developers/design.md, Search), searching 150 ms after the
      last key, with the results in a virtual list. With the box empty it shows what changed most recently. The search
-     is kept in the address (/find?q=...), so it can be bookmarked. -->
+     is kept in the address (/find?q=...), so it can be bookmarked. Above the list, while not searching, is the
+     getting-started card (components/GettingStarted.svelte). -->
 <script>
   import { untrack } from 'svelte';
-  import { app, run, currentSpace } from '../lib/app.svelte.js';
+  import { app, run, currentSpace, kindHint } from '../lib/app.svelte.js';
   import { api } from '../lib/api.js';
   import { amount, label, chainText } from '../lib/items.js';
   import { plural } from '../lib/format.js';
   import NoSpace from '../components/NoSpace.svelte';
   import HelpLink from '../components/HelpLink.svelte';
   import VirtualList from '../components/VirtualList.svelte';
+  import GettingStarted from '../components/GettingStarted.svelte';
   import Search from '@lucide/svelte/icons/search';
   import Box from '@lucide/svelte/icons/box';
   import Package from '@lucide/svelte/icons/package';
@@ -109,6 +111,8 @@
       {problem || 'Try words, type:tool, in:"Box F", brand:dewalt, price>50, qty<5, tag:garden, is:container or added<30d.'}
     </p>
 
+    {#if !searching}<GettingStarted onexamples={search} />{/if}
+
     {#if results === null}
       <div class="card"><span class="skeleton line"></span><span class="skeleton line"></span><span class="skeleton line"></span></div>
     {:else if results.length === 0}
@@ -117,7 +121,7 @@
         <h2>{searching ? 'Nothing found' : 'Nothing here yet'}</h2>
         <p class="muted">{searching
           ? 'Check the spelling, or try fewer words. Disposed things show with is:disposed.'
-          : 'Add places and things on the Browse tab, and they show up here.'}</p>
+          : kindHint('find', 'Add places and things on the Browse tab, and they show up here.')}</p>
         <p class="muted"><HelpLink page="using/search">How to search</HelpLink></p>
       </div>
     {:else}

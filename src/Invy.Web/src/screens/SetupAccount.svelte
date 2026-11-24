@@ -1,7 +1,7 @@
 <!-- Setup step one: create the first account, which is the admin. Once it is made, a welcome card says so and setup
      moves on by itself after a moment, or at once with Continue. Coming back to this step later shows who is signed
-     in instead, since setup only ever creates one account. When HTTPS is off there is no next step,
-     so Continue opens Invy. -->
+     in instead, since setup only ever creates one account. When HTTPS is off, Continue goes straight to the
+     first space. -->
 <script>
   import { onDestroy } from 'svelte';
   import { app, loadSystem, moveSetup } from '../lib/app.svelte.js';

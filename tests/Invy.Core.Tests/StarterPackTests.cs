@@ -7,17 +7,18 @@ namespace Invy.Core.Tests;
 public class StarterPackTests
 {
     [Test]
-    public async Task Home_hobby_and_business_are_offered_in_order()
+    public async Task Home_hobby_collection_and_business_are_offered_in_order()
     {
         var packs = new TestCore().SpaceManager().ListStarterPacks();
 
-        await Assert.That(string.Join(", ", packs.Select(pack => pack.Key))).IsEqualTo("home, hobby, business");
+        await Assert.That(string.Join(", ", packs.Select(pack => pack.Key))).IsEqualTo("home, hobby, collection, business");
         await Assert.That(packs.All(pack => pack.Description.Length > 0 && pack.Types.Count > 0)).IsTrue();
     }
 
     [Test]
     [Arguments("home")]
     [Arguments("hobby")]
+    [Arguments("collection")]
     [Arguments("business")]
     public async Task Each_pack_makes_a_space_with_its_types(string key)
     {
@@ -64,6 +65,6 @@ public class StarterPackTests
 
         var refused = await TestData.Caught<RuleViolationException>(
             () => core.SpaceManager().CreateSpaceAsync(owen, new CreateSpaceRequest("Odd", "garden"), default));
-        await Assert.That(refused?.Message).IsEqualTo("There is no starter pack called garden. Pick one of home, hobby, business, or none.");
+        await Assert.That(refused?.Message).IsEqualTo("There is no starter pack called garden. Pick one of home, hobby, collection, business, or none.");
     }
 }

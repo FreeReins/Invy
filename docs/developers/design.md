@@ -120,10 +120,13 @@ later changes only the hints and getting-started steps, never the types.
 ### After setup
 
 - **Places** from step 5 are top-level containers of the pack's place type, made in the same commit as the space.
-- **Example items** carry `items.is_example`. Editing one clears it. **Remove examples** deletes the examples that are left,
-  and their events, in one statement.
+- **Example items** carry `items.is_example`. Editing one clears it. An example's place that wasn't ticked in step 5 is
+  made as an example too. **Remove examples** deletes the examples that are left, and their events, in one statement,
+  keeping any example that still holds something of the person's own.
 - **Getting started** is a card on **Find** with the kind's steps (for a home: add your rooms, print labels, pack a box,
-  try a photo, invite someone). Each step is worked out from data that already exists, never stored. Each member can dismiss
+  try a photo, invite someone). Step keys are listed in `Utilities/GettingStartedSteps.cs`; a step that belongs to a
+  feature (`values`, `audit`) is left off while that feature is off. Each step is worked out from data that already
+  exists, never stored. Each member can dismiss
   it (`space_members.getting_started_dismissed`), and it hides once every step is done.
 - **Hints:** empty Browse, Scan, Types and Find use the kind's `hints` text, and generic text when there is none.
 - **Settings → This space:** name, kind, feature switches (owners change them, others see them), **Remove examples** and
@@ -135,10 +138,10 @@ Every space-owned table carries `space_id`. Ids are `Guid.CreateVersion7()`.
 
 | Table | Columns | Notes |
 |---|---|---|
-| `spaces` | id, name, preset, created | |
-| `space_members` | space_id, account_id, role | |
+| `spaces` | id, name, preset, features (text[]), created | `preset` is the kind; `features` the keys switched on |
+| `space_members` | space_id, account_id, role, getting_started_dismissed | |
 | `item_types` | id, space_id, name, icon, colour, holds_items, fields (jsonb), version | All user-defined |
-| `items` | id, space_id, type_id, name, marking, label_code, parent_id, path (`ltree`), depth, holds_items, quantity, unit, fields (jsonb), tags (text[]), notes, status, last_seen_at, created, updated, version, search (generated `tsvector`) | Places, containers and things |
+| `items` | id, space_id, type_id, name, marking, label_code, parent_id, path (`ltree`), depth, holds_items, quantity, unit, fields (jsonb), tags (text[]), notes, is_example, status, last_seen_at, created, updated, version, search (generated `tsvector`) | Places, containers and things |
 | `item_values` | space_id, item_id, field_id, num, date, text | A typed copy of sortable field values, written in the same transaction as the item |
 | `item_events` | id, space_id, item_id, at, actor, kind, from_parent, to_parent, qty_delta, data (jsonb) | Append-only timeline |
 | `labels` | code, space_id, item_id (null until claimed), printed_at | QR labels |

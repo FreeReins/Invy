@@ -2,6 +2,8 @@
   "name": "Home",
   "description": "Rooms, furniture and boxes, with types for appliances, tools, electronics, clothes, books, documents and the pantry.",
   "position": 1,
+  "icon": "house",
+  "features": ["values", "barcodes", "lending", "reminders"],
   "types": [
     { "name": "Room", "icon": "door", "colour": "#64748b", "holdsItems": true, "fields": [
       { "key": "floor", "label": "Floor", "kind": "Text" }
@@ -52,5 +54,39 @@
       { "key": "barcode", "label": "Barcode", "kind": "Barcode" },
       { "key": "best_before", "label": "Best before", "kind": "Date", "sortable": true }
     ] }
-  ]
+  ],
+  "places": {
+    "type": "Room",
+    "suggest": ["Kitchen", "Living room", "Bedroom", "Bathroom", "Hallway", "Garage", "Loft", "Shed"]
+  },
+  "examples": [
+    {
+      "name": "Toolbox",
+      "type": "Box",
+      "place": "Garage",
+      "contents": [
+        { "name": "Claw hammer", "type": "Tool", "fields": { "power": "Hand", "price": 12 } },
+        {
+          "name": "Cordless drill",
+          "type": "Tool",
+          "fields": { "brand": "Makita", "power": "Cordless", "price": 89 }
+        }
+      ]
+    },
+    { "name": "Toaster", "type": "Appliance", "place": "Kitchen", "fields": { "brand": "Breville", "price": 35 } },
+    { "name": "Rice", "type": "Pantry item", "place": "Kitchen", "quantity": 2, "unit": "kg" },
+    {
+      "name": "Winter clothes",
+      "type": "Box",
+      "place": "Loft",
+      "contents": [{ "name": "Wool jumper", "type": "Clothing", "fields": { "season": ["Winter"] } }]
+    }
+  ],
+  "gettingStarted": ["places", "labels", "pack", "photo", "invite"],
+  "hints": {
+    "find": "Search for anything you've added, or add your first things with Add.",
+    "browse": "Start with your rooms, then add the furniture and boxes in them.",
+    "scan": "Scan a QR label on a box to open it, or a blank one to make it a new box.",
+    "types": "Types such as Appliance and Book give items their own fields, like a serial number or an author."
+  }
 }

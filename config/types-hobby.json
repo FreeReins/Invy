@@ -1,7 +1,9 @@
 {
   "name": "Hobby",
-  "description": "Bins and drawers for a workshop or craft room, with types for parts, materials, kits, collectibles and tools.",
+  "description": "Bins and drawers for a workshop or craft room, with types for parts, materials, kits and tools.",
   "position": 2,
+  "icon": "palette",
+  "features": ["barcodes", "stock", "reminders", "projects"],
   "types": [
     { "name": "Workspace", "icon": "table", "colour": "#64748b", "holdsItems": true, "fields": [] },
     { "name": "Bin", "icon": "box", "colour": "#b45309", "holdsItems": true, "fields": [
@@ -25,16 +27,49 @@
       { "key": "scale", "label": "Scale", "kind": "Text" },
       { "key": "build", "label": "Build", "kind": "Select", "options": ["Not started", "In progress", "Done"] }
     ] },
-    { "name": "Collectible", "icon": "star", "colour": "#db2777", "fields": [
-      { "key": "series", "label": "Series", "kind": "Text", "sortable": true },
-      { "key": "year", "label": "Year", "kind": "Number", "sortable": true },
-      { "key": "condition", "label": "Condition", "kind": "Select", "options": ["Mint", "Good", "Fair", "Poor"] },
-      { "key": "value", "label": "Value", "kind": "Money", "sortable": true }
-    ] },
     { "name": "Tool", "icon": "wrench", "colour": "#dc2626", "fields": [
       { "key": "brand", "label": "Brand", "kind": "Text", "sortable": true },
       { "key": "model", "label": "Model", "kind": "Text" },
       { "key": "purchased", "label": "Purchased", "kind": "Date", "sortable": true }
     ] }
-  ]
+  ],
+  "places": { "type": "Workspace", "suggest": ["Workbench", "Craft table", "Desk", "Garage", "Shed", "Spare room"] },
+  "examples": [
+    {
+      "name": "Small parts",
+      "type": "Bin",
+      "place": "Workbench",
+      "fields": { "size": "Small" },
+      "contents": [
+        {
+          "name": "M3 screws",
+          "type": "Part",
+          "quantity": 200,
+          "fields": { "part_number": "M3x8", "unit_price": 0.05 }
+        },
+        { "name": "LEDs, red", "type": "Part", "quantity": 50, "fields": { "unit_price": 0.1 } }
+      ]
+    },
+    {
+      "name": "PLA filament",
+      "type": "Material",
+      "place": "Workbench",
+      "quantity": 1,
+      "unit": "kg",
+      "fields": { "material": "PLA", "colour": "Black", "price": 20 }
+    },
+    {
+      "name": "Spitfire model",
+      "type": "Kit",
+      "place": "Spare room",
+      "fields": { "maker": "Airfix", "scale": "1:72", "build": "Not started" }
+    }
+  ],
+  "gettingStarted": ["places", "labels", "pack", "photo", "invite"],
+  "hints": {
+    "find": "Search your parts, materials and kits, or add the first ones with Add.",
+    "browse": "Start with your workbench or craft table, then add the bins and drawers on it.",
+    "scan": "Scan a QR label on a bin to see what's in it, or a blank one to make it a new bin.",
+    "types": "Types such as Part and Material give items their own fields, like a part number or a colour."
+  }
 }

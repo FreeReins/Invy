@@ -13,6 +13,9 @@ function remembered() {
 /** SpaceResponse of the space the page shows, or null when the person is in none. */
 export const currentSpace = () => app.spaces.find((space) => space.id === app.spaceId) ?? null;
 
+/** The text an empty tab shows ('find', 'browse', 'scan' or 'types'): the space's kind's own hint, or `fallback`. */
+export const kindHint = (tab, fallback = null) => app.starterPacks.find((pack) => pack.key === currentSpace()?.preset)?.hints?.[tab] ?? fallback;
+
 /** Editors and owners can change items and types. */
 export const canEdit = () => ['Editor', 'Owner'].includes(currentSpace()?.role);
 
@@ -36,9 +39,64 @@ export function pickSpace(id) {
   if (leavingItem) go('/browse');
 }
 
-/** Makes a space with the person as its owner, and shows it. */
-export async function createSpace(name, preset) {
-  const space = await api('POST', '/api/spaces', { name, preset: preset || null });
+/** Loads what the steps for a new space offer, unless it's here already: the starter packs and the feature catalogue. */
+export async function loadSpaceChoices() {
+  const [packs, features] = await Promise.all([
+    app.starterPacks.length ? app.starterPacks : api('GET', '/api/starter-packs'),
+    app.spaceFeatures.length ? app.spaceFeatures : api('GET', '/api/space-features'),
+  ]);
+  app.starterPacks = packs;
+  app.spaceFeatures = features;
+}
+
+/** The starter pack (StarterPackResponse) with this key, or null for none. */
+export const packOf = (key) => app.starterPacks.find((pack) => pack.key === key) ?? null;
+
+/**
+ * The answers for a new space while its steps are filled in: its name, its kind (a pack key, or '' for none), the
+ * features switched on, the places ticked, the places typed in, and whether to add the kind's examples. It starts
+ * as the first pack, named after it.
+ */
+export function newDraft(name = null) {
+  const draft = { name: '', preset: '', features: [], places: [], ownPlaces: [], examples: false, made: null };
+  chooseKind(draft, app.starterPacks[0]?.key ?? '');
+  if (name != null) draft.name = name;
+  return draft;
+}
+
+/**
+ * Picks a draft's kind, which resets what follows from it: the features to the kind's own, and the places and
+ * examples ticked. A name still the old kind's (or empty) becomes the new kind's.
+ */
+export function chooseKind(draft, key) {
+  const before = packOf(draft.preset);
+  const pack = packOf(key);
+  if (!draft.name.trim() || draft.name === before?.name) draft.name = pack?.name ?? '';
+  draft.preset = pack?.key ?? '';
+  draft.features = [...(pack?.features ?? [])];
+  draft.places = [];
+  draft.examples = false;
+}
+
+/** Switches a feature on or off in a draft, keeping any that aren't offered yet as they are. */
+export function toggleFeature(draft, key, on) {
+  draft.features = on ? [...new Set([...draft.features, key])] : draft.features.filter((feature) => feature !== key);
+}
+
+/** The places a draft makes: the ticked ones, then the ones typed in. */
+export const draftPlaces = (draft) => [...draft.places, ...draft.ownPlaces];
+
+/** Makes the space a draft describes, with the person as its owner, and shows it. Returns the SpaceResponse. */
+export async function createSpace(draft) {
+  const name = draft.name.trim();
+  if (!name) throw new Error('Give the space a name, such as Home or Workshop.');
+  const space = await api('POST', '/api/spaces', {
+    name,
+    preset: draft.preset || null,
+    features: draft.features,
+    places: draftPlaces(draft),
+    examples: Boolean(draft.preset) && draft.examples,
+  });
   app.spaces.push(space);
   pickSpace(space.id);
   toast(`${space.name} is ready.`);

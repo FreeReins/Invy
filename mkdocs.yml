@@ -130,4 +130,5 @@ nav:
       - Backups: troubleshooting/backups.md
   - Developers:
       - The design: developers/design.md
+      - Database changes: developers/data-model.md
       - HTTP API: reference/api.md

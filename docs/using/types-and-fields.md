@@ -28,6 +28,18 @@ Anyone in a space can look at its types on the **Types** tab. Editors and owners
 5. Use the arrows to change the order of fields, and the bin to remove one.
 6. Press **Save**.
 
+## Add a type from another pack
+
+Each [kind of space](spaces.md#kinds-of-space) starts with its own types, but any space can borrow one: a home might
+want the *Collectible* type from the collection pack.
+
+1. Open the **Types** tab and press **Add from another pack**.
+2. Pick a **Pack**: **Home**, **Hobby**, **Collection** or **Business**.
+3. Press **Add** beside the type you want. A type the space already has a type of the same name for shows
+   **Already here**.
+
+The type comes with its fields, and you can change it like any other.
+
 ## Kinds of field
 
 | Kind | Holds |

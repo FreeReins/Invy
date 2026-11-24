@@ -7,6 +7,7 @@
   import { pendingClick } from '../lib/pending.js';
   import { amount, display, label, chainText } from '../lib/items.js';
   import { fullDate, ago } from '../lib/format.js';
+  import { has } from '../lib/features.js';
   import ItemList from './ItemList.svelte';
   import ItemForm from './ItemForm.svelte';
   import MoveDialog from './MoveDialog.svelte';
@@ -43,6 +44,16 @@
   const shown = $derived(type?.fields.filter((field) => item?.fields[field.id] != null) ?? []);
   const others = $derived(Object.keys(item?.fields ?? {}).filter((fieldId) => !type?.fields.some((field) => field.id === fieldId)));
   const readable = $derived(type?.fields.some((field) => field.kind !== 'Item') && aiReady('ItemDetailsFromPhoto'));
+  // What it's worth, while the space has values on: a counted thing's price times its amount (a unique thing's price
+  // is already among its fields), and the total of everything inside a container. Currencies aren't converted.
+  const worth = $derived.by(() => {
+    if (!item || !has('values')) return [];
+    const money = type?.fields.find((field) => field.kind === 'Money') ?? { kind: 'Money', unit: null };
+    const lines = [];
+    if (item.quantity != null && item.value != null) lines.push({ label: 'Worth', text: display(money, item.value) });
+    if (item.holdsItems && item.contentValue > 0) lines.push({ label: 'Worth inside', text: display({ kind: 'Money', unit: null }, item.contentValue) });
+    return lines;
+  });
   const gone = $derived(item && (item.status === 'Disposed' || item.status === 'Archived'));
 
   async function load() {
@@ -64,7 +75,7 @@
   onMount(() => {
     if (app.auditItem === id) {
       app.auditItem = null;
-      reload().then(() => { if (detail?.item.holdsItems) dialog = 'audit'; });
+      reload().then(() => { if (detail?.item.holdsItems && has('audits')) dialog = 'audit'; });
     } else {
       reload();
     }
@@ -162,8 +173,11 @@
       </div>
     {/if}
 
-    {#if shown.length || others.length}
+    {#if shown.length || others.length || worth.length}
       <dl class="fields">
+        {#each worth as line (line.label)}
+          <div><dt>{line.label}</dt><dd>{line.text}</dd></div>
+        {/each}
         {#each shown as field (field.id)}
           <div><dt>{field.label}</dt><dd>{#if field.kind === 'Url'}<a href={item.fields[field.id]} target="_blank" rel="noopener noreferrer">{item.fields[field.id]}</a>{:else if field.kind === 'Item'}<a href="/browse/{item.fields[field.id]}">Open the item</a>{:else}{display(field, item.fields[field.id])}{/if}</dd></div>
         {/each}
@@ -185,7 +199,7 @@
             <button type="button" class="small with-icon" onclick={addHere} disabled={addingHere}><MapPin size={14} aria-hidden="true" />{addingHere ? 'Adding here' : 'Add things here'}</button>
             <button type="button" class="small with-icon" onclick={() => { dialog = 'add'; }}><Plus size={14} aria-hidden="true" />Add an item</button>
             {#if aiReady('ItemsFromPhoto')}<button type="button" class="small with-icon" onclick={() => { dialog = 'photo'; }}><Camera size={14} aria-hidden="true" />Add from a photo</button>{/if}
-            <button type="button" class="small with-icon" onclick={() => { dialog = 'audit'; }}><ClipboardCheck size={14} aria-hidden="true" />Audit</button>
+            {#if has('audits')}<button type="button" class="small with-icon" onclick={() => { dialog = 'audit'; }}><ClipboardCheck size={14} aria-hidden="true" />Audit</button>{/if}
           </span>
         {/if}
       </div>

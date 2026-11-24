@@ -12,6 +12,9 @@ internal interface IAttachmentAccess
     Task<List<Attachment>> ListAsync(Guid spaceId, Guid itemId, CancellationToken cancellationToken);
 
     /// <summary>Adds the attachment, or changes the stored one.</summary>
+    /// <summary>True when any item in the space that isn't an example has a photo.</summary>
+    Task<bool> AnyPhotoAsync(Guid spaceId, CancellationToken cancellationToken);
+
     Task SaveAsync(Attachment attachment, CancellationToken cancellationToken);
 
     /// <summary>Removes an attachment's row. The file stays until nothing else points at it.</summary>

@@ -29,6 +29,7 @@ const VIEWS = [
     answers: { 'GET /api/spaces/*/search': { results: [], total: 0, totalIsEstimate: false, next: null } } },
   { name: 'find: no space yet', path: '/find', answers: { 'GET /api/spaces': [] } },
   { name: 'find for a member', path: '/find', answers: asMember },
+  { name: 'find: the getting-started card', path: '/find', act: (page) => page.getByText('2 of 5 done').waitFor() },
   { name: 'find: results from the address', path: '/find?q=baseball', act: (page) => page.getByText('2 items found').waitFor() },
   {
     name: 'find: typing a search', path: '/find',
@@ -72,6 +73,21 @@ const VIEWS = [
 
   // Spaces
   { name: 'space picker: new space dialog', path: '/find', act: (page) => page.getByRole('button', { name: 'New space' }).click() },
+  { name: "new space dialog: what you'll use", path: '/find',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'New space' }).click();
+      await page.getByRole('button', { name: 'Next' }).click();
+      await page.getByRole('checkbox', { name: /^Values/ }).waitFor();
+    } },
+  { name: 'new space dialog: places', path: '/find',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'New space' }).click();
+      await page.getByRole('button', { name: 'Next' }).click();
+      await page.getByRole('button', { name: 'Next' }).click();
+      await page.getByLabel('Your own place').fill('Spare room');
+      await page.getByRole('button', { name: 'Add', exact: true }).click();
+      await page.getByRole('checkbox', { name: 'Garage' }).check();
+    } },
   { name: 'types: no space yet', path: '/types', answers: { 'GET /api/spaces': [] } },
   { name: 'people: no space yet', path: '/people', answers: { 'GET /api/spaces': [] } },
 
@@ -94,6 +110,8 @@ const VIEWS = [
     answers: { 'GET /api/spaces': data.spaces().map((space) => ({ ...space, role: 'Viewer' })) },
     act: (page) => page.getByText('Where it has been').waitFor() },
 
+  { name: 'item: a box in a space with audits and values off', path: `/browse/${data.itemIds.f}`, answers: { 'GET /api/spaces': data.spacesWith([]) },
+    act: (page) => page.getByText('Where it has been').waitFor() },
   { name: 'item: auditing a box', path: `/browse/${data.itemIds.f}`,
     act: async (page) => { await page.getByRole('button', { name: 'Audit' }).click(); await page.getByText('0 of 3 ticked').waitFor(); } },
   { name: "item: an audit's differences", path: `/browse/${data.itemIds.f}`,
@@ -178,6 +196,8 @@ const VIEWS = [
       await page.getByRole('dialog').waitFor();
     },
   },
+  { name: 'scan: audits and barcodes off', path: '/scan', answers: { 'GET /api/spaces': data.spacesWith(['values']) },
+    act: (page) => page.getByRole('radio', { name: 'Add' }).check() },
   { name: 'scan: as a viewer', path: '/scan', answers: { 'GET /api/spaces': data.spaces().map((space) => ({ ...space, role: 'Viewer' })) } },
   { name: 'scan: no space yet', path: '/scan', answers: { 'GET /api/spaces': [] } },
   { name: 'settings: labels and printing', path: '/settings/labels' },
@@ -204,6 +224,8 @@ const VIEWS = [
   // Types
   { name: 'types: the list', path: '/types', act: (page) => page.getByRole('heading', { name: 'Tool' }).waitFor() },
   { name: 'types: none yet', path: '/types', answers: { 'GET /api/spaces/*/types': [] } },
+  { name: 'types: adding from another pack', path: '/types',
+    act: (page) => page.getByRole('button', { name: 'Add from another pack' }).click().then(() => page.getByRole('dialog').waitFor()) },
   {
     name: 'types: editing a type', path: '/types',
     act: (page) => page.getByRole('button', { name: 'Edit Tool' }).click(),
@@ -241,6 +263,10 @@ const VIEWS = [
 
   // Settings
   { name: 'settings: login', path: '/settings/login' },
+  { name: 'settings: this space, as an owner', path: '/settings/space', act: (page) => page.getByRole('button', { name: 'Remove examples (2)' }).waitFor() },
+  { name: 'settings: this space, as a viewer', path: '/settings/space',
+    answers: { 'GET /api/spaces': data.spaces().map((space) => ({ ...space, role: 'Viewer' })), 'GET /api/spaces/*/getting-started': data.gettingStarted({ dismissed: true }) },
+    act: (page) => page.getByRole('button', { name: 'Show getting started again' }).waitFor() },
   { name: 'settings: appearance', path: '/settings/appearance' },
   {
     // Phones only: the sidebar opened from the menu button. Wide screens show it all the time.
@@ -360,11 +386,16 @@ for (const view of VIEWS) {
 }
 
 test('setup wizard, every step', async ({ page, api }) => {
+  // A new install has no spaces until the last step makes one.
+  let made = [];
   api.set({
     'GET /api/session': { setupRequired: true, user: null },
     'POST /api/setup/account': data.admin(),
-    // A new install has no spaces yet.
-    'GET /api/spaces': [],
+    'GET /api/spaces': () => made,
+    'POST /api/spaces': (request) => {
+      made = [{ ...data.spaces()[0], ...request.postDataJSON(), id: '00000000-0000-4000-8000-000000000c09', role: 'Owner' }];
+      return made[0];
+    },
   });
   await open(page, '/');
   await page.getByLabel('Your name').fill('Alex Rivera');
@@ -377,13 +408,21 @@ test('setup wizard, every step', async ({ page, api }) => {
   await expectAccessible(page);
   await page.getByRole('button', { name: 'Continue' }).click();
 
-  await page.getByRole('heading', { name: 'Secure connection' }).waitFor();
-  await expect(page.getByRole('heading', { name: 'Secure connection' })).toBeFocused();
-  await expectAccessible(page);
+  for (const step of ['Secure connection', 'Your space', "What you'll use", 'Places']) {
+    await page.getByRole('heading', { name: step }).waitFor();
+    await expect(page.getByRole('heading', { name: step })).toBeFocused();
+    await expectAccessible(page);
+    if (step === 'Places') {
+      await page.getByRole('checkbox', { name: 'Kitchen' }).check();
+      await page.getByRole('checkbox', { name: /^Add a few example items/ }).check();
+      await expectAccessible(page);
+    }
+    await page.getByRole('button', { name: step === 'Places' ? 'Finish' : 'Next' }).click();
+  }
 
-  // The last step finishes setup and opens Find, which offers the first space.
-  await page.getByRole('button', { name: 'Finish' }).click();
-  await page.getByRole('heading', { name: 'Make your first space' }).waitFor();
+  // The last step makes the space and opens Find in it.
   await expect(page).toHaveURL(/\/find$/);
+  await expect(page.getByRole('navigation', { name: 'Views' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Make your first space' })).toHaveCount(0);
   await expectAccessible(page);
 });

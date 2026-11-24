@@ -17,7 +17,9 @@ internal sealed partial class StarterPackAccess(string folder) : IStarterPackAcc
 
     /// <summary>
     /// Reads one file shaped like
-    /// <c>{ "name": "Home", "description": "...", "position": 1, "types": [ { "name": "Box", "holdsItems": true, "fields": [ { "key": "size", "label": "Size", "kind": "Select", "options": [...] } ] } ] }</c>.
+    /// <c>{ "name": "Home", "description": "...", "position": 1, "icon": "house", "features": ["values"], "types": [ { "name": "Box", "holdsItems": true, "fields": [ { "key": "size", "label": "Size", "kind": "Select", "options": [...] } ] } ],
+    /// "places": { "type": "Room", "suggest": ["Kitchen"] }, "examples": [ { "name": "Toolbox", "type": "Box", "place": "Garage", "contents": [...] } ],
+    /// "gettingStarted": ["places"], "hints": { "browse": "..." } }</c>. Everything after the types is optional.
     /// </summary>
     public static (StarterPack Pack, int Position) FromJson(string key, string json)
     {
@@ -28,6 +30,12 @@ internal sealed partial class StarterPackAccess(string folder) : IStarterPackAcc
             Key = key,
             Name = file.Name,
             Description = file.Description,
+            Icon = file.Icon,
+            Features = [.. file.Features],
+            Places = file.Places is { } places ? new StarterPlaces { Type = places.Type, Suggest = [.. places.Suggest] } : null,
+            Examples = file.Examples.Select(Example).ToList(),
+            GettingStarted = [.. file.GettingStarted],
+            Hints = new(file.Hints, StringComparer.OrdinalIgnoreCase),
             Types = file.Types.Select(type => new ItemType
             {
                 Name = type.Name,
@@ -49,6 +57,17 @@ internal sealed partial class StarterPackAccess(string folder) : IStarterPackAcc
         return (pack, file.Position);
     }
 
+    private static StarterExample Example(ExampleEntry entry) => new()
+    {
+        Name = entry.Name,
+        Type = entry.Type,
+        Place = entry.Place,
+        Quantity = entry.Quantity,
+        Unit = entry.Unit,
+        Fields = entry.Fields.ToDictionary(pair => pair.Key, pair => pair.Value.Clone()),
+        Contents = entry.Contents.Select(Example).ToList(),
+    };
+
     private static IReadOnlyList<StarterPack> Load(string folder) =>
         Directory.Exists(folder)
             ? Directory.GetFiles(folder, $"{Prefix}*.json")
@@ -67,7 +86,45 @@ internal sealed partial class StarterPackAccess(string folder) : IStarterPackAcc
 
         public int Position { get; init; }
 
+        public string? Icon { get; init; }
+
+        public IReadOnlyList<string> Features { get; init => field = value ?? []; } = [];
+
         public IReadOnlyList<TypeEntry> Types { get; init => field = value ?? []; } = [];
+
+        public PlacesEntry? Places { get; init; }
+
+        public IReadOnlyList<ExampleEntry> Examples { get; init => field = value ?? []; } = [];
+
+        public IReadOnlyList<string> GettingStarted { get; init => field = value ?? []; } = [];
+
+        public IReadOnlyDictionary<string, string> Hints { get; init => field = value ?? new Dictionary<string, string>(); } = new Dictionary<string, string>();
+    }
+
+    /// <summary>The places setup suggests: the type they get and the names offered.</summary>
+    internal sealed record PlacesEntry
+    {
+        public required string Type { get; init; }
+
+        public IReadOnlyList<string> Suggest { get; init => field = value ?? []; } = [];
+    }
+
+    /// <summary>One example item as the file writes it, with what is inside it.</summary>
+    internal sealed record ExampleEntry
+    {
+        public required string Name { get; init; }
+
+        public string? Type { get; init; }
+
+        public string? Place { get; init; }
+
+        public decimal? Quantity { get; init; }
+
+        public string? Unit { get; init; }
+
+        public IReadOnlyDictionary<string, JsonElement> Fields { get; init => field = value ?? new Dictionary<string, JsonElement>(); } = new Dictionary<string, JsonElement>();
+
+        public IReadOnlyList<ExampleEntry> Contents { get; init => field = value ?? []; } = [];
     }
 
     /// <summary>One type as the file writes it.</summary>

@@ -5,7 +5,7 @@
 const query = new URLSearchParams(location.search);
 
 export const app = $state({
-  screen: 'loading',   // loading | setup-account | setup-https | sign-in | join | reset | app
+  screen: 'loading',   // loading | setup-account | setup-https | setup-space | setup-features | setup-places | sign-in | join | reset | app
   session: null,       // SessionResponse: { setupRequired, user }
   linkToken: query.get('invite') ?? query.get('reset'),
   link: null,          // LinkDetails for linkToken: { purpose, username, expiresAt }
@@ -26,6 +26,8 @@ export const app = $state({
   spaces: [],          // SpaceResponse[]: the spaces the signed-in person is in (spaces.svelte.js)
   spaceId: null,       // the space the page shows
   starterPacks: [],    // StarterPackResponse[]: offered when making a space
+  spaceFeatures: [],   // SpaceFeatureResponse[]: the feature catalogue, whose available ones are offered as switches
+  spaceDraft: null,    // setup's answers for the first space until it is made: see newDraft() in spaces.svelte.js
   newSpaceOpen: false, // true while the New space dialog is open
   itemId: null,        // the item page open on Browse (/browse/{id}), or null for the top of the space
   places: {},          // the sticky place per space id: an ItemRef new things go into ("Adding to Box F"), kept in this browser (labels.svelte.js)

@@ -135,6 +135,7 @@ internal sealed partial class FakeItems : IItemAccess
         ContentValue = item.ContentValue,
         SuggestedTypeId = item.SuggestedTypeId,
         TypeSuggestedAt = item.TypeSuggestedAt,
+        IsExample = item.IsExample,
         Version = item.Version,
     };
 }

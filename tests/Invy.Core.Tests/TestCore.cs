@@ -17,6 +17,7 @@ internal sealed class TestCore
     public TestCore()
     {
         services = new(Register);
+        Attachments.IsExample = id => Items.Rows.Any(item => item.Id == id && item.IsExample);
     }
 
     public FixedClock Clock { get; } = new();

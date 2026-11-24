@@ -34,6 +34,18 @@ internal sealed class TypeManager(
         return type.ToResponse();
     }
 
+    public async Task<ItemTypeResponse> CopyPackTypeAsync(Guid userId, Guid spaceId, PackTypeRequest request, CancellationToken cancellationToken)
+    {
+        await validation.SpaceRoleAsync(spaceId, userId, SpaceRole.Editor, cancellationToken);
+        var pack = validation.StarterPack(request.Pack)
+            ?? throw new RuleViolationException("Pick the starter pack to copy a type from.");
+        var name = (request.Type ?? string.Empty).Trim();
+        var template = pack.Types.FirstOrDefault(type => string.Equals(type.Name, name, StringComparison.OrdinalIgnoreCase))
+            ?? throw new RuleViolationException(
+                $"The {pack.Name} starter pack has no type called {name}. Pick one of {string.Join(", ", pack.Types.Select(type => type.Name))}.");
+        return await CreateTypeAsync(userId, spaceId, template.ToRequest(), cancellationToken);
+    }
+
     public async Task<ItemTypeResponse> UpdateTypeAsync(
         Guid userId, Guid spaceId, Guid typeId, ItemTypeRequest request, CancellationToken cancellationToken)
     {

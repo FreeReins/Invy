@@ -9,18 +9,61 @@ spaces, and you pick the one you're looking at from the **Space** list under the
 ## Make a space
 
 1. Press **New space** under the header. If you aren't in a space yet, every tab that needs one shows the same button.
-2. Give it a **Name**.
-3. Under **Start with these types**, pick a starter pack, or **None** to make every type yourself:
-    - **Home**: rooms, furniture and boxes, with types for appliances, tools, electronics, clothes, books, documents
-      and the pantry.
-    - **Hobby**: bins and drawers for a workshop or craft room, with types for parts, materials, kits, collectibles
-      and tools.
-    - **Business**: sites, rooms, racks and bins, with types for stock you sell, equipment you own and the documents
-      behind them.
-4. Press **Make the space**. You are its owner.
+2. **Your space:** give it a **Name**, and pick what it's for under **What is it for?** (see
+   [Kinds of space](#kinds-of-space)), or **Start empty** to make every type yourself. Press **Next**.
+3. **What you'll use:** the kind's [features](#features) are already switched on. Change any of them, then press
+   **Next**.
+4. **Places:** tick the places you have and add your own under **Your own place**. Tick **Add a few example items** to
+   try things out. All of this is optional.
+5. Press **Make the space**. You are its owner.
 
-A starter pack only adds types. You can change or remove any of them on the **Types** tab; see
-[Types and fields](types-and-fields.md).
+**Back** keeps your answers. The first-run setup asks the same three questions for your first space.
+
+## Kinds of space
+
+| Kind | Starts with these types | Features on | Places suggested |
+|---|---|---|---|
+| **Home** | Room, Furniture, Box, Appliance, Tool, Electronics, Clothing, Book, Document, Pantry item | Values, Barcodes | Kitchen, Living room, Bedroom, Bathroom, Hallway, Garage, Loft, Shed |
+| **Hobby** | Workspace, Bin, Drawer unit, Part, Material, Kit, Tool | Barcodes | Workbench, Craft table, Desk, Garage, Shed, Spare room |
+| **Collection** | Display case, Binder, Set, Collectible | Values | Living room cabinet, Study shelves, Glass case, Storage boxes |
+| **Business** | Site, Room, Rack, Bin, Product, Equipment, Document | Values, Audits, Barcodes | Shop, Warehouse, Office, Workshop, Stockroom |
+
+A kind only adds types. You can change or remove any of them on the **Types** tab, and copy a type from another kind
+with **Add from another pack** (see [Types and fields](types-and-fields.md#add-a-type-from-another-pack)). The kind also
+picks the steps on the getting-started card and the hints on empty tabs. Places are made at the top of the space, as
+the kind's place type (a *Room* in a home).
+
+## Features
+
+Each space switches features on and off by itself, so a home can use audits and a shop can use values.
+
+| Feature | What it shows |
+|---|---|
+| **Values** | What things are worth: **Worth** on a counted thing, **Worth inside** on a box or place |
+| **Audits** | **Audit** on a box or place, and Scan's **Audit** mode |
+| **Barcodes** | Looking up a product's barcode in Scan's **Add** mode (the admin's **Look up product barcodes online** switch still applies) |
+
+A feature that is off is only hidden: its details stay, and show again when it is switched back on. Labels, scanning,
+search, Browse, Types and Activity are always there. More features, such as lending, stock and reminders, come with
+later versions; a kind that uses them has them on already, ready for when they arrive.
+
+## Getting started and examples
+
+A new space shows a **Getting started** card on **Find** with a few steps for its kind, such as *Add your places* and
+*Print labels*. Each step ticks itself when the space shows it was done. The card goes away when every step is done,
+or when you press **Dismiss**; it is yours alone, so dismissing it doesn't hide it for anyone else.
+
+**Remove examples** on the card deletes the example items that are left, with their timelines. An example you've
+changed is yours now and stays, and so does an example place that holds something of your own.
+
+## Change a space's kind and features
+
+Open **Settings → Kind and features**. Everyone in the space can look; only owners change things.
+
+- **Name:** type a new one and press **Rename**.
+- **What it's for:** pick another kind. This changes the hints and getting-started steps, never the types.
+- **Features:** switch each one on or off.
+- **Remove examples** (editors and owners) and **Show getting started again**, if you dismissed the card.
 
 ## Roles
 

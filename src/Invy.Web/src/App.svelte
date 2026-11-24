@@ -1,9 +1,12 @@
 <!-- Invy's page: first-run setup, sign-in, then the space picker and the tabs (Find, Browse, Scan, Activity, Types, People and Settings for now; the rest come with their phases in
      docs/roadmap/). State and actions live in lib/app.svelte.js. -->
 <script>
-  import { app, run, start, signOut } from './lib/app.svelte.js';
+  import { app, run, start, signOut, SPACE_STEPS } from './lib/app.svelte.js';
   import SetupAccount from './screens/SetupAccount.svelte';
   import SetupHttps from './screens/SetupHttps.svelte';
+  import SetupSpace from './screens/SetupSpace.svelte';
+  import SetupFeatures from './screens/SetupFeatures.svelte';
+  import SetupPlaces from './screens/SetupPlaces.svelte';
   import SignIn from './screens/SignIn.svelte';
   import Join from './screens/Join.svelte';
   import Reset from './screens/Reset.svelte';
@@ -42,7 +45,8 @@
     { key: 'people', label: 'People', icon: Users },
     { key: 'settings', label: 'Settings', icon: SettingsIcon },
   ].map((tab) => ({ ...tab, area: `var(--area-${tab.key})` }));
-  const GATES = { 'setup-account': SetupAccount, 'setup-https': SetupHttps, 'sign-in': SignIn, join: Join, reset: Reset };
+  const GATES = { 'setup-account': SetupAccount, 'setup-https': SetupHttps, 'setup-space': SetupSpace, 'setup-features': SetupFeatures,
+    'setup-places': SetupPlaces, 'sign-in': SignIn, join: Join, reset: Reset };
   const TAB_VIEWS = { find: Find, browse: Browse, scan: Scan, activity: Activity, types: Types, people: People, settings: Settings };
 
   const inApp = $derived(app.screen === 'app');
@@ -117,7 +121,8 @@
     <div class="stage" class:in-setup={inSetup}>
       {#key app.screen}
         <div class="scene" use:arrive in:stepIn={{ direction: app.setupDirection }} out:stepOut={{ direction: app.setupDirection }}>
-          <Gate />
+          <!-- The steps for the first space share setup's draft of it. -->
+          {#if app.spaceDraft && SPACE_STEPS.includes(app.screen)}<Gate bind:draft={app.spaceDraft} />{:else}<Gate />{/if}
         </div>
       {/key}
     </div>

@@ -64,7 +64,10 @@ says so rather than touching it.
 
 ### Versions that needed this
 
-None yet. Every Invy version applies its database changes by itself when it starts.
+None yet. Every Invy version applies its database changes by itself when it starts. Spaces made before kinds and
+features existed get their kind's features switched on as they upgrade, and a space made with no starter pack gets
+none; owners can change them in **Settings → Kind and features**. [Database changes](../developers/data-model.md)
+lists what each version changed.
 
 ## Go back to an older version
 

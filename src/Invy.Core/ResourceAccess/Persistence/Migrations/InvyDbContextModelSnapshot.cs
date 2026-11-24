@@ -293,6 +293,9 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                     b.Property<bool>("HoldsItems")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsExample")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("LabelCode")
                         .HasMaxLength(6)
                         .HasColumnType("character varying(6)");
@@ -377,6 +380,9 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
 
                     b.HasIndex(new[] { "SpaceId" }, "IX_Items_Counted")
                         .HasFilter("\"Quantity\" IS NOT NULL");
+
+                    b.HasIndex(new[] { "SpaceId" }, "IX_Items_Examples")
+                        .HasFilter("\"IsExample\"");
 
                     b.HasIndex(new[] { "Fields" }, "IX_Items_Fields");
 
@@ -615,6 +621,10 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.PrimitiveCollection<List<string>>("Features")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -634,6 +644,9 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("GettingStartedDismissed")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Role")
                         .IsRequired()

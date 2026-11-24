@@ -19,12 +19,12 @@
         {#if canMove && index !== current}
           <button type="button" class="step" disabled={locked} onclick={() => openSetupStep(step.screen)}>
             <span class="segment"></span>
-            <span class="label">{#if index < current}<span class="tick" aria-hidden="true"><Check size={13} /></span><span class="sr-only">Done: </span>{/if}{step.label}</span>
+            <span class="label">{#if index < current}<span class="tick" aria-hidden="true"><Check size={13} /></span><span class="sr-only">{'Done: '}</span>{/if}{step.label}</span>
           </button>
         {:else}
           <span class="step">
             <span class="segment"></span>
-            <span class="label">{#if index < current}<span class="tick" aria-hidden="true"><Check size={13} /></span><span class="sr-only">Done: </span>{/if}{step.label}</span>
+            <span class="label">{#if index < current}<span class="tick" aria-hidden="true"><Check size={13} /></span><span class="sr-only">{'Done: '}</span>{/if}{step.label}</span>
           </span>
         {/if}
       </li>
