@@ -39,6 +39,7 @@ its guide; elsewhere use `<HelpLink page="…">` from `src/components/HelpLink.s
 
 - Svelte drops a space before `{#if}` and at the end of an element's text (`<span class="sr-only">Done: </span>`); put it inside an expression: ``{` · ${text}`}``, `{'Done: '}`.
 - A keyed `{#each}` throws on duplicate keys when older pages repeat items.
+- To test a live push, stub `GET /api/live` with an async function that awaits a promise, then returns `event: <topic>` (`tests/views.spec.js`).
 - Entrance animations are fine (axe waits). Respect `prefers-reduced-motion`.
 - A screen that loads in `$effect` (to follow `app.spaceId`) hangs the page: `run()` reads `app.busy`, so the effect
   re-runs forever. Read the id, then do the work inside `untrack(() => ...)` (see `tabs/Types.svelte`).

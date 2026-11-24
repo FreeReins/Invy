@@ -101,6 +101,26 @@ internal sealed partial class FakeItems : IItemAccess
         Task.FromResult(Events.Where(e => e.SpaceId == spaceId && (before is null || e.At < before.At || (e.At == before.At && e.Id.CompareTo(before.Id) < 0)))
             .OrderByDescending(e => e.At).ThenByDescending(e => e.Id).Take(limit).ToList());
 
+    public Task<List<ItemEvent>> ListMatchingEventsAsync(
+        Guid spaceId, ItemQuery query, EventCursor? before, int limit, CancellationToken cancellationToken)
+    {
+        var ids = Matching(spaceId, query).Select(item => item.Id).ToHashSet();
+        return Task.FromResult(Events.Where(e => e.SpaceId == spaceId && ids.Contains(e.ItemId)
+                && (before is null || e.At < before.At || (e.At == before.At && e.Id.CompareTo(before.Id) < 0)))
+            .OrderByDescending(e => e.At).ThenByDescending(e => e.Id).Take(limit).ToList());
+    }
+
+    public Task<List<PlaceTotal>> TotalsByPlaceAsync(Guid spaceId, CancellationToken cancellationToken) =>
+        Task.FromResult(Current(spaceId).Where(item => item.ParentId == null)
+            .GroupBy(item => item.HoldsItems ? (Guid?)item.Id : null)
+            .Select(g => new PlaceTotal(g.Key, g.Sum(i => i.HoldsItems ? i.ContentCount : 1), g.Sum(i => (i.HoldsItems ? i.ContentValue : 0) + (i.Value ?? 0))))
+            .ToList());
+
+    public Task<List<TypeTotal>> TotalsByTypeAsync(Guid spaceId, CancellationToken cancellationToken) =>
+        Task.FromResult(Current(spaceId).GroupBy(item => item.TypeId)
+            .Select(g => new TypeTotal(g.Key, g.Count(), g.Count(i => i.Value != null), g.Sum(i => i.Value ?? 0)))
+            .ToList());
+
     private IEnumerable<Item> Current(Guid spaceId) =>
         Rows.Where(item => item.SpaceId == spaceId && item.Status is not (ItemStatus.Disposed or ItemStatus.Archived));
 

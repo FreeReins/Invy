@@ -97,6 +97,17 @@ function defaults() {
     'POST /api/spaces/*/labels': (request) => data.newLabels(request.postDataJSON().count),
     'POST /api/spaces/*/labels/*/claim': (request) => data.claimedBox(new URL(request.url()).pathname.split('/').at(-2), request.postDataJSON().parentId),
     'POST /api/spaces/*/labels/*/attach': (request) => ({ ...data.itemDetail(data.itemIds.drill).item, labelCode: new URL(request.url()).pathname.split('/').at(-2) }),
+    // Views: one of each display; each runs to the drill and the baseball.
+    'GET /api/spaces/*/views': data.views(),
+    'POST /api/spaces/*/views': (request) => ({ ...data.views()[0], ...request.postDataJSON(), id: '00000000-0000-4000-8000-000000002099', mine: true, canChange: true }),
+    'PUT /api/spaces/*/views/*': (request) => ({ ...data.views()[0], ...request.postDataJSON(), id: new URL(request.url()).pathname.split('/').pop(), mine: true, canChange: true }),
+    'DELETE /api/spaces/*/views/*': null,
+    'GET /api/spaces/*/views/*/results': data.viewResults(),
+    'GET /api/spaces/*/views/*/timeline': (request) => (new URL(request.url()).searchParams.get('before') ? { events: [], next: null } : data.activity()),
+    // Reports.
+    'GET /api/spaces/*/reports/values': data.valueTotals(),
+    'GET /api/spaces/*/reports/insurance': data.insuranceReport(),
+    'GET /api/spaces/*/reports/missing': data.missingItems(),
     // Search: "baseball" finds two, "type:" can't be read, "nothing" finds none, "part" finds 120 (for scrolling),
     // and an empty box gives the recently changed items.
     'GET /api/spaces/*/search': (request) => {

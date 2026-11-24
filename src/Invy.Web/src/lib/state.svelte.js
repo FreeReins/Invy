@@ -30,6 +30,7 @@ export const app = $state({
   spaceDraft: null,    // setup's answers for the first space until it is made: see newDraft() in spaces.svelte.js
   newSpaceOpen: false, // true while the New space dialog is open
   itemId: null,        // the item page open on Browse (/browse/{id}), or null for the top of the space
+  viewId: null,        // the saved view open on Views (/views/{id}), or null for the list
   places: {},          // the sticky place per space id: an ItemRef new things go into ("Adding to Box F"), kept in this browser (labels.svelte.js)
   scanLabel: null,     // a label code /l/<code> opened that isn't on anything yet, offered on Scan to claim
   auditItem: null,     // a container Scan's Audit mode opened, whose page starts the audit walk

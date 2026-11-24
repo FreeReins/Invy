@@ -32,6 +32,8 @@ internal sealed class InvyDbContext(DbContextOptions<InvyDbContext> options) : D
 
     public DbSet<AttachmentEntity> Attachments => Set<AttachmentEntity>();
 
+    public DbSet<ViewEntity> Views => Set<ViewEntity>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<decimal>().HavePrecision(12, 3);
@@ -190,6 +192,19 @@ internal sealed class InvyDbContext(DbContextOptions<InvyDbContext> options) : D
             attachment.Property(a => a.Sha256).HasMaxLength(64);
             attachment.HasIndex(a => new { a.SpaceId, a.ItemId, a.CreatedAt });
             attachment.HasIndex(a => new { a.SpaceId, a.Path });
+        });
+
+        // Saved views. A view goes with its space and with the person who made it.
+        modelBuilder.Entity<ViewEntity>(view =>
+        {
+            view.ToTable("Views");
+            view.HasOne<SpaceEntity>().WithMany().HasForeignKey(v => v.SpaceId).OnDelete(DeleteBehavior.Cascade);
+            view.HasOne<UserEntity>().WithMany().HasForeignKey(v => v.OwnerId).OnDelete(DeleteBehavior.Cascade);
+            view.Property(v => v.Name).HasMaxLength(80);
+            view.Property(v => v.Query).HasMaxLength(500);
+            view.Property(v => v.Sort).HasMaxLength(20);
+            view.Property(v => v.GroupBy).HasMaxLength(40);
+            view.HasIndex(v => new { v.SpaceId, v.OwnerId });
         });
 
         StoreEnumsByName(modelBuilder);

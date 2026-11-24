@@ -17,6 +17,9 @@ internal static partial class Mapping
     public static ItemSummary ToSummary(this Item item) =>
         new(item.Id, item.Name, item.Marking, item.TypeId, item.HoldsItems, item.Quantity, item.Unit, item.Status, item.ContentCount, item.Value, item.ContentValue, item.LabelCode, item.SuggestedTypeId);
 
+    public static ItemDetails ToDetails(this Item item, Guid? photoId) =>
+        new(item.Fields, item.Tags, item.LastSeenAt, item.CreatedAt, photoId);
+
     public static ItemRef ToRef(this Item item) => new(item.Id, item.Name, item.Marking);
 
     public static ItemEventResponse ToResponse(

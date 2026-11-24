@@ -11,6 +11,9 @@ internal interface IAttachmentAccess
     /// <summary>An item's attachments, oldest first.</summary>
     Task<List<Attachment>> ListAsync(Guid spaceId, Guid itemId, CancellationToken cancellationToken);
 
+    /// <summary>For each of these items that has one, the id of its first photo with a thumbnail, in one query.</summary>
+    Task<Dictionary<Guid, Guid>> FirstPhotosAsync(Guid spaceId, IReadOnlyCollection<Guid> itemIds, CancellationToken cancellationToken);
+
     /// <summary>Adds the attachment, or changes the stored one.</summary>
     /// <summary>True when any item in the space that isn't an example has a photo.</summary>
     Task<bool> AnyPhotoAsync(Guid spaceId, CancellationToken cancellationToken);

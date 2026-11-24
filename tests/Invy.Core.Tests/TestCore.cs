@@ -36,6 +36,8 @@ internal sealed class TestCore
 
     public FakeAttachments Attachments { get; } = new();
 
+    public FakeViews Views { get; } = new();
+
     public FakeFiles Files { get; } = new();
 
     public FakeProducts Products { get; } = new();
@@ -62,6 +64,10 @@ internal sealed class TestCore
 
     public AttachmentManager AttachmentManager() => Make<AttachmentManager>();
 
+    public ViewManager ViewManager() => Make<ViewManager>();
+
+    public ReportManager ReportManager() => Make<ReportManager>();
+
     /// <summary>A new manager each call, as each request gets in the app; the fakes and engines are shared.</summary>
     private T Make<T>()
         where T : notnull => services.Value.GetRequiredService<T>();
@@ -78,6 +84,7 @@ internal sealed class TestCore
         services.AddSingleton<IItemAccess>(Items);
         services.AddSingleton<ILabelAccess>(Labels);
         services.AddSingleton<IAttachmentAccess>(Attachments);
+        services.AddSingleton<IViewAccess>(Views);
         services.AddSingleton<IFileStoreAccess>(Files);
         services.AddSingleton<IProductAccess>(Products);
         services.AddSingleton<IStarterPackAccess>(TestData.StarterPacks);
@@ -98,6 +105,7 @@ internal sealed class TestCore
         services.AddSingleton<QueryEngine>();
         services.AddSingleton<LabelEngine>();
         services.AddSingleton<ImageEngine>();
+        services.AddSingleton<ReportEngine>();
         services.AddTransient<ValidationEngine>();
 
         // The managers under test.
@@ -108,6 +116,8 @@ internal sealed class TestCore
         services.AddTransient<ItemManager>();
         services.AddTransient<LabelManager>();
         services.AddTransient<AttachmentManager>();
+        services.AddTransient<ViewManager>();
+        services.AddTransient<ReportManager>();
 
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
     }

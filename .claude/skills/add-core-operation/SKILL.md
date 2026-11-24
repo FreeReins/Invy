@@ -45,3 +45,6 @@ before anything else.
   `ASPNETCORE_URLS`, when a dev run holds 8080).
 - An endpoint that sends a file returns `Task<IResult>` (`Results.File`). Its manager returns a record in
   `Managers/Contracts/` (not `Messages/`, which `JsonShapeTests` checks), such as `AttachmentContent`.
+- A download read from the database as it is sent (a CSV) is written inside the endpoint to `HttpContext.Response`
+  (`ReportEndpoints.WriteCsvAsync`): database reads in a `Results.Stream` callback run after the request's scope and
+  silently return nothing.

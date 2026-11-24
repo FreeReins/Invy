@@ -26,6 +26,22 @@ internal sealed class AttachmentAccess(InvyDbContext db) : IAttachmentAccess
         .Select(attachment => attachment.ToContract())
         .ToList();
 
+    public async Task<Dictionary<Guid, Guid>> FirstPhotosAsync(Guid spaceId, IReadOnlyCollection<Guid> itemIds, CancellationToken cancellationToken)
+    {
+        if (itemIds.Count == 0)
+        {
+            return [];
+        }
+
+        var photos = await db.Attachments.AsNoTracking()
+            .Where(attachment => attachment.SpaceId == spaceId && itemIds.Contains(attachment.ItemId)
+                && attachment.Kind == AttachmentKind.Photo && attachment.HasThumbnail)
+            .OrderBy(attachment => attachment.CreatedAt).ThenBy(attachment => attachment.Id)
+            .Select(attachment => new { attachment.ItemId, attachment.Id })
+            .ToListAsync(cancellationToken);
+        return photos.GroupBy(photo => photo.ItemId).ToDictionary(group => group.Key, group => group.First().Id);
+    }
+
     public async Task SaveAsync(Attachment attachment, CancellationToken cancellationToken)
     {
         var fresh = attachment.ToEntity();

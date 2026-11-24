@@ -14,7 +14,7 @@ and one phase file. Run a phase with `/phase <id>` (`.claude/skills/phase/SKILL.
 | 2 Capture | [phase-2-capture.md](phase-2-capture.md) | Done |
 | 3 AI and MCP | [phase-3-ai-and-mcp.md](phase-3-ai-and-mcp.md) | Done |
 | 4 Tailored spaces | [phase-4-tailored-spaces.md](phase-4-tailored-spaces.md) | Done |
-| 5 Views and reports | [phase-5-views-and-reports.md](phase-5-views-and-reports.md) | Not started |
+| 5 Views and reports | [phase-5-views-and-reports.md](phase-5-views-and-reports.md) | Done |
 | 6 Audience features | [phase-6-audience-features.md](phase-6-audience-features.md) | Not started |
 | 7 Scale hardening | [phase-7-scale-hardening.md](phase-7-scale-hardening.md) | Not started |
 
@@ -36,3 +36,5 @@ Add one line per decision that changes `design.md`, newest last, and update `des
 - 2026-11-24: spaces have a kind (home, hobby, collection, business) that sets their starting types, features, places, examples, getting-started steps and hints. Features are per space; one that is off is hidden, not blocked, and any space can switch on any feature.
 - 2026-11-24: an MCP tool without `space` uses the token owner's only space and asks which when they have several; `list_views` and `run_view` move to phase 5 with views.
 - 2026-11-24: removing examples keeps an example that holds something of the person's own; an example's place that wasn't ticked is made as an example; getting-started steps of a feature that is off are left off the card.
+- 2026-11-24: a view keeps its search as text, read again each run so `seen>1y` stays relative (a stored tree would freeze the date); it keeps its maker in `owner_id` with a `shared` flag, and pinning is per view.
+- 2026-11-24: reports are printed from the browser (a print page with **Print or save as PDF**, as label sheets are), so Invy bundles no PDF library or fonts; their CSV comes from the server, streamed in batches.

@@ -145,6 +145,38 @@ belongs to. Codes are 4 to 6 characters, without look-alikes such as 0 and O.
 | POST | `/api/spaces/{spaceId}/labels/{code}/claim` | editor | Makes a new item with the label on it, in `parentId`: named `name`, or Box and the code; of `typeId`, or none (then it holds items) |
 | POST | `/api/spaces/{spaceId}/labels/{code}/attach` | editor | Sticks an unclaimed label on the existing item `itemId`. A label it had before becomes unclaimed |
 
+## Views
+
+A view is a saved search (`query`, written as in the search box) plus how to show it: `display` is `Table`, `Cards`,
+`Tree`, `Board` or `Timeline`. The search is read again each time the view runs, so `seen>1y` always counts back from
+today. A view is the caller's own unless `shared` is true; `pinned` views show on **Find**. Any member can make their
+own views; only editors and owners share views or change shared ones.
+
+| Method | Path | Who | What it does |
+|---|---|---|---|
+| GET | `/api/spaces/{spaceId}/views` | viewer | The space's shared views and the caller's own, pinned first, then by name. `mine` and `canChange` say what the caller can do |
+| POST | `/api/spaces/{spaceId}/views` | viewer (editor to share) | Saves a view: `name`, `query`, `display`, `columns` (for a table: name, type, place, quantity, value, seen, added, label or a field's search name; empty for name, type, place), `sort` (relevance, name or recent), `groupBy` (for a board: a select field's search name), `shared`, `pinned` |
+| PUT | `/api/spaces/{spaceId}/views/{viewId}` | its maker, or editor for a shared one | Changes a view; same body as POST |
+| DELETE | `/api/spaces/{spaceId}/views/{viewId}` | its maker, or editor for a shared one | Removes a view. Its items are untouched |
+| GET | `/api/spaces/{spaceId}/views/{viewId}/results?after=` | viewer | Runs the view's search as of now, 50 at a time, shaped like search results. Each result also has `details`: its `fields` (by field id), `tags`, `lastSeenAt`, `createdAt` and `photoId` (an attachment with a thumbnail, or null) |
+| GET | `/api/spaces/{spaceId}/views/{viewId}/timeline?before=` | viewer | The events of the items the view finds as of now, newest first, 50 at a time, shaped like the activity feed |
+| GET | `/api/spaces/{spaceId}/views/{viewId}/export.csv` | viewer | Everything the view finds as of now, as CSV (the same columns as the reports below) |
+
+## Reports
+
+Reports read the whole space. The page shows each behind its feature (`values`, `audits`), but the API answers
+whatever the switches say. A CSV has one row per item: Room (its container at the top), Place, Name, Marking, Type,
+Amount, Unit, Value, Status, Label, Last seen, Added, Tags, Photo (the address of its first photo), then one column
+per field search name. It is UTF-8 with a byte order mark, and a cell that starts like a formula is written as text.
+
+| Method | Path | Who | What it does |
+|---|---|---|---|
+| GET | `/api/spaces/{spaceId}/reports/values` | viewer | `total`, `items`, `unvalued`, and totals `byPlace` (each container at the top, from the rollups; `place: null` is things at the top outside one) and `byType`. Currencies aren't converted |
+| GET | `/api/spaces/{spaceId}/reports/insurance` | viewer | The insurance inventory: things (and containers with a value) by room, each with `details`, up to 5,000; `truncated` says when there are more |
+| GET | `/api/spaces/{spaceId}/reports/insurance.csv` | viewer | The insurance inventory as CSV, every thing in the space |
+| GET | `/api/spaces/{spaceId}/reports/missing?after=` | viewer | Items marked missing, by name, 50 at a time, shaped like search results with `details` |
+| GET | `/api/spaces/{spaceId}/reports/missing.csv` | viewer | The missing items as CSV |
+
 ## Running the server (admin)
 
 | Method | Path | Who | What it does |

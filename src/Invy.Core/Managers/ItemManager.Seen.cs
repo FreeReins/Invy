@@ -24,6 +24,10 @@ internal sealed partial class ItemManager
         // One event for the container; what's inside only gets its time, in the same statement.
         await items.MarkSeenAsync(spaceId, [id], item.HoldsItems ? id : null, now, cancellationToken);
         await items.AddEventAsync(Event(item, userId, ItemEventKind.Seen, now), cancellationToken);
+
+        // Sent even for an item at the top (no containers to recount), so open pages showing it, such as a "not seen
+        // in a year" view, load again through the items live topic.
+        await messages.PublishAsync(new ItemsChanged(spaceId, ItemPaths.AncestorIds(item.Path).ToList()));
         await messages.CommitAsync(cancellationToken);
         item.LastSeenAt = now;
         return item.ToResponse();

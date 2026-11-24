@@ -375,3 +375,66 @@ export const unclaimedLabels = () => ({ labels: newLabels(12), next: null });
 export const claimedBox = (code, parentId = null) => item('00000000-0000-4000-8000-000000000f20', `Box ${code}`, {
   holdsItems: true, parentId, labelCode: code, version: 1,
 });
+
+/** The saved views, one per display: ViewResponse[]. "Not seen in a year" is pinned to Find and shared. */
+export const viewIds = {
+  notSeen: '00000000-0000-4000-8000-000000002001', cards: '00000000-0000-4000-8000-000000002002', tree: '00000000-0000-4000-8000-000000002003',
+  board: '00000000-0000-4000-8000-000000002004', timeline: '00000000-0000-4000-8000-000000002005', mine: '00000000-0000-4000-8000-000000002006',
+};
+const view = (id, name, query, display, extra = {}) => ({
+  id, name, query, display, columns: [], sort: null, groupBy: null, shared: true, pinned: false, mine: true, canChange: true,
+  updatedAt: '2026-11-20T10:00:00Z', ...extra,
+});
+export const views = () => [
+  view(viewIds.notSeen, 'Not seen in a year', 'seen>1y', 'Table', { pinned: true, columns: ['name', 'type', 'place', 'seen', 'brand', 'value'] }),
+  view(viewIds.board, 'Tools by power', 'type:tool', 'Board', { groupBy: 'power' }),
+  view(viewIds.cards, 'Everything in the garage', 'in:garage', 'Cards'),
+  view(viewIds.timeline, 'What happened to tools', 'type:tool', 'Timeline'),
+  view(viewIds.tree, 'Boxes', 'is:container', 'Tree', { shared: false }),
+  view(viewIds.mine, "Sam's list", 'tag:garden', 'Table', { mine: false, canChange: false }),
+];
+
+/** SearchResponse for a view: the drill (a photo, seen long ago) and the baseball (never seen), with their details. */
+export const viewResults = ({ withoutBall = false } = {}) => {
+  const chain = [{ id: itemIds.garage, name: 'Garage', marking: null }, { id: itemIds.f, name: 'Box F', marking: 'F' }];
+  const results = [
+    { item: { id: itemIds.drill, name: 'Drill', marking: null, typeId: '00000000-0000-4000-8000-000000000d03', holdsItems: false, quantity: null, unit: null,
+      status: 'Active', contents: 0, value: 129.5, contentValue: 0, labelCode: null }, chain,
+      details: { fields: { '00000000-0000-4000-8000-000000000e02': 'DeWalt', '00000000-0000-4000-8000-000000000e04': 'Cordless' }, tags: [],
+        lastSeenAt: '2025-06-01T10:00:00Z', createdAt: '2025-01-10T10:00:00Z', photoId: '00000000-0000-4000-8000-000000000b01' } },
+    { item: { id: itemIds.ball, name: 'Baseball', marking: null, typeId: null, holdsItems: false, quantity: null, unit: null, status: 'Active',
+      contents: 0, value: null, contentValue: 0, labelCode: null }, chain,
+      details: { fields: {}, tags: [], lastSeenAt: null, createdAt: '2026-05-03T12:00:00Z', photoId: null } },
+  ].filter((result) => !withoutBall || result.item.id !== itemIds.ball);
+  return { results, total: results.length, totalIsEstimate: false, next: null };
+};
+
+/** ValueTotalsResponse: the drill in the garage, and the rest unvalued. */
+export const valueTotals = () => ({
+  total: 129.5, items: 6, unvalued: 5,
+  byPlace: [
+    { place: { id: itemIds.garage, name: 'Garage', marking: null }, count: 4, value: 129.5 },
+    { place: { id: itemIds.shed, name: 'Shed', marking: null }, count: 1, value: 0 },
+    { place: null, count: 1, value: 0 },
+  ],
+  byType: [
+    { typeId: '00000000-0000-4000-8000-000000000d03', name: 'Tool', count: 1, valued: 1, value: 129.5 },
+    { typeId: '00000000-0000-4000-8000-000000000d01', name: 'Box', count: 3, valued: 0, value: 0 },
+    { typeId: null, name: 'No type', count: 2, valued: 0, value: 0 },
+  ],
+});
+
+/** InsuranceReportResponse: the garage with the drill (photo) and the baseball. */
+export const insuranceReport = () => {
+  const { results } = viewResults();
+  return {
+    madeAt: '2026-11-24T10:00:00Z', total: 129.5, count: 2, truncated: false,
+    rooms: [{ room: { id: itemIds.garage, name: 'Garage', marking: null }, value: 129.5, items: results }],
+  };
+};
+
+/** SearchResponse for the missing items: the baseball, never seen since. */
+export const missingItems = () => {
+  const ball = viewResults().results.find((result) => result.item.id === itemIds.ball);
+  return { results: [{ ...ball, item: { ...ball.item, status: 'Missing' } }], total: 1, totalIsEstimate: false, next: null };
+};

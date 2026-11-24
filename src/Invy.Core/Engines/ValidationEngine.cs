@@ -10,7 +10,7 @@ namespace Invy.Core.Engines;
 /// Rules that depend on what is stored (does the account exist, is the username taken, is setup done) read it through
 /// the resource accessors; this is the only engine that does.
 /// </summary>
-internal sealed partial class ValidationEngine(IAccountAccess accounts, ISpaceAccess spaces, ITypeAccess types, IItemAccess items, ILabelAccess labels, IAttachmentAccess attachments, IStarterPackAccess starterPacks, IBackupAccess backups)
+internal sealed partial class ValidationEngine(IAccountAccess accounts, ISpaceAccess spaces, ITypeAccess types, IItemAccess items, ILabelAccess labels, IAttachmentAccess attachments, IViewAccess views, IStarterPackAccess starterPacks, IBackupAccess backups)
 {
     public const int MinimumPasswordLength = 8;
 

@@ -108,6 +108,8 @@ nav:
       - Last seen and audits: using/audits.md
       - Timeline and activity: using/timeline.md
       - Search: using/search.md
+      - Views: using/views.md
+      - Reports: using/reports.md
   - Running it:
       - People and accounts: admin/people-and-accounts.md
       - HTTPS and certificates: admin/https-and-certificates.md

@@ -72,7 +72,8 @@ builder.Services.AddMcpServer(mcp => mcp.ServerInfo = new() { Name = "Invy", Ver
     .WithHttpTransport(mcp => mcp.Stateless = true)
     .WithTools<SpaceTools>(McpJsonContext.ToolOptions)
     .WithTools<ItemTools>(McpJsonContext.ToolOptions)
-    .WithTools<TypeTools>(McpJsonContext.ToolOptions);
+    .WithTools<TypeTools>(McpJsonContext.ToolOptions)
+    .WithTools<ViewTools>(McpJsonContext.ToolOptions);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<McpCaller>();
 

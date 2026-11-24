@@ -86,6 +86,8 @@ batteries"*. The assistant uses these tools:
 | `mark_seen` | Records that something was just seen where Invy says it is |
 | `list_types` | The space's types and their fields |
 | `define_type` | Adds a type with its fields |
+| `list_views` | The saved views you can see: your own and the ones shared with the space |
+| `run_view` | Runs a saved view, such as *Not seen in a year*, and lists what it finds |
 | `list_spaces` | The spaces you're in, and your role in each |
 
 An assistant can do only what its token's owner can: a viewer of a space can find things there but not change

@@ -88,11 +88,35 @@ public class McpToolTests
         await Assert.That(filled.Fields[lego.Fields[1].Id!.Value].GetDecimal()).IsEqualTo(7541m);
     }
 
+    [Test]
+    public async Task An_assistant_lists_the_saved_views_and_runs_one()
+    {
+        var space = await ItemSpace.MakeAsync();
+        await space.BoxAsync("Shed");
+        await space.ThingAsync("Glove");
+        await space.Core.ViewManager().CreateViewAsync(space.Owen, space.SpaceId,
+            new("Boxes", "is:container", Managers.Contracts.Messages.ViewDisplay.Table, null, null, null, true, true), default);
+        var views = new ViewTools(space.Core.ViewManager(), Caller(space, space.Vera));
+
+        var listed = await views.ListViews();
+        var run = await views.RunView(listed.Single().Id);
+        var missing = await TestData.Caught<McpException>(() => views.RunView(Guid.NewGuid()));
+
+        await Assert.That(listed.Single().Name).IsEqualTo("Boxes");
+        await Assert.That(string.Join(", ", run.Results.Select(result => result.Item.Name))).IsEqualTo("Shed");
+        await Assert.That(missing!.Message).Contains("view doesn't exist");
+    }
+
     /// <summary>The tools as the token of <paramref name="userId"/> sees them.</summary>
     private static (ItemTools Items, TypeTools Types) Tools(ItemSpace space, Guid userId)
     {
-        var principal = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId.ToString())], "Token"));
-        var caller = new McpCaller(new HttpContextAccessor { HttpContext = new DefaultHttpContext { User = principal } }, space.Core.SpaceManager());
+        var caller = Caller(space, userId);
         return (new ItemTools(space.Core.ItemManager(), caller), new TypeTools(space.Core.TypeManager(), caller));
+    }
+
+    private static McpCaller Caller(ItemSpace space, Guid userId)
+    {
+        var principal = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId.ToString())], "Token"));
+        return new McpCaller(new HttpContextAccessor { HttpContext = new DefaultHttpContext { User = principal } }, space.Core.SpaceManager());
     }
 }

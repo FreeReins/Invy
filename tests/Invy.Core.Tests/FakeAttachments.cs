@@ -21,6 +21,11 @@ internal sealed class FakeAttachments : IAttachmentAccess
     public Task<List<Attachment>> ListAsync(Guid spaceId, Guid itemId, CancellationToken cancellationToken) =>
         Task.FromResult(Rows.Where(row => row.SpaceId == spaceId && row.ItemId == itemId).OrderBy(row => row.CreatedAt).ThenBy(row => row.Id).Select(Copy).ToList());
 
+    public Task<Dictionary<Guid, Guid>> FirstPhotosAsync(Guid spaceId, IReadOnlyCollection<Guid> itemIds, CancellationToken cancellationToken) =>
+        Task.FromResult(Rows.Where(row => row.SpaceId == spaceId && itemIds.Contains(row.ItemId) && row.Kind == AttachmentKind.Photo && row.HasThumbnail)
+            .OrderBy(row => row.CreatedAt).ThenBy(row => row.Id)
+            .GroupBy(row => row.ItemId).ToDictionary(group => group.Key, group => group.First().Id));
+
     public Task SaveAsync(Attachment attachment, CancellationToken cancellationToken)
     {
         Rows.RemoveAll(row => row.Id == attachment.Id);

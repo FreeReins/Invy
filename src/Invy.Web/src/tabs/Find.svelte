@@ -12,6 +12,7 @@
   import HelpLink from '../components/HelpLink.svelte';
   import VirtualList from '../components/VirtualList.svelte';
   import GettingStarted from '../components/GettingStarted.svelte';
+  import PinnedViews from '../components/PinnedViews.svelte';
   import Search from '@lucide/svelte/icons/search';
   import Box from '@lucide/svelte/icons/box';
   import Package from '@lucide/svelte/icons/package';
@@ -111,7 +112,7 @@
       {problem || 'Try words, type:tool, in:"Box F", brand:dewalt, price>50, qty<5, tag:garden, is:container or added<30d.'}
     </p>
 
-    {#if !searching}<GettingStarted onexamples={search} />{/if}
+    {#if !searching}<GettingStarted onexamples={search} /><PinnedViews />{/if}
 
     {#if results === null}
       <div class="card"><span class="skeleton line"></span><span class="skeleton line"></span><span class="skeleton line"></span></div>
@@ -125,7 +126,10 @@
         <p class="muted"><HelpLink page="using/search">How to search</HelpLink></p>
       </div>
     {:else}
-      <h2 class="count" aria-live="polite">{heading}</h2>
+      <div class="row count-row">
+        <h2 class="count" aria-live="polite">{heading}</h2>
+        {#if searching}<a class="save" href="/views?{new URLSearchParams({ new: text.trim() })}">Save as a view</a>{/if}
+      </div>
       <div class="card results">
         <VirtualList items={results} key={(result) => result.item.id} rowHeight={64} total={searching ? total : null}
           onend={next ? more : null} name={searching ? 'Search results' : 'Recently changed'}>
@@ -156,6 +160,9 @@
   .box select { flex: none; }
   .hint { margin: .4rem 0 1rem; min-height: 1.2em; }
   .count { font-size: 1rem; margin: 0 0 .4rem; }
+  .count-row { align-items: baseline; }
+  .count-row > :first-child { flex: 1 1 auto; }
+  .save { font-size: .9rem; }
   .empty h2 { margin: .25rem 0 .4rem; }
   .results { padding-top: 0; padding-bottom: 0; }
   .result { display: flex; align-items: center; gap: .7rem; height: 100%; padding: 0 .25rem; color: var(--ink); text-decoration: none; min-width: 0; }

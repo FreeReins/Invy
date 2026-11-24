@@ -99,6 +99,14 @@ namespace Invy.Core.Managers.Contracts;
 [JsonSerializable(typeof(LabelPageResponse))]
 [JsonSerializable(typeof(ClaimLabelRequest))]
 [JsonSerializable(typeof(AttachLabelRequest))]
+// Views
+[JsonSerializable(typeof(ViewRequest))]
+[JsonSerializable(typeof(ViewResponse))]
+[JsonSerializable(typeof(IReadOnlyList<ViewResponse>))]
+
+// Reports
+[JsonSerializable(typeof(ValueTotalsResponse))]
+[JsonSerializable(typeof(InsuranceReportResponse))]
 // Maintenance
 [JsonSerializable(typeof(NotificationSettingsRequest))]
 [JsonSerializable(typeof(NotificationSettingsResponse))]

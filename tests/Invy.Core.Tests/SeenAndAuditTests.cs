@@ -29,6 +29,20 @@ public class SeenAndAuditTests
     }
 
     [Test]
+    public async Task Seeing_a_thing_announces_it_so_open_views_load_again()
+    {
+        var space = await ItemSpace.MakeAsync();
+        var box = await space.BoxAsync("Box F");
+        var ball = await space.ThingAsync("Baseball", box);
+        space.Core.Messages.Published.Clear();
+
+        await space.Items.MarkSeenAsync(space.Owen, space.SpaceId, ball.Id, default);
+
+        var changed = space.Core.Messages.Published.OfType<ItemsChanged>().Single();
+        await Assert.That(string.Join(", ", changed.ContainerIds)).IsEqualTo(box.Id.ToString());
+    }
+
+    [Test]
     public async Task Opening_it_again_soon_writes_nothing_more()
     {
         var space = await ItemSpace.MakeAsync();

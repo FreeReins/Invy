@@ -145,7 +145,7 @@ Every space-owned table carries `space_id`. Ids are `Guid.CreateVersion7()`.
 | `item_values` | space_id, item_id, field_id, num, date, text | A typed copy of sortable field values, written in the same transaction as the item |
 | `item_events` | id, space_id, item_id, at, actor, kind, from_parent, to_parent, qty_delta, data (jsonb) | Append-only timeline |
 | `labels` | code, space_id, item_id (null until claimed), printed_at | QR labels |
-| `views` | id, space_id, owner_id (null = shared), name, query (jsonb), display, columns, sort, pinned | Saved searches |
+| `views` | id, space_id, owner_id, name, query (text), display, columns (text[]), sort, group_by, shared, pinned, created, updated | Saved searches. `owner_id` is who made it; `shared` shows it to the whole space |
 | `attachments` | id, space_id, item_id, kind, name, content_type, path, sha256, bytes, has_thumbnail, created_by, created_at | Files go under `Data:Root/files/<space>/<sha256>.<ext>`, not in the database, with a `.thumb.jpg` beside photos. Backups copy each file once into `<backups>/files/` |
 | From ChefBot | accounts, API tokens, AI models and routes, settings, schedule state, the Wolverine schema | |
 
@@ -238,6 +238,9 @@ A view is a saved query plus how to show it:
 | Timeline | the events of the matching items |
 
 Views are personal or shared with the space. Pinned views appear on **Find**. Live topics keep an open view current.
+A view stores its search as text and reads it again each time it runs, so `seen>1y` counts back from today and a
+renamed type or field shows up as a search that no longer reads. Any member makes views for themselves; editors and
+owners share them and change shared ones. Pinning is per view, so a pinned shared view is on everyone's **Find**.
 
 ## Capture with less typing
 
@@ -281,7 +284,7 @@ keeps the time. Accepting one changes the type as an edit does, with a `Changed`
 |---|---|
 | Finding | `find_items`, `where_is`, `get_item`, `list_contents`, `item_history` |
 | Changing | `add_items`, `update_item`, `move_items`, `adjust_quantity`, `mark_seen` |
-| Types and views | `list_types`, `define_type`, `list_views`, `run_view` (the views tools come with views) |
+| Types and views | `list_types`, `define_type`, `list_views`, `run_view` |
 | Spaces | `list_spaces` |
 
 Every tool takes an optional `space`, a space's name or id. Without one, a tool uses the token owner's only space;
@@ -324,6 +327,11 @@ totals, projects that reserve or use up items, tool upkeep dates in the calendar
 condition fields, purchase date and depreciation, several sites, scheduled stocktakes, CSV export, the HTTP API.
 
 **Imports:** CSV, and Homebox backups (as ChefBot imports Mealie).
+
+**Reports** (phase 5): value totals by top-level place and by type, from the rollups; an insurance inventory with
+photos and values by room; the missing items an audit found; and a CSV export of any view. A report's PDF is the
+browser's: its page prints cleanly and has a **Print or save as PDF** button, as label sheets do, so Invy bundles no
+PDF library or fonts. CSV files come from the server, written in batches so a large space never sits in memory.
 
 **Starter packs:** `config/types-home.json`, `config/types-hobby.json`, `config/types-collection.json` and
 `config/types-business.json`, one per kind (see [Tailored spaces](#tailored-spaces)). Each idea above hides behind a

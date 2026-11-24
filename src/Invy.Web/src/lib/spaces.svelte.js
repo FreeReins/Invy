@@ -31,12 +31,14 @@ export async function loadSpaces() {
   app.spaceId = (spaces.find((space) => space.id === wanted) ?? spaces[0])?.id ?? null;
 }
 
-/** Shows another space. An item page open on Browse belongs to the old space, so Browse goes back to its top. */
+/** Shows another space. An item page open on Browse, or a view open on Views, belongs to the old space, so the tab goes back to its start. */
 export function pickSpace(id) {
   const leavingItem = app.spaceId !== id && app.tab === 'browse' && app.itemId;
+  const leavingView = app.spaceId !== id && app.tab === 'views' && app.viewId;
   app.spaceId = id;
   try { localStorage.setItem(KEY, id); } catch { /* kept for this visit only */ }
   if (leavingItem) go('/browse');
+  if (leavingView) go('/views');
 }
 
 /** Loads what the steps for a new space offer, unless it's here already: the starter packs and the feature catalogue. */

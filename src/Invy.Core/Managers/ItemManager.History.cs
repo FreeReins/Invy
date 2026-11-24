@@ -10,9 +10,6 @@ internal sealed partial class ItemManager
     /// <summary>How many events an item's timeline shows.</summary>
     public const int HistorySize = 200;
 
-    /// <summary>How many events a page of activity holds.</summary>
-    public const int ActivityPageSize = 50;
-
     public async Task<ItemHistoryResponse> GetHistoryAsync(Guid userId, Guid spaceId, Guid id, CancellationToken cancellationToken)
     {
         await validation.SpaceRoleAsync(spaceId, userId, SpaceRole.Viewer, cancellationToken);
@@ -32,8 +29,8 @@ internal sealed partial class ItemManager
         }
 
         var places = timeline.Places(id, moves);
-        var refs = await RefsAsync(spaceId, events.SelectMany(Mentioned).Concat(places.SelectMany(stay => stay.Chain)), cancellationToken);
-        var names = await ActorsAsync(cancellationToken);
+        var refs = await EventPages.RefsAsync(items, spaceId, events.SelectMany(EventPages.Mentioned).Concat(places.SelectMany(stay => stay.Chain)), cancellationToken);
+        var names = await EventPages.ActorsAsync(accounts, cancellationToken);
         return new ItemHistoryResponse(
             events.Select(e => e.ToResponse(refs, names)).ToList(),
             places.Reverse().Select(stay => new ItemStay(stay.From, stay.Until, stay.Chain.Select(container => refs[container]).ToList())).ToList());
@@ -42,25 +39,7 @@ internal sealed partial class ItemManager
     public async Task<ActivityResponse> ListActivityAsync(Guid userId, Guid spaceId, string? before, CancellationToken cancellationToken)
     {
         await validation.SpaceRoleAsync(spaceId, userId, SpaceRole.Viewer, cancellationToken);
-        var found = await items.ListActivityAsync(spaceId, ValidationEngine.EventCursor(before), ActivityPageSize + 1, cancellationToken);
-        var page = found.Take(ActivityPageSize).ToList();
-        var refs = await RefsAsync(spaceId, page.SelectMany(Mentioned), cancellationToken);
-        var names = await ActorsAsync(cancellationToken);
-        var next = found.Count > ActivityPageSize ? Mapping.Cursor(page[^1]) : null;
-        return new ActivityResponse(page.Select(e => e.ToResponse(refs, names)).ToList(), next);
+        var found = await items.ListActivityAsync(spaceId, ValidationEngine.EventCursor(before), EventPages.PageSize + 1, cancellationToken);
+        return await EventPages.ToPageAsync(items, accounts, spaceId, found, cancellationToken);
     }
-
-    private static IEnumerable<Guid> Mentioned(ItemEvent itemEvent) =>
-        new[] { itemEvent.ItemId, itemEvent.FromParent, itemEvent.ToParent }.OfType<Guid>();
-
-    /// <summary>Each item named, as it is called now. One gone from the space is named as removed.</summary>
-    private async Task<IReadOnlyDictionary<Guid, ItemRef>> RefsAsync(Guid spaceId, IEnumerable<Guid> ids, CancellationToken cancellationToken)
-    {
-        var wanted = ids.Distinct().ToList();
-        var found = (await items.FindManyAsync(spaceId, wanted, cancellationToken)).ToDictionary(item => item.Id, item => item.ToRef());
-        return wanted.ToDictionary(id => id, id => found.GetValueOrDefault(id) ?? new ItemRef(id, "A removed item", null));
-    }
-
-    private async Task<IReadOnlyDictionary<Guid, string>> ActorsAsync(CancellationToken cancellationToken) =>
-        (await accounts.ListUsersAsync(cancellationToken)).ToDictionary(user => user.Id, user => user.DisplayName);
 }

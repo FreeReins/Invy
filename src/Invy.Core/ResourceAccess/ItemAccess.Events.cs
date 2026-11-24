@@ -33,9 +33,26 @@ internal sealed partial class ItemAccess
             .Select(e => e.ToContract())
             .ToList();
 
-    public async Task<List<ItemEvent>> ListActivityAsync(Guid spaceId, EventCursor? before, int limit, CancellationToken cancellationToken)
+    public Task<List<ItemEvent>> ListActivityAsync(Guid spaceId, EventCursor? before, int limit, CancellationToken cancellationToken) =>
+        PageEventsAsync(db.ItemEvents.AsNoTracking().Where(e => e.SpaceId == spaceId), before, limit, cancellationToken);
+
+    public Task<List<ItemEvent>> ListMatchingEventsAsync(
+        Guid spaceId, ItemQuery query, EventCursor? before, int limit, CancellationToken cancellationToken)
     {
-        IQueryable<ItemEventEntity> rows = db.ItemEvents.AsNoTracking().Where(e => e.SpaceId == spaceId);
+        // The matching items come from the same WHERE clause as search (SearchSql), so the query text never reaches SQL.
+        // Every value in the WHERE clause is a parameter, so the text built here holds only SQL chosen by SearchSql.
+        var sql = new SearchSql(spaceId);
+        var text = $"SELECT * FROM \"ItemEvents\" WHERE \"ItemId\" IN (SELECT i.\"Id\" FROM \"Items\" i WHERE {sql.Where(query)})";
+        var matching = db.ItemEvents
+            .FromSqlRaw(text, sql.Parameters.ToArray<object>())
+            .AsNoTracking()
+            .Where(e => e.SpaceId == spaceId);
+        return PageEventsAsync(matching, before, limit, cancellationToken);
+    }
+
+    private static async Task<List<ItemEvent>> PageEventsAsync(
+        IQueryable<ItemEventEntity> rows, EventCursor? before, int limit, CancellationToken cancellationToken)
+    {
         if (before is not null)
         {
             rows = rows.Where(e => e.At < before.At || (e.At == before.At && e.Id.CompareTo(before.Id) < 0));

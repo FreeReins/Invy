@@ -39,12 +39,12 @@ Each space switches features on and off by itself, so a home can use audits and 
 
 | Feature | What it shows |
 |---|---|
-| **Values** | What things are worth: **Worth** on a counted thing, **Worth inside** on a box or place |
-| **Audits** | **Audit** on a box or place, and Scan's **Audit** mode |
+| **Values** | What things are worth: **Worth** on a counted thing, **Worth inside** on a box or place, the **Value** column in views, and the value totals and insurance inventory in [Reports](reports.md) |
+| **Audits** | **Audit** on a box or place, Scan's **Audit** mode, and the missing items in [Reports](reports.md) |
 | **Barcodes** | Looking up a product's barcode in Scan's **Add** mode (the admin's **Look up product barcodes online** switch still applies) |
 
 A feature that is off is only hidden: its details stay, and show again when it is switched back on. Labels, scanning,
-search, Browse, Types and Activity are always there. More features, such as lending, stock and reminders, come with
+search, Browse, Views, Types and Activity are always there. More features, such as lending, stock and reminders, come with
 later versions; a kind that uses them has them on already, ready for when they arrive.
 
 ## Getting started and examples

@@ -1,11 +1,11 @@
 // Each view has its own address, so it can be bookmarked, reloaded or opened in a new tab:
-//   /find  /browse  /browse/{item id}  /scan  /activity  /types  /people  /settings/{section}
+//   /find  /browse  /browse/{item id}  /scan  /views  /views/{view id}  /views/insurance  /views/missing  /activity  /types  /people  /settings/{section}
 // and /l/{label code}, the address in a QR label, which opens the item it is on or offers to claim it on Scan.
 // The address is the source of truth: links and buttons call go(path), and showAddress() shows what it names.
 import { app, run, clearErrors } from './state.svelte.js';
 import { openLabel } from './labels.svelte.js';
 
-const TAB_KEYS = ['find', 'browse', 'scan', 'activity', 'types', 'people', 'settings'];
+const TAB_KEYS = ['find', 'browse', 'scan', 'views', 'activity', 'types', 'people', 'settings'];
 
 /** Moves to an address inside the page and shows it. */
 export async function go(path, { replace = false } = {}) {
@@ -42,6 +42,7 @@ export async function showAddress() {
   app.tab = first;
   if (first === 'settings' && second) app.settingsSection = second;
   if (first === 'browse') app.itemId = second;
+  if (first === 'views') app.viewId = second;
   app.screen = 'app';
 }
 

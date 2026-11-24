@@ -67,6 +67,15 @@ internal interface IItemAccess
     /// </summary>
     Task MarkSeenAsync(Guid spaceId, IReadOnlyCollection<Guid> ids, Guid? contentsOf, DateTimeOffset at, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Each container at the top with its rollup (count and value of everything inside, its own value added), and one
+    /// total with no id for the things at the top that hold nothing. Disposed and archived items are left out.
+    /// </summary>
+    Task<List<PlaceTotal>> TotalsByPlaceAsync(Guid spaceId, CancellationToken cancellationToken);
+
+    /// <summary>The current items' count and value by type, in one query.</summary>
+    Task<List<TypeTotal>> TotalsByTypeAsync(Guid spaceId, CancellationToken cancellationToken);
+
     /// <summary>What the space has so far, apart from its examples, in one query.</summary>
     Task<SpaceProgress> ProgressAsync(Guid spaceId, CancellationToken cancellationToken);
 
@@ -86,4 +95,10 @@ internal interface IItemAccess
 
     /// <summary>The space's events, newest first, before <paramref name="before"/> (keyset paging), at most <paramref name="limit"/>.</summary>
     Task<List<ItemEvent>> ListActivityAsync(Guid spaceId, EventCursor? before, int limit, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The events of the items matching <paramref name="query"/> (their own events, not what went in and out of them),
+    /// newest first, before <paramref name="before"/> (keyset paging), at most <paramref name="limit"/>.
+    /// </summary>
+    Task<List<ItemEvent>> ListMatchingEventsAsync(Guid spaceId, ItemQuery query, EventCursor? before, int limit, CancellationToken cancellationToken);
 }

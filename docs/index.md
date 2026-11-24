@@ -32,6 +32,8 @@ in any text editor, or inside Invy itself: press the **?** button at the top of 
 - [Check a box against what Invy says is in it](using/audits.md)
 - [See where something has been](using/timeline.md)
 - [Find anything](using/search.md)
+- [Keep a search as a view and pin it to Find](using/views.md)
+- [See what it is all worth, and print an insurance inventory](using/reports.md)
 
 ### Run Invy
 

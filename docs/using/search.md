@@ -39,6 +39,11 @@ Results come best match first when you typed words, or by name otherwise. The li
 **Name** or **Recently changed**. The line above the results says how many were found; above 10,000 it is an
 estimate. Scroll down and more load by themselves.
 
+## Keep a search
+
+Press **Save as a view** above the results to keep a search with a name, show it as a table, cards, a tree, a
+board or a timeline, and pin it to **Find**. See [Views](views.md).
+
 ## If something goes wrong
 
 The line under the box says what Invy couldn't read and how to write it. For example:

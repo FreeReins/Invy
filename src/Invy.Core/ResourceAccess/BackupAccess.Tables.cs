@@ -44,6 +44,9 @@ internal sealed partial class BackupAccess
         // What is attached to items. The files themselves are copied beside the backups. Empty in backups made
         // before phase 2b.
         new BackupTable<AttachmentEntity>("attachments", BackupJson.Default.ListAttachmentEntity),
+
+        // Saved views. Empty in backups made before phase 5.
+        new BackupTable<ViewEntity>("views", BackupJson.Default.ListViewEntity),
     ];
 
     /// <summary>
