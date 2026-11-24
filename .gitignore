@@ -438,6 +438,8 @@ src/Invy.Web/test-results/
 src/Invy.Web/playwright-report/
 # Screenshots from ./dev.sh web-shot
 src/Invy.Web/shots/
+# Screenshots from ./dev.sh docs-shots on their way to docs/images/
+src/Invy.Web/docs-shots/
 # The documentation site built locally (mkdocs build / mkdocs serve) and its Python environment
 /site/
 /.venv/

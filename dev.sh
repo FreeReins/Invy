@@ -10,6 +10,8 @@
 #   ./dev.sh web-shot /find
 #                     screenshot an address of the web page, answered from the test stubs, in each test project
 #                     (light, dark, phone) into src/Invy.Web/shots/, then exit
+#   ./dev.sh docs-shots
+#                     retake the screenshots the docs show (tests/docs-shots.spec.js) into docs/images/, then exit
 #   ./dev.sh test     run the tests again on every save
 #   ./dev.sh db       start the dev database only
 #   ./dev.sh psql     open a SQL prompt on the dev database
@@ -118,7 +120,7 @@ web_test() {
         echo "Pin @playwright/test to an exact version in $web/package.json, so the container image can match it." >&2
         exit 1
     fi
-    podman run --rm --init --ipc=host --env NPM_CONFIG_UPDATE_NOTIFIER=false --env CI=1 --env SHOT_PATH \
+    podman run --rm --init --ipc=host --env NPM_CONFIG_UPDATE_NOTIFIER=false --env CI=1 --env SHOT_PATH --env DOCS_SHOTS \
         --volume "$PWD/$web:/source/$web:z" --volume "$web_test_modules:/source/$web/node_modules" \
         --workdir "/source/$web" "mcr.microsoft.com/playwright:v$version-noble" \
         sh -c 'npm install --no-audit --no-fund --loglevel=error && exec npx playwright test "$@"' web-test "$@"
@@ -193,6 +195,15 @@ case "${1:-run}" in
         fi
         SHOT_PATH="$2" web_test --reporter=line "${@:3}"
         echo "Screenshots are in $web/shots/."
+        ;;
+    docs-shots)
+        # The container sees only the web folder, so the spec saves into it and the files move to docs/ after.
+        rm -rf "${web:?}/docs-shots"
+        DOCS_SHOTS=1 web_test --reporter=line --project desktop-light "${@:2}"
+        mkdir -p docs/images
+        mv "$web"/docs-shots/*.png docs/images/
+        rmdir "$web/docs-shots"
+        echo "Screenshots are in docs/images/."
         ;;
     test)
         exec dotnet watch --project tests/Invy.Core.Tests run

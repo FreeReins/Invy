@@ -13,7 +13,7 @@ and one phase file. Run a phase with `/phase <id>` (`.claude/skills/phase/SKILL.
 | 1 Core inventory | [phase-1-core-inventory.md](phase-1-core-inventory.md) | Done |
 | 2 Capture | [phase-2-capture.md](phase-2-capture.md) | Done |
 | 3 AI and MCP | [phase-3-ai-and-mcp.md](phase-3-ai-and-mcp.md) | Done |
-| 4 Tailored spaces | [phase-4-tailored-spaces.md](phase-4-tailored-spaces.md) | In progress |
+| 4 Tailored spaces | [phase-4-tailored-spaces.md](phase-4-tailored-spaces.md) | Done |
 | 5 Views and reports | [phase-5-views-and-reports.md](phase-5-views-and-reports.md) | Not started |
 | 6 Audience features | [phase-6-audience-features.md](phase-6-audience-features.md) | Not started |
 | 7 Scale hardening | [phase-7-scale-hardening.md](phase-7-scale-hardening.md) | Not started |

@@ -45,6 +45,12 @@ build the container image to check docs.
 
 Renaming or moving a page breaks `/help` links in the app: search `src/Invy.Web/src` for the old path.
 
+## Screenshots
+
+Pages show screenshots from `images/`, taken by `src/Invy.Web/tests/docs-shots.spec.js` from the test stubs (so
+`tests/data.js` must match the real data they show). Add a shot there, run `./dev.sh docs-shots`, look at the
+image, then link it as `![What it shows](../images/<name>.png)`. Retake them when a shown screen changes.
+
 ## Which page covers what
 
 | When this changes in the code | Update |

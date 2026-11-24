@@ -50,7 +50,10 @@ later versions; a kind that uses them has them on already, ready for when they a
 ## Getting started and examples
 
 A new space shows a **Getting started** card on **Find** with a few steps for its kind, such as *Add your places* and
-*Print labels*. Each step ticks itself when the space shows it was done. The card goes away when every step is done,
+*Print labels*. Each step ticks itself when the space shows it was done.
+
+![The Getting started card: two of five steps ticked, with Remove examples and Dismiss](../images/getting-started.png)
+ The card goes away when every step is done,
 or when you press **Dismiss**; it is yours alone, so dismissing it doesn't hide it for anyone else.
 
 **Remove examples** on the card deletes the example items that are left, with their timelines. An example you've
@@ -59,6 +62,8 @@ changed is yours now and stays, and so does an example place that holds somethin
 ## Change a space's kind and features
 
 Open **Settings → Kind and features**. Everyone in the space can look; only owners change things.
+
+![Settings, Kind and features: the name, the kind, the feature switches and Remove examples](../images/kind-and-features.png)
 
 - **Name:** type a new one and press **Rename**.
 - **What it's for:** pick another kind. This changes the hints and getting-started steps, never the types.

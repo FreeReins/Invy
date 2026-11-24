@@ -6,6 +6,9 @@ import { defineConfig, devices } from '@playwright/test';
 const port = 4173;
 /** Set by ./dev.sh web-shot: the address to screenshot. Then only tests/screenshot.spec.js runs. */
 const shooting = Boolean(process.env.SHOT_PATH);
+/** Set by ./dev.sh docs-shots: only tests/docs-shots.spec.js runs, saving the screenshots the docs show. */
+const docsShots = Boolean(process.env.DOCS_SHOTS);
+const only = shooting ? 'screenshot.spec.js' : docsShots ? 'docs-shots.spec.js' : null;
 
 export default defineConfig({
   testDir: 'tests',
@@ -13,8 +16,8 @@ export default defineConfig({
   retries: 0,
   // A dot per test in the container (CI=1), so a full run prints a few lines; pass --reporter=list to see each test.
   reporter: process.env.CI ? 'dot' : 'list',
-  testMatch: shooting ? 'screenshot.spec.js' : '*.spec.js',
-  testIgnore: shooting ? [] : ['screenshot.spec.js'],
+  testMatch: only ?? '*.spec.js',
+  testIgnore: only ? [] : ['screenshot.spec.js', 'docs-shots.spec.js'],
   // Less motion, as some people ask their system for: the page's transitions finish at once (lib/motion.js), so axe
   // never checks something half faded in and nothing waits on an animation.
   use: { baseURL: `http://localhost:${port}`, locale: 'en-US', timezoneId: 'UTC', contextOptions: { reducedMotion: 'reduce' } },

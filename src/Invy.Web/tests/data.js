@@ -166,28 +166,24 @@ export const gettingStarted = (extra = {}) => ({
   examplesLeft: 2, dismissed: false, ...extra,
 });
 
-/** SpaceFeatureResponse[]: the catalogue, two of which aren't built yet. */
+/** SpaceFeatureResponse[]: the catalogue in Utilities/SpaceFeatures.cs, most of which isn't built yet. */
 export const spaceFeatures = () => [
   { key: 'values', name: 'Values', description: 'Add up what things are worth, in each box and across the space.', available: true },
   { key: 'audits', name: 'Audits', description: "Walk round with your phone and tick off what's where.", available: true },
   { key: 'barcodes', name: 'Barcodes', description: "Fill in a product's details from its barcode when you add it.", available: true },
   { key: 'stock', name: 'Stock', description: 'Get told when something you keep counted is running low.', available: false },
   { key: 'lending', name: 'Lending', description: "Lend things to people and get reminded when they're due back.", available: false },
+  { key: 'reminders', name: 'Reminders', description: 'Get reminded of warranties, upkeep and expiry dates.', available: false },
+  { key: 'moving', name: 'Moving', description: "Pack boxes for a move, with where each one goes and what's in it.", available: false },
+  { key: 'projects', name: 'Projects', description: 'Set things aside or use them up for a project.', available: false },
 ];
 
-/** StarterPackResponse[]: every kind, one without places or examples. */
+/** StarterPackResponse[]: the packs in config/types-*.json as Invy sends them. Keep in step when a pack changes. */
 export const starterPacks = () => [
-  { key: 'home', name: 'Home', description: 'Rooms, furniture and boxes, with types for appliances, tools and more.', types: ['Room', 'Furniture', 'Box', 'Tool', 'Book'],
-    icon: 'house', features: ['values', 'barcodes', 'lending'], places: { type: 'Room', suggest: ['Kitchen', 'Garage', 'Loft'] },
-    examples: ['Toolbox', 'Toaster'], gettingStarted: ['places', 'labels'], hints: { browse: 'Start with your rooms.' } },
-  { key: 'hobby', name: 'Hobby', description: 'Bins and drawers for a workshop or craft room.', types: ['Bin', 'Part', 'Kit'],
-    icon: 'palette', features: ['barcodes', 'stock'], places: { type: 'Workspace', suggest: ['Workbench', 'Shelves'] },
-    examples: ['Parts bin'], gettingStarted: ['places'], hints: {} },
-  { key: 'collection', name: 'Collection', description: 'Display cases, binders and sets of collectibles.', types: ['Display case', 'Binder', 'Collectible'],
-    icon: 'star', features: ['values', 'lending'], places: null, examples: [], gettingStarted: [], hints: {} },
-  { key: 'business', name: 'Business', description: 'Sites, racks and bins, with stock and equipment.', types: ['Site', 'Rack', 'Product'],
-    icon: 'building', features: ['values', 'audits', 'barcodes', 'stock'], places: { type: 'Site', suggest: ['Shop floor', 'Stock room'] },
-    examples: ['Till'], gettingStarted: ['places'], hints: {} },
+  {"key": "home", "name": "Home", "description": "Rooms, furniture and boxes, with types for appliances, tools, electronics, clothes, books, documents and the pantry.", "types": ["Room", "Furniture", "Box", "Appliance", "Tool", "Electronics", "Clothing", "Book", "Document", "Pantry item"], "icon": "house", "features": ["values", "barcodes", "lending", "reminders"], "places": {"type": "Room", "suggest": ["Kitchen", "Living room", "Bedroom", "Bathroom", "Hallway", "Garage", "Loft", "Shed"]}, "examples": ["Toolbox", "Toaster", "Rice", "Winter clothes"], "gettingStarted": ["places", "labels", "pack", "photo", "invite"], "hints": {"find": "Search for anything you've added, or add your first things with Add.", "browse": "Start with your rooms, then add the furniture and boxes in them.", "scan": "Scan a QR label on a box to open it, or a blank one to make it a new box.", "types": "Types such as Appliance and Book give items their own fields, like a serial number or an author."}},
+  {"key": "hobby", "name": "Hobby", "description": "Bins and drawers for a workshop or craft room, with types for parts, materials, kits and tools.", "types": ["Workspace", "Bin", "Drawer unit", "Part", "Material", "Kit", "Tool"], "icon": "palette", "features": ["barcodes", "stock", "reminders", "projects"], "places": {"type": "Workspace", "suggest": ["Workbench", "Craft table", "Desk", "Garage", "Shed", "Spare room"]}, "examples": ["Small parts", "PLA filament", "Spitfire model"], "gettingStarted": ["places", "labels", "pack", "photo", "invite"], "hints": {"find": "Search your parts, materials and kits, or add the first ones with Add.", "browse": "Start with your workbench or craft table, then add the bins and drawers on it.", "scan": "Scan a QR label on a bin to see what's in it, or a blank one to make it a new bin.", "types": "Types such as Part and Material give items their own fields, like a part number or a colour."}},
+  {"key": "collection", "name": "Collection", "description": "Display cases, binders and sets, with a collectible type for series, condition and value.", "types": ["Display case", "Binder", "Set", "Collectible"], "icon": "star", "features": ["values", "lending"], "places": {"type": "Display case", "suggest": ["Living room cabinet", "Study shelves", "Glass case", "Storage boxes"]}, "examples": ["Trading cards", "Coins of the year"], "gettingStarted": ["places", "values", "photo", "labels", "invite"], "hints": {"find": "Search your collection by name, series or year, or add your first pieces with Add.", "browse": "Start with your display cases, then add the binders and sets in them.", "scan": "Scan a QR label on a case or binder to open it, or a blank one to make it a new one.", "types": "Types such as Collectible give items their own fields, like a series, a condition and a value."}},
+  {"key": "business", "name": "Business", "description": "Sites, rooms, racks and bins, with types for stock you sell, equipment you own and the documents behind them.", "types": ["Site", "Room", "Rack", "Bin", "Product", "Equipment", "Document"], "icon": "building", "features": ["values", "audits", "barcodes", "stock", "lending", "reminders"], "places": {"type": "Site", "suggest": ["Shop", "Warehouse", "Office", "Workshop", "Stockroom"]}, "examples": ["Rack A", "Office laptop"], "gettingStarted": ["places", "labels", "pack", "audit", "invite"], "hints": {"find": "Search stock, equipment and documents by name, SKU or asset tag, or add the first ones with Add.", "browse": "Start with your sites, then add the rooms, racks and bins in them.", "scan": "Scan a QR label on a rack or bin to open it, or use Audit to tick off what's where.", "types": "Types such as Product and Equipment give items their own fields, like a SKU or an asset tag."}},
 ];
 
 /** ItemTypeResponse[]: a container, a type with every kind of extra (unit, options) and one with no fields. */

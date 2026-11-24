@@ -65,7 +65,7 @@ for (const kind of kinds) {
 
     await page.getByRole('heading', { name: 'Places' }).waitFor();
     const suggested = kind.places?.suggest ?? [];
-    if (suggested.length) await page.getByRole('checkbox', { name: suggested[0] }).check();
+    if (suggested.length) await page.getByRole('checkbox', { name: suggested[0], exact: true }).check();
     await expect(page.getByRole('checkbox', { name: /^Add a few example items/ })).toHaveCount(kind.examples.length ? 1 : 0);
     if (kind.examples.length) await page.getByRole('checkbox', { name: /^Add a few example items/ }).check();
     await page.getByLabel('Your own place').fill('Spare room');
@@ -106,7 +106,7 @@ test('going back and forward through setup keeps the answers', async ({ page, ap
   await expect(page.getByRole('checkbox', { name: 'Workbench' })).toBeChecked();
   await page.getByRole('button', { name: 'Finish' }).click();
   await expect(page).toHaveURL(/\/find$/);
-  expect(sent).toEqual([{ name: 'Workshop', preset: 'hobby', features: ['stock', 'values'], places: ['Workbench'], examples: false }]);
+  expect(sent).toEqual([{ name: 'Workshop', preset: 'hobby', features: ['stock', 'reminders', 'projects', 'values'], places: ['Workbench'], examples: false }]);
 });
 
 test('a space without a name is not made', async ({ page, api }) => {
@@ -161,17 +161,17 @@ test('the New space dialog runs the same three steps', async ({ page, api }) => 
   await expect(dialog.getByRole('checkbox', { name: /^Audits/ })).toBeChecked();
   await dialog.getByRole('checkbox', { name: /^Audits/ }).uncheck();
   await dialog.getByRole('button', { name: 'Next' }).click();
-  await dialog.getByRole('checkbox', { name: 'Stock room' }).check();
+  await dialog.getByRole('checkbox', { name: 'Stockroom' }).check();
 
   await dialog.getByRole('button', { name: 'Back' }).click();
   await expect(dialog.getByRole('checkbox', { name: /^Audits/ })).not.toBeChecked();
   await dialog.getByRole('button', { name: 'Next' }).click();
-  await expect(dialog.getByRole('checkbox', { name: 'Stock room' })).toBeChecked();
+  await expect(dialog.getByRole('checkbox', { name: 'Stockroom' })).toBeChecked();
 
   const made = page.waitForRequest((request) => request.method() === 'POST' && new URL(request.url()).pathname === '/api/spaces');
   await dialog.getByRole('button', { name: 'Make the space' }).click();
   expect((await made).postDataJSON()).toEqual({
-    name: 'Corner shop 2', preset: 'business', features: ['values', 'barcodes', 'stock'], places: ['Stock room'], examples: false,
+    name: 'Corner shop 2', preset: 'business', features: ['values', 'barcodes', 'stock', 'lending', 'reminders'], places: ['Stockroom'], examples: false,
   });
   await expect(dialog).toBeHidden();
 });
@@ -245,7 +245,7 @@ test('a viewer sees the card without Remove examples', async ({ page, api }) => 
 test("empty tabs use the kind's hints, and general text without one", async ({ page, api }) => {
   api.set({ 'GET /api/spaces/*/items': { items: [], next: null }, 'GET /api/spaces/*/inbox': { items: [], next: null } });
   await open(page, '/browse');
-  await expect(page.getByText('Start with your rooms.')).toBeVisible();
+  await expect(page.getByText('Start with your rooms, then add')).toBeVisible();
 
   api.set({ 'GET /api/spaces': data.spaces().map((space) => ({ ...space, preset: null })) });
   await open(page, '/browse');

@@ -12,7 +12,8 @@
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
-      "Read(../chef-bot/**)"
+      "Read(../chef-bot/**)",
+      "Bash(./dev.sh docs-shots)"
     ]
   },
   "hooks": {

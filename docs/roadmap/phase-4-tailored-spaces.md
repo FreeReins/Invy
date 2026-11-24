@@ -55,7 +55,7 @@ This phase adds the switches and their defaults. Each later feature hides behind
   see), **Remove examples**, **Show getting started again**.
 - [x] Types → **Add from another pack**: copy one type from any starter pack into this space.
 - [x] Web tests for the card, hints, the panel (owner and viewer) and Add from another pack.
-- [ ] Docs (`update-docs`): `getting-started/first-run.md`, `using/spaces.md`, `using/types-and-fields.md` (the
+- [x] Docs (`update-docs`): `getting-started/first-run.md`, `using/spaces.md`, `using/types-and-fields.md` (the
   collection pack, Add from another pack), `reference/api.md`, `admin/upgrading.md` and
   `developers/data-model.md` (the migration), with screenshots taken by the web tests.
 
@@ -79,3 +79,7 @@ TUnit tests and the web tests (with axe) above pass. The strict docs build is cl
   (first-run, spaces, types-and-fields, api, upgrading, new `developers/data-model.md`); strict builds clean.
   Half-done: the docs box asks for screenshots taken by the web tests, but no docs page has screenshots and there is
   no pipeline for them. Next: decide on docs screenshots with the user, then tick the docs box and set phase 4 Done.
+- 2026-11-24 (4c): docs screenshots pipeline: `./dev.sh docs-shots` runs `tests/docs-shots.spec.js` (light, wide) and
+  moves the shots into `docs/images/`; first-run, spaces and types-and-fields show six of them. The web test stubs'
+  starter packs and feature catalogue now match `config/types-*.json` and `SpaceFeatures.cs`. Phase 4 done.
+  Next: phase 5, 6 or 7 (any order).

@@ -38,6 +38,8 @@ want the *Collectible* type from the collection pack.
 3. Press **Add** beside the type you want. A type the space already has a type of the same name for shows
    **Already here**.
 
+![Add from another pack: the Hobby pack's types, each with an Add button](../images/add-from-another-pack.png)
+
 The type comes with its fields, and you can change it like any other.
 
 ## Kinds of field
