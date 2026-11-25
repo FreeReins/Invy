@@ -40,11 +40,11 @@ public class SchemaTests
         using var db = Context();
         var covered = BackupAccess.Tables.Select(table => table.EntityType).ToHashSet();
 
-        // Children are written inside their parents, through the collections a table includes.
+        // Children are written inside their parents: the collections a table includes, and rows like an item's path.
         var parents = new Queue<Type>(covered);
         while (parents.TryDequeue(out var parent))
         {
-            foreach (var child in db.Model.FindEntityType(parent)!.GetNavigations().Where(n => n.IsCollection))
+            foreach (var child in db.Model.FindEntityType(parent)!.GetNavigations().Where(n => !n.IsOnDependent))
             {
                 if (covered.Add(child.TargetEntityType.ClrType))
                 {

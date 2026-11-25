@@ -41,7 +41,7 @@ internal sealed partial class ItemAccess
         var connection = (NpgsqlConnection)db.Database.GetDbConnection();
         await using (var copy = await connection.BeginBinaryImportAsync(
             """
-            COPY "Items" ("Id", "SpaceId", "TypeId", "Name", "Marking", "ParentId", "Path", "Depth", "HoldsItems", "Quantity", "Unit",
+            COPY "Items" ("Id", "SpaceId", "TypeId", "Name", "Marking", "ParentId", "HoldsItems", "Quantity", "Unit",
                 "Fields", "Tags", "Notes", "Status", "CreatedAt", "UpdatedAt", "Value", "ContentCount", "ContentValue", "Reserved",
                 "IsExample", "Version") FROM STDIN (FORMAT BINARY)
             """, cancellationToken))
@@ -55,8 +55,6 @@ internal sealed partial class ItemAccess
                 await copy.WriteAsync(entity.Name, NpgsqlDbType.Text, cancellationToken);
                 await WriteAsync(copy, entity.Marking, NpgsqlDbType.Text, cancellationToken);
                 await WriteAsync(copy, entity.ParentId, NpgsqlDbType.Uuid, cancellationToken);
-                await copy.WriteAsync(entity.Path, NpgsqlDbType.LTree, cancellationToken);
-                await copy.WriteAsync(entity.Depth, NpgsqlDbType.Integer, cancellationToken);
                 await copy.WriteAsync(entity.HoldsItems, NpgsqlDbType.Boolean, cancellationToken);
                 await WriteAsync(copy, entity.Quantity, NpgsqlDbType.Numeric, cancellationToken);
                 await WriteAsync(copy, entity.Unit, NpgsqlDbType.Text, cancellationToken);
@@ -72,6 +70,20 @@ internal sealed partial class ItemAccess
                 await copy.WriteAsync(entity.Reserved, NpgsqlDbType.Numeric, cancellationToken);
                 await copy.WriteAsync(entity.IsExample, NpgsqlDbType.Boolean, cancellationToken);
                 await copy.WriteAsync(entity.Version, NpgsqlDbType.Integer, cancellationToken);
+            }
+
+            await copy.CompleteAsync(cancellationToken);
+        }
+
+        await using (var copy = await connection.BeginBinaryImportAsync(
+            """COPY "ItemPaths" ("Id", "Path", "Depth") FROM STDIN (FORMAT BINARY)""", cancellationToken))
+        {
+            foreach (var item in items)
+            {
+                await copy.StartRowAsync(cancellationToken);
+                await copy.WriteAsync(item.Id, NpgsqlDbType.Uuid, cancellationToken);
+                await copy.WriteAsync(item.Path, NpgsqlDbType.LTree, cancellationToken);
+                await copy.WriteAsync(item.Depth, NpgsqlDbType.Integer, cancellationToken);
             }
 
             await copy.CompleteAsync(cancellationToken);

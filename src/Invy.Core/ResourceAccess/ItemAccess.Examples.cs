@@ -40,8 +40,10 @@ internal sealed partial class ItemAccess
             SELECT e."Id" AS "Value" FROM "Items" AS e
             WHERE e."SpaceId" = {spaceId} AND e."IsExample"
               AND NOT EXISTS (
-                SELECT 1 FROM "Items" AS d
-                WHERE d."SpaceId" = {spaceId} AND NOT d."IsExample" AND d."Path" <@ e."Path")
+                SELECT 1 FROM "ItemPaths" AS ep
+                JOIN "ItemPaths" AS dp ON dp."Path" <@ ep."Path"
+                JOIN "Items" AS d ON d."Id" = dp."Id"
+                WHERE ep."Id" = e."Id" AND d."SpaceId" = {spaceId} AND NOT d."IsExample")
             """).ToListAsync(cancellationToken);
         if (ids.Count == 0)
         {
@@ -50,7 +52,7 @@ internal sealed partial class ItemAccess
 
         var paths = await db.Items.AsNoTracking()
             .Where(item => item.SpaceId == spaceId && ids.Contains(item.Id))
-            .Select(item => item.Path)
+            .Select(item => item.Place.Path)
             .ToListAsync(cancellationToken);
 
         // Events, sortable values and attachments go with their items through the foreign keys; labels are freed.

@@ -124,7 +124,10 @@ public interface IItemManager
     /// <summary>How long after being marked seen an item is marked again, so opening a box twice writes one event.</summary>
     static TimeSpan SeenAgainAfter => TimeSpan.FromMinutes(10);
 
-    /// <summary>An item's timeline and where it has been, counting its containers' moves.</summary>
+    /// <summary>
+    /// An item's timeline (its latest 200 events) and where it has been over its latest 200 moves, counting its
+    /// containers' moves.
+    /// </summary>
     Task<ItemHistoryResponse> GetHistoryAsync(Guid userId, Guid spaceId, Guid id, CancellationToken cancellationToken);
 
     /// <summary>

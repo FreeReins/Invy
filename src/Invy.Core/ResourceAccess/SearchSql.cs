@@ -19,6 +19,8 @@ internal sealed partial class SearchSql
 
     private readonly string space;
 
+    private bool nearSpellings;
+
     public SearchSql(Guid spaceId)
     {
         space = Add(spaceId);
@@ -29,6 +31,7 @@ internal sealed partial class SearchSql
     /// <summary>The conditions on <c>i</c>: in the space, the query's filter, and not gone unless asked for.</summary>
     public string Where(ItemQuery query)
     {
+        nearSpellings = query.NearSpellings;
         var gone = query.IncludeGone ? string.Empty : " AND i.\"Status\" NOT IN ('Disposed', 'Archived')";
         return $"i.\"SpaceId\" = {space}{gone} AND {Node(query.Filter)}";
     }
@@ -84,11 +87,19 @@ internal sealed partial class SearchSql
         _ => throw new ArgumentOutOfRangeException(nameof(node), node, "QueryEngine made a condition SearchSql doesn't know."),
     };
 
-    /// <summary>A word or phrase: its words as prefixes in the search text, or the text inside the name or marking, or a near spelling of the name.</summary>
+    /// <summary>
+    /// A word or phrase: its words as prefixes in the search text, or the text inside the name or marking, or (when the
+    /// query asks for near spellings) a near spelling of the name.
+    /// </summary>
     private string WordsSql(string text)
     {
         var like = Add(Like(text));
-        var parts = new List<string> { $"i.\"Name\" ILIKE {like}", $"i.\"Marking\" ILIKE {like}", $"{Add(text)} <% i.\"Name\"" };
+        var parts = new List<string> { $"i.\"Name\" ILIKE {like}", $"i.\"Marking\" ILIKE {like}" };
+        if (nearSpellings)
+        {
+            parts.Add($"{Add(text)} <% i.\"Name\"");
+        }
+
         var tokens = Tokens(text).ToList();
         if (tokens.Count > 0)
         {
@@ -101,11 +112,15 @@ internal sealed partial class SearchSql
 
     private string InsideSql(string container)
     {
+        // The matching containers' paths are found once, as lquery patterns for "anything below", and the path index
+        // finds what is inside them (IX_Items_Container* and IX_ItemPaths_Path).
         var name = Add(container.ToLowerInvariant());
+        var below = Add(".*{1,}");
         return $"""
-            EXISTS (SELECT 1 FROM "Items" c WHERE c."SpaceId" = {space} AND c."HoldsItems"
-                AND (lower(c."Name") = {name} OR lower(c."Marking") = {name} OR lower(c."LabelCode") = {name})
-                AND c."Path" @> i."Path" AND c."Id" <> i."Id")
+            i."Id" IN (SELECT ip."Id" FROM "ItemPaths" ip WHERE ip."Path" ? ARRAY(
+                SELECT (cp."Path"::text || {below})::lquery FROM "Items" c JOIN "ItemPaths" cp ON cp."Id" = c."Id"
+                WHERE c."SpaceId" = {space} AND c."HoldsItems"
+                    AND (lower(c."Name") = {name} OR lower(c."Marking") = {name} OR lower(c."LabelCode") = {name})))
             """;
     }
 

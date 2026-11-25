@@ -16,7 +16,7 @@ and one phase file. Run a phase with `/phase <id>` (`.claude/skills/phase/SKILL.
 | 4 Tailored spaces | [phase-4-tailored-spaces.md](phase-4-tailored-spaces.md) | Done |
 | 5 Views and reports | [phase-5-views-and-reports.md](phase-5-views-and-reports.md) | Done |
 | 6 Audience features | [phase-6-audience-features.md](phase-6-audience-features.md) | Done |
-| 7 Scale hardening | [phase-7-scale-hardening.md](phase-7-scale-hardening.md) | Not started |
+| 7 Scale hardening | [phase-7-scale-hardening.md](phase-7-scale-hardening.md) | In progress |
 
 Phases 1 to 4 are in order. Phases 5, 6 and 7 only need phase 4 and can be done in any order. A feature that phases 5
 and 6 build hides behind its space feature switch (the `add-space-feature` skill). Large phases are split
@@ -40,3 +40,4 @@ Add one line per decision that changes `design.md`, newest last, and update `des
 - 2026-11-24: reports are printed from the browser (a print page with **Print or save as PDF**, as label sheets are), so Invy bundles no PDF library or fonts; their CSV comes from the server, streamed in batches.
 - 2026-11-24: phase 6 (design.md, Audience features): stock is `items.low_stock_at`, alerting once on crossing and daily, against the amount less project reservations; lending is `lent_to`, `lent_at`, `due_on`, whole items only; reminders are Date fields with `remind` and `repeatMonths`, plus a per-space secret calendar feed; imports take CSV or Homebox's CSV into a chosen container, in background `COPY` batches; moving is `destination_id`, a printed manifest and **Arrived**; projects are `projects` and `project_items`; each feature has MCP tools that read and change it.
 - 2026-11-24: security design review (design.md, Security hardening): API tokens gain expiry, last use and read-only (enforced by an MCP filter, refused unless a tool is marked read-only), and a reset revokes them; sign-in refusals are uniform with a decoy hash; known-device cookies bypass lockout; per-address limits on sign-in forms; a cross-site check on unsafe methods; AI keys sealed with Data Protection; private backup files; sign out everywhere; labels in other spaces look missing.
+- 2026-11-26: phase 7 (design.md, Nesting and moves, Search, Scale targets): paths and depths move to a narrow `item_paths` table so a subtree move doesn't rewrite every index of `items`; rollups add up each container's direct children, deepest first; search keeps relevance order for every match, and the 200 ms target covers searches whose words match up to about 20,000 things (a name-order fallback for big matches was measured and dropped as slower); near spellings are searched for only when the words match nothing as typed.

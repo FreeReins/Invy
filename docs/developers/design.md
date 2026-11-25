@@ -160,7 +160,8 @@ Every space-owned table carries `space_id`. Ids are `Guid.CreateVersion7()`.
 | `spaces` | id, name, preset, features (text[]), calendar_token, created | `preset` is the kind; `features` the keys switched on |
 | `space_members` | space_id, account_id, role, getting_started_dismissed | |
 | `item_types` | id, space_id, name, icon, colour, holds_items, fields (jsonb), version | All user-defined |
-| `items` | id, space_id, type_id, name, marking, label_code, parent_id, path (`ltree`), depth, holds_items, quantity, unit, fields (jsonb), tags (text[]), notes, is_example, status, last_seen_at, low_stock_at, lent_to, lent_at, due_on, destination_id, created, updated, version, search (generated `tsvector`) | Places, containers and things |
+| `items` | id, space_id, type_id, name, marking, label_code, parent_id, holds_items, quantity, unit, fields (jsonb), tags (text[]), notes, is_example, status, last_seen_at, low_stock_at, lent_to, lent_at, due_on, destination_id, created, updated, version, search (generated `tsvector`) | Places, containers and things |
+| `item_paths` | id (the item's), path (`ltree`), depth | Where an item sits, one row per item, loaded and saved with it. Kept narrow, with only its GiST index, so a move rewrites these rows and not the items (phase 7) |
 | `item_values` | space_id, item_id, field_id, num, date, text | A typed copy of sortable field values, written in the same transaction as the item |
 | `item_events` | id, space_id, item_id, at, actor, kind, from_parent, to_parent, qty_delta, data (jsonb) | Append-only timeline |
 | `labels` | code, space_id, item_id (null until claimed), printed_at | QR labels |
@@ -203,10 +204,12 @@ Moving an item to another type keeps every value.
 ### Nesting and moves
 
 `parent_id` is the container the item is in now. `path` is the `ltree` of ancestor ids (`shed.shelf2.abc.f`), so
-"everything in the shed" is one indexed `path <@` query.
+"everything in the shed" is one indexed `path <@` query. Paths and depths live in `item_paths`, not `items`: `items`
+has some 25 indexes, and rewriting a path there wrote every changed row into all of them (33 s for 100,000 things in
+phase 7's benchmark, against 5.5 s with the path index alone).
 
-Moving an item writes one `Moved` event (`from_parent`, `to_parent`) and updates the subtree's `path` in one SQL
-statement. Nothing is written for the items inside, so moving a box of 10,000 parts costs the same event as moving
+Moving an item writes one `Moved` event (`from_parent`, `to_parent`) and updates the subtree's `item_paths` rows in
+one SQL statement. Nothing is written for the items inside, so moving a box of 10,000 parts costs the same event as moving
 one baseball. Moving an item into itself or into one of its own descendants is refused.
 
 ### Timeline
@@ -235,7 +238,7 @@ drill type:tool in:"Shed" brand:dewalt price>50 seen>1y qty<5 is:container has:p
 
 | Part | Meaning | Index |
 |---|---|---|
-| plain words | name, marking, label code, notes, tags, text fields | GIN on `search`, plus `pg_trgm` GIN on name and marking for typos and partial words |
+| plain words | name, marking, label code, notes, tags, text fields; near spellings of the name only when the words match nothing as typed | GIN on `search`, plus `pg_trgm` GIN on name and marking for partial words and typos |
 | `type:` | item type by name | btree `(space_id, type_id)` |
 | `in:` | anywhere inside a container, by name, marking or code | GiST on `path` |
 | `<field>:value` | exact field value | GIN `jsonb_path_ops` on `fields` |
@@ -243,10 +246,18 @@ drill type:tool in:"Shed" brand:dewalt price>50 seen>1y qty<5 is:container has:p
 | `seen>1y`, `added<30d` | not seen in a year, added in the last 30 days | btree on `last_seen_at`, `created` |
 | `is:` / `has:` | container, counted, missing, lent, disposed / photo, barcode, label | partial indexes |
 
-Results use keyset paging (never OFFSET). Totals above 10,000 are shown as estimates. Per-container counts and value
+Results use keyset paging (never OFFSET). Totals above 10,000 are shown as estimates, and far above it the
+planner's estimate is shown without counting. Relevance order scores every match; name and recent orders don't score.
+A word that matches tens of thousands of things reads every one of them, so it is slower than the target below
+(phase 7 measured it, `docs/reference/limits.md`). Listing those by name instead was tried and was slower still: the
+planner walked the name index past hundreds of thousands of rows for a rare phrase. Near spellings (pg_trgm word
+similarity) are looked for only when the words match nothing as typed: in every search they cost most of its time,
+and for several words they matched anything sharing one of them ("cordless drill" found every cordless thing). Per-container counts and value
 totals are kept up to date by a handler on the `rollups` queue, not counted on every page load. An item's value is its
 type's first Money field times its amount (1 for a unique item); a container's count and total cover everything inside
-it at any depth. Currencies aren't converted: a total is a plain sum.
+it at any depth. Currencies aren't converted: a total is a plain sum. The handler recounts each changed container
+from its direct children (their own count and value plus their rollups), deepest first, so it reads only the
+children however much is further down; the message names every ancestor of what changed.
 
 ### Views
 
@@ -394,7 +405,9 @@ something to say.
 ## Scale targets
 
 - 5 million items and 50 million events in one install.
-- Search p95 under 200 ms and an item timeline under 100 ms, on a Raspberry Pi 5-class machine.
+- Search p95 under 200 ms for searches without words or whose words match up to about 20,000 things, and an item
+  timeline under 100 ms, on a Raspberry Pi 5-class machine. Words that match more read every match (about 0.3 to
+  1 s at 5 million items; measured times are in `docs/reference/limits.md`).
 - Moving a container costs the same whatever it holds, apart from one subtree `path` update.
 - Backups and imports stream in batches and never load a whole table into memory. Imports use `COPY`.
 

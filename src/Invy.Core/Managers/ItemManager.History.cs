@@ -1,6 +1,5 @@
 using Invy.Core.Engines;
 using Invy.Core.Managers.Contracts.Messages;
-using Invy.Core.ResourceAccess.Contracts.Messages;
 
 namespace Invy.Core.Managers;
 
@@ -16,10 +15,11 @@ internal sealed partial class ItemManager
         await validation.ItemAsync(spaceId, id, cancellationToken);
         var events = await items.ListEventsAsync(spaceId, id, HistorySize, cancellationToken);
 
-        // Every container the item was ever in, at any depth: their moves moved it too.
-        var moves = new List<ItemEvent>();
-        var seen = new HashSet<Guid>();
-        IReadOnlyCollection<Guid> next = [id];
+        // Every container the item was in during its last HistorySize moves, at any depth: their moves moved it too.
+        // Older stays are left off, as older events are, so a thing moved thousands of times stays quick to show.
+        var moves = (await items.ListMovesAsync(spaceId, [id], cancellationToken)).TakeLast(HistorySize).ToList();
+        var seen = new HashSet<Guid> { id };
+        IReadOnlyCollection<Guid> next = timeline.ContainersIn(moves).Where(container => container != id).ToList();
         while (next.Count > 0 && seen.Count < 1_000)
         {
             seen.UnionWith(next);

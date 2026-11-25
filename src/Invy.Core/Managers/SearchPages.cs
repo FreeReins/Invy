@@ -21,6 +21,7 @@ internal static class SearchPages
     public static async Task<SearchResponse> RunAsync(
         IItemAccess items, Guid spaceId, ItemQuery query, string? after, IAttachmentAccess? photos, CancellationToken cancellationToken)
     {
+        query = await SpellingAsync(items, spaceId, query, cancellationToken);
         var hits = await items.SearchAsync(spaceId, query, ValidationEngine.SearchCursor(after), PageSize + 1, cancellationToken);
         var page = hits.Take(PageSize).ToList();
         var results = await ResultsAsync(items, photos, spaceId, page, cancellationToken);
@@ -38,6 +39,7 @@ internal static class SearchPages
         IItemAccess items, IAttachmentAccess photos, Guid spaceId, ItemQuery query, int batch,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        query = await SpellingAsync(items, spaceId, query, cancellationToken);
         SearchHit? after = null;
         while (true)
         {
@@ -56,6 +58,15 @@ internal static class SearchPages
             after = hits[^1];
         }
     }
+
+    /// <summary>
+    /// The query to run: as typed, or with near spellings of names when its words match nothing as typed ("drll" finds
+    /// drills). Asked again for every page, so all of a search's pages agree.
+    /// </summary>
+    private static async Task<ItemQuery> SpellingAsync(IItemAccess items, Guid spaceId, ItemQuery query, CancellationToken cancellationToken) =>
+        query.Words.Count > 0 && (await items.SearchAsync(spaceId, query with { Sort = SearchOrder.Name }, null, 1, cancellationToken)).Count == 0
+            ? query with { NearSpellings = true }
+            : query;
 
     /// <summary>The items of these hits, in their order, with where each is (and its details when <paramref name="photos"/> is given).</summary>
     private static async Task<List<SearchResult>> ResultsAsync(

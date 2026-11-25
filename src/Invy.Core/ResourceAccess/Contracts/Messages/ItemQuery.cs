@@ -8,4 +8,8 @@ namespace Invy.Core.ResourceAccess.Contracts.Messages;
 /// <param name="IncludeGone">True when disposed and archived items were asked for (is:disposed); otherwise left out.</param>
 /// <param name="Words">The plain words searched for, to rank results by.</param>
 /// <param name="Sort">The order of the results.</param>
-internal sealed record ItemQuery(QueryNode Filter, bool IncludeGone, IReadOnlyList<string> Words, SearchOrder Sort);
+/// <param name="NearSpellings">
+/// True when words also match near spellings of names (typos), which SearchPages asks for only when the words
+/// themselves match nothing: near spellings are slow to find and, for several words, match far too much.
+/// </param>
+internal sealed record ItemQuery(QueryNode Filter, bool IncludeGone, IReadOnlyList<string> Words, SearchOrder Sort, bool NearSpellings = false);

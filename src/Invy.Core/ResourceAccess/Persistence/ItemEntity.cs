@@ -1,10 +1,20 @@
+using System.Text.Json.Serialization;
 using Invy.Core.Managers.Contracts.Messages;
 
 namespace Invy.Core.ResourceAccess.Persistence;
 
 internal sealed class ItemEntity
 {
-    public Guid Id { get; set; }
+    /// <summary>The item's id, also set on its <see cref="Place"/>.</summary>
+    public Guid Id
+    {
+        get;
+        set
+        {
+            field = value;
+            Place.Id = value;
+        }
+    }
 
     public Guid SpaceId { get; set; }
 
@@ -18,10 +28,23 @@ internal sealed class ItemEntity
 
     public Guid? ParentId { get; set; }
 
-    /// <summary>An ltree column. See ItemPaths.</summary>
-    public string Path { get; set; } = string.Empty;
+    /// <summary>Its row in "ItemPaths": its path and depth. Backups write those as <see cref="Path"/> and <see cref="Depth"/>.</summary>
+    [JsonIgnore]
+    public ItemPathEntity Place { get; set; } = new();
 
-    public int Depth { get; set; }
+    /// <summary>The ltree of its containers' ids and its own, stored in <see cref="Place"/>. See ItemPaths.</summary>
+    public string Path
+    {
+        get => Place.Path;
+        set => Place.Path = value;
+    }
+
+    /// <summary>How many containers it is inside, stored in <see cref="Place"/>.</summary>
+    public int Depth
+    {
+        get => Place.Depth;
+        set => Place.Depth = value;
+    }
 
     public bool HoldsItems { get; set; }
 

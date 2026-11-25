@@ -51,6 +51,7 @@ internal sealed partial class ItemAccess(InvyDbContext db) : IItemAccess
         if (await TrackedAsync(item.SpaceId, item.Id, cancellationToken) is { } tracked)
         {
             db.CopyInto(tracked, fresh);
+            db.CopyInto(tracked.Place, fresh.Place);
         }
         else
         {
@@ -91,12 +92,16 @@ internal sealed partial class ItemAccess(InvyDbContext db) : IItemAccess
             await db.Database.BeginTransactionAsync(cancellationToken);
         }
 
+        // Only the narrow "ItemPaths" rows change, so the items' own columns and indexes aren't rewritten. A tree is in
+        // one space, so checking that its top item is in the space covers everything under it.
+        var top = ItemPaths.Ids(oldPath)[0];
         await db.Database.ExecuteSqlAsync(
             $"""
-            UPDATE "Items"
+            UPDATE "ItemPaths"
             SET "Path" = {newPath}::ltree || subpath("Path", nlevel({oldPath}::ltree)),
                 "Depth" = nlevel({newPath}::ltree || subpath("Path", nlevel({oldPath}::ltree))) - 1
-            WHERE "SpaceId" = {spaceId} AND "Path" <@ {oldPath}::ltree AND "Path" <> {oldPath}::ltree
+            WHERE "Path" <@ {oldPath}::ltree AND "Path" <> {oldPath}::ltree
+              AND EXISTS (SELECT 1 FROM "Items" WHERE "Id" = {top} AND "SpaceId" = {spaceId})
             """,
             cancellationToken);
     }

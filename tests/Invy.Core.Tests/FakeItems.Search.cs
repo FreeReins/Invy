@@ -47,18 +47,24 @@ internal sealed partial class FakeItems
     private IEnumerable<Item> Matching(Guid spaceId, ItemQuery query) =>
         Rows.Where(item => item.SpaceId == spaceId
             && (query.IncludeGone || item.Status is not (ItemStatus.Disposed or ItemStatus.Archived))
-            && Holds(query.Filter, item));
+            && Holds(query.Filter, item, query.NearSpellings));
+
+    /// <summary>A near spelling, as pg_trgm's word similarity finds one: a word of the name one letter away.</summary>
+    private static bool NearSpelling(string name, string word) =>
+        name.Split(' ').Any(part => part.Length >= word.Length && part.Length <= word.Length + 1
+            && Enumerable.Range(0, part.Length).Any(skip => string.Equals(part.Remove(skip, 1), word, StringComparison.OrdinalIgnoreCase)));
 
     private static float Rank(Item item, ItemQuery query) =>
         query.Words.Count(word => item.Name.Contains(word, StringComparison.OrdinalIgnoreCase));
 
-    private bool Holds(QueryNode node, Item item) => node switch
+    private bool Holds(QueryNode node, Item item, bool near) => node switch
     {
-        AllOf all => all.Parts.All(part => Holds(part, item)),
-        AnyOf any => any.Parts.Any(part => Holds(part, item)),
-        Not not => !Holds(not.Part, item),
+        AllOf all => all.Parts.All(part => Holds(part, item, near)),
+        AnyOf any => any.Parts.Any(part => Holds(part, item, near)),
+        Not not => !Holds(not.Part, item, near),
         Nothing => false,
-        Words words => Texts(item).Any(text => text.Contains(words.Text, StringComparison.OrdinalIgnoreCase)),
+        Words words => Texts(item).Any(text => text.Contains(words.Text, StringComparison.OrdinalIgnoreCase))
+            || (near && NearSpelling(item.Name, words.Text)),
         OfType type => item.TypeId is Guid typeId && type.TypeIds.Contains(typeId),
         Inside inside => Rows.Any(container => container.SpaceId == item.SpaceId && container.HoldsItems && container.Id != item.Id
             && ItemPaths.IsWithin(item.Path, container.Path)

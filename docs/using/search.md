@@ -8,7 +8,8 @@ Type in the box on **Find** and the results appear as you type. Each result show
 ## Words
 
 Plain words find items by their name, marking, label code, tags, notes and text fields. A word can be half typed (`base` finds
-*Baseball*) or slightly misspelt (`basebll` still finds it). Every word has to match. Put words in quotes to find them
+*Baseball*) or slightly misspelt (`basebll` still finds it): when the words match nothing as typed, Invy looks for
+names spelt nearly the same. Every word has to match. Put words in quotes to find them
 together: `"box f"`.
 
 ## Search terms

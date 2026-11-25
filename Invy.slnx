@@ -3,6 +3,10 @@
     <Project Path="src/Invy.Api/Invy.Api.csproj" />
     <Project Path="src/Invy.Core/Invy.Core.csproj" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/Invy.Bench/Invy.Bench.csproj" />
+    <Project Path="tools/Invy.Seed/Invy.Seed.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Invy.Core.Tests/Invy.Core.Tests.csproj" />
   </Folder>

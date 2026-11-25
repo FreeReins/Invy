@@ -229,6 +229,9 @@ public sealed partial class BundledDatabase
         "max_connections = 50",
         // Invy's queries are small; the container image leaves out the JIT compiler.
         "jit = off",
+        // A search that matches tens of thousands of things keeps an exact list of them in memory; with the default
+        // 4MB it falls back to whole pages and checks every row on them again, many times slower (phase 7).
+        "work_mem = 32MB",
         "log_line_prefix = '%m [%p] '",
         string.Empty);
 

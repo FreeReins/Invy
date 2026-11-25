@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Dev only, never shipped: times search, timelines, moves and rollups through the real managers against a database
+    seeded by tools/Invy.Seed, and prints the results for docs/reference/limits.md.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Invy.Core/Invy.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -18,7 +18,8 @@ dotnet run --project tests/Invy.Core.Tests
 dotnet run --project tests/Invy.Core.Tests -- --treenode-filter "/*/*/ItemMoveTests/*"   # one class
 ```
 
-Done means no build warnings and passing tests. `./dev.sh`, `./dev.sh test` and `dotnet watch` never exit; don't
+Done means no build warnings and passing tests. Commit messages and PR titles are Conventional Commits (`fix:`,
+`feat:`, `docs:`...): a merged `fix:` or `feat:` publishes a release (CONTRIBUTING.md, Releases). `./dev.sh`, `./dev.sh test` and `dotnet watch` never exit; don't
 run them or `podman build --target test`.
 
 ## Checklists

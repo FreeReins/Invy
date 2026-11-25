@@ -34,7 +34,7 @@ internal sealed partial class BackupAccess
 
         // Items (containers before what is in them), their timelines and sortable values. Empty in backups made
         // before phase 1b.
-        new BackupTable<ItemEntity>("items", BackupJson.Default.ListItemEntity, query: rows => rows.OrderBy(item => item.Depth)),
+        new BackupTable<ItemEntity>("items", BackupJson.Default.ListItemEntity, query: rows => rows.OrderBy(item => item.Place.Depth)),
         new BackupTable<ItemEventEntity>("itemEvents", BackupJson.Default.ListItemEventEntity),
         new BackupTable<ItemValueEntity>("itemValues", BackupJson.Default.ListItemValueEntity),
 
@@ -52,6 +52,9 @@ internal sealed partial class BackupAccess
         new BackupTable<ProjectEntity>("projects", BackupJson.Default.ListProjectEntity, query: rows => rows.Include(project => project.Items)),
     ];
 
+    /// <summary>Rows written and read between flushes to the file, and added to the database per save.</summary>
+    private const int BatchSize = 1_000;
+
     /// <summary>
     /// Everyone signs in again after a restore. Passwords go back to the backup's, and so would the session
     /// versions, which would bring back sessions that a password change since then had ended (a stolen cookie,
@@ -59,14 +62,45 @@ internal sealed partial class BackupAccess
     /// carries. An account removed since the backup has no current version; its sessions ended when it was
     /// removed, unless its password also changed between the backup and the removal.
     /// </summary>
-    private static async Task EndSessionsAsync(InvyDbContext db, List<UserEntity> users, CancellationToken cancellationToken)
+    private static async Task<Action<UserEntity>> EndSessionsAsync(InvyDbContext db, CancellationToken cancellationToken)
     {
         var currentVersions = await db.Users.AsNoTracking().ToDictionaryAsync(user => user.Id, user => user.SessionVersion, cancellationToken);
-        foreach (var user in users)
-        {
-            user.SessionVersion = Math.Max(user.SessionVersion, currentVersions.GetValueOrDefault(user.Id)) + 1;
-        }
+        return user => user.SessionVersion = Math.Max(user.SessionVersion, currentVersions.GetValueOrDefault(user.Id)) + 1;
     }
+
+    /// <summary>
+    /// Items point at other items (their container, their moving destination), and rows are restored a batch at a
+    /// time, so these keys are dropped while restoring and added back after, which checks every row in one go. Their
+    /// definitions wait in a temporary table that goes with the transaction.
+    /// </summary>
+    private Task DropItemLinksAsync(CancellationToken cancellationToken) =>
+        db.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TEMPORARY TABLE invy_item_links ON COMMIT DROP AS
+                SELECT conname, pg_get_constraintdef(oid) AS definition FROM pg_constraint
+                WHERE contype = 'f' AND conrelid = '"Items"'::regclass AND confrelid = conrelid;
+            DO $$
+            DECLARE link record;
+            BEGIN
+                FOR link IN SELECT conname FROM invy_item_links LOOP
+                    EXECUTE format('ALTER TABLE "Items" DROP CONSTRAINT %I', link.conname);
+                END LOOP;
+            END $$;
+            """,
+            cancellationToken);
+
+    private Task AddItemLinksAsync(CancellationToken cancellationToken) =>
+        db.Database.ExecuteSqlRawAsync(
+            """
+            DO $$
+            DECLARE link record;
+            BEGIN
+                FOR link IN SELECT conname, definition FROM invy_item_links LOOP
+                    EXECUTE format('ALTER TABLE "Items" ADD CONSTRAINT %I %s', link.conname, link.definition);
+                END LOOP;
+            END $$;
+            """,
+            cancellationToken);
 
     /// <summary>One table in a backup file.</summary>
     internal abstract class BackupTable
@@ -77,40 +111,38 @@ internal sealed partial class BackupAccess
         /// <summary>The stored entity the table's rows are.</summary>
         public abstract Type EntityType { get; }
 
-        /// <summary>Writes the table's rows as the value of its property.</summary>
+        /// <summary>Writes the table's rows as the value of its property, streamed from the database.</summary>
         public abstract Task WriteAsync(InvyDbContext db, Utf8JsonWriter writer, CancellationToken cancellationToken);
 
-        /// <summary>Reads the table's rows from a backup file; none when an older backup lacks the table.</summary>
-        public abstract BackupRows Read(JsonElement backup);
+        /// <summary>Runs before any table is cleared, while the current rows can still be read.</summary>
+        public abstract Task BeforeRestoreAsync(InvyDbContext db, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Reads the value after the table's property (an array of rows; anything else counts as none) and adds the
+        /// rows in batches.
+        /// </summary>
+        public abstract Task RestoreAsync(InvyDbContext db, JsonStreamReader reader, CancellationToken cancellationToken);
 
         /// <summary>Deletes every row; their children go through the database's foreign keys.</summary>
         public abstract Task ClearAsync(InvyDbContext db, CancellationToken cancellationToken);
     }
 
-    /// <summary>A table's rows read from a backup file, waiting to be restored.</summary>
-    internal abstract class BackupRows
-    {
-        /// <summary>Runs before any table is cleared, while the current rows can still be read.</summary>
-        public abstract Task BeforeRestoreAsync(InvyDbContext db, CancellationToken cancellationToken);
-
-        /// <summary>Adds the rows to the context, to be inserted on save.</summary>
-        public abstract void AddTo(InvyDbContext db);
-    }
-
     /// <summary>A table of <typeparamref name="TEntity"/> rows.</summary>
     /// <param name="name">The table's property in the backup file's JSON.</param>
-    /// <param name="json">How a list of its rows is written, made at build time.</param>
-    /// <param name="query">Includes the rows' children, which are written inside them.</param>
-    /// <param name="prepare">Tidies rows just read from the database or from a backup file.</param>
-    /// <param name="beforeRestore">Adjusts the backup's rows from the current ones, before they are cleared.</param>
+    /// <param name="json">How a list of its rows is written, made at build time; its rows are written one by one.</param>
+    /// <param name="query">Includes the rows' children, which are written inside them, and orders the rows.</param>
+    /// <param name="beforeRestore">Reads what it needs from the current rows, before they are cleared, and adjusts each restored row.</param>
     private sealed class BackupTable<TEntity>(
         string name,
         JsonTypeInfo<List<TEntity>> json,
         Func<IQueryable<TEntity>, IQueryable<TEntity>>? query = null,
-        Action<List<TEntity>>? prepare = null,
-        Func<InvyDbContext, List<TEntity>, CancellationToken, Task>? beforeRestore = null) : BackupTable
+        Func<InvyDbContext, CancellationToken, Task<Action<TEntity>>>? beforeRestore = null) : BackupTable
         where TEntity : class
     {
+        private readonly JsonTypeInfo<TEntity> row = (JsonTypeInfo<TEntity>)json.Options.GetTypeInfo(typeof(TEntity));
+
+        private Action<TEntity>? adjust;
+
         public override string Name => name;
 
         public override Type EntityType => typeof(TEntity);
@@ -118,30 +150,71 @@ internal sealed partial class BackupAccess
         public override async Task WriteAsync(InvyDbContext db, Utf8JsonWriter writer, CancellationToken cancellationToken)
         {
             var rows = db.Set<TEntity>().AsNoTracking();
-            var list = await (query?.Invoke(rows) ?? rows).ToListAsync(cancellationToken);
-            prepare?.Invoke(list);
             writer.WritePropertyName(name);
-            JsonSerializer.Serialize(writer, list, json);
+            writer.WriteStartArray();
+            var written = 0;
+            await foreach (var entity in (query?.Invoke(rows) ?? rows).AsAsyncEnumerable().WithCancellation(cancellationToken))
+            {
+                JsonSerializer.Serialize(writer, entity, row);
+                if (++written % BatchSize == 0)
+                {
+                    await writer.FlushAsync(cancellationToken);
+                }
+            }
+
+            writer.WriteEndArray();
+            await writer.FlushAsync(cancellationToken);
         }
 
-        public override BackupRows Read(JsonElement backup)
+        public override async Task BeforeRestoreAsync(InvyDbContext db, CancellationToken cancellationToken) =>
+            adjust = beforeRestore is null ? null : await beforeRestore(db, cancellationToken);
+
+        public override async Task RestoreAsync(InvyDbContext db, JsonStreamReader reader, CancellationToken cancellationToken)
         {
-            var list = backup.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Array
-                ? value.Deserialize(json) ?? []
-                : [];
-            prepare?.Invoke(list);
-            return new Rows(list, beforeRestore);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                return;
+            }
+
+            if (reader.TokenType is JsonTokenType.StartObject)
+            {
+                throw new InvalidDataException($"The backup file's {name} aren't a list.");
+            }
+
+            if (reader.TokenType is not JsonTokenType.StartArray)
+            {
+                return;
+            }
+
+            var batch = new List<TEntity>(BatchSize);
+            while (await reader.ReadElementAsync(row, cancellationToken) is { } entity)
+            {
+                adjust?.Invoke(entity);
+                batch.Add(entity);
+                if (batch.Count == BatchSize)
+                {
+                    await SaveAsync(db, batch, cancellationToken);
+                }
+            }
+
+            await SaveAsync(db, batch, cancellationToken);
         }
 
         public override Task ClearAsync(InvyDbContext db, CancellationToken cancellationToken) =>
             db.Set<TEntity>().ExecuteDeleteAsync(cancellationToken);
 
-        private sealed class Rows(List<TEntity> list, Func<InvyDbContext, List<TEntity>, CancellationToken, Task>? beforeRestore) : BackupRows
+        /// <summary>Adds the batch and forgets it, so the context never holds more than one batch.</summary>
+        private static async Task SaveAsync(InvyDbContext db, List<TEntity> batch, CancellationToken cancellationToken)
         {
-            public override Task BeforeRestoreAsync(InvyDbContext db, CancellationToken cancellationToken) =>
-                beforeRestore?.Invoke(db, list, cancellationToken) ?? Task.CompletedTask;
+            if (batch.Count == 0)
+            {
+                return;
+            }
 
-            public override void AddTo(InvyDbContext db) => db.AddRange(list);
+            db.AddRange(batch);
+            await db.SaveChangesAsync(cancellationToken);
+            db.ChangeTracker.Clear();
+            batch.Clear();
         }
     }
 }

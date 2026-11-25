@@ -1,3 +1,4 @@
+using System.Data;
 using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -62,16 +63,19 @@ internal sealed partial class BackupAccess(InvyDbContext db, string folder, stri
         await using (var zip = new GZipStream(file, CompressionLevel.Optimal))
         await using (var writer = new Utf8JsonWriter(zip))
         {
+            // One snapshot for every table, so rows added while the backup runs can't point at rows it left out. Rows
+            // are streamed from the database to the file: only a few at a time are in memory, however many there are.
+            await using var snapshot = await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, cancellationToken);
             writer.WriteStartObject();
             writer.WriteString("createdAt", DateTimeOffset.UtcNow);
             foreach (var table in Tables)
             {
-                // One table's rows in memory at a time.
                 await table.WriteAsync(db, writer, cancellationToken);
-                await writer.FlushAsync(cancellationToken);
             }
 
             writer.WriteEndObject();
+            await writer.FlushAsync(cancellationToken);
+            await snapshot.CommitAsync(cancellationToken);
         }
 
         CopyMissing(filesFolder, FileCopies);
@@ -89,37 +93,54 @@ internal sealed partial class BackupAccess(InvyDbContext db, string folder, stri
 
     public async Task<BackupCounts> CountAsync(string name, CancellationToken cancellationToken)
     {
-        BackupOutline outline;
-        await using (var file = File.OpenRead(Path.Combine(folder, name)))
-        await using (var zip = new GZipStream(file, CompressionMode.Decompress))
+        // Only the accounts are counted. They come first, so the rest of the file is never read.
+        await using var file = File.OpenRead(Path.Combine(folder, name));
+        await using var zip = new GZipStream(file, CompressionMode.Decompress);
+        var reader = new JsonStreamReader(zip);
+        if (!await reader.ReadAsync(cancellationToken) || reader.TokenType != JsonTokenType.StartObject)
         {
-            outline = await JsonSerializer.DeserializeAsync(zip, BackupJson.Default.BackupOutline, cancellationToken)
-                ?? throw new InvalidDataException("The backup file is empty.");
+            throw new InvalidDataException("The backup file is empty.");
         }
 
-        return new BackupCounts(outline.Users.Count);
+        while (await reader.ReadAsync(cancellationToken) && reader.TokenType == JsonTokenType.PropertyName)
+        {
+            if (reader.Text != "users")
+            {
+                await reader.SkipValueAsync(cancellationToken);
+                continue;
+            }
+
+            var users = 0;
+            if (await reader.ReadAsync(cancellationToken) && reader.TokenType == JsonTokenType.StartArray)
+            {
+                while (await reader.ReadElementAsync(BackupJson.Default.Counted, cancellationToken) is not null)
+                {
+                    users++;
+                }
+            }
+
+            return new BackupCounts(users);
+        }
+
+        return new BackupCounts(0);
     }
 
     public async Task RestoreAsync(string name, CancellationToken cancellationToken)
     {
-        List<BackupRows> restored;
-        await using (var file = File.OpenRead(Path.Combine(folder, name)))
-        await using (var zip = new GZipStream(file, CompressionMode.Decompress))
+        await using var file = File.OpenRead(Path.Combine(folder, name));
+        await using var zip = new GZipStream(file, CompressionMode.Decompress);
+        var reader = new JsonStreamReader(zip);
+        if (!await reader.ReadAsync(cancellationToken) || reader.TokenType != JsonTokenType.StartObject)
         {
-            using var backup = await JsonDocument.ParseAsync(zip, cancellationToken: cancellationToken);
-            if (backup.RootElement.ValueKind != JsonValueKind.Object)
-            {
-                throw new InvalidDataException("The backup file is empty.");
-            }
-
-            restored = Tables.Select(table => table.Read(backup.RootElement)).ToList();
+            throw new InvalidDataException("The backup file is empty.");
         }
 
-        // One transaction: either everything is replaced, or nothing changes.
+        // One transaction: either everything is replaced, or nothing changes, even when the file turns out to be
+        // damaged part way through. The rows are streamed from the file in batches, never all read at once.
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        foreach (var rows in restored)
+        foreach (var table in Tables)
         {
-            await rows.BeforeRestoreAsync(db, cancellationToken);
+            await table.BeforeRestoreAsync(db, cancellationToken);
         }
 
         // These aren't backed up, and point at users. Access links are made again. API tokens aren't backed up, so
@@ -133,12 +154,20 @@ internal sealed partial class BackupAccess(InvyDbContext db, string folder, stri
         }
 
         db.ChangeTracker.Clear();
-        foreach (var rows in restored)
+        await DropItemLinksAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken) && reader.TokenType == JsonTokenType.PropertyName)
         {
-            rows.AddTo(db);
+            if (Tables.FirstOrDefault(table => table.Name == reader.Text) is { } table)
+            {
+                await table.RestoreAsync(db, reader, cancellationToken);
+            }
+            else
+            {
+                await reader.SkipValueAsync(cancellationToken);
+            }
         }
 
-        await db.SaveChangesAsync(cancellationToken);
+        await AddItemLinksAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         db.ChangeTracker.Clear();
         CopyMissing(FileCopies, filesFolder);
@@ -178,15 +207,6 @@ internal sealed partial class BackupAccess(InvyDbContext db, string folder, stri
     private static StoredBackup Describe(FileInfo file) =>
         new(file.Name, new DateTimeOffset(file.LastWriteTimeUtc, TimeSpan.Zero), file.Length);
 
-    /// <summary>
-    /// Just enough of a backup file to count what it holds. The records' fields are skipped, so
-    /// no entities are built. A list an older backup lacks reads as empty.
-    /// </summary>
-    private sealed class BackupOutline
-    {
-        public List<Counted> Users { get; init => field = value ?? []; } = [];
-    }
-
     /// <summary>One record in a backup, counted but not read.</summary>
     private sealed class Counted;
 
@@ -208,6 +228,6 @@ internal sealed partial class BackupAccess(InvyDbContext db, string folder, stri
     [JsonSerializable(typeof(List<AttachmentEntity>))]
     [JsonSerializable(typeof(List<ViewEntity>))]
     [JsonSerializable(typeof(List<ProjectEntity>))]
-    [JsonSerializable(typeof(BackupOutline))]
+    [JsonSerializable(typeof(Counted))]
     private sealed partial class BackupJson : JsonSerializerContext;
 }

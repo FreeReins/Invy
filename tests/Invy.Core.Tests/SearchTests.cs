@@ -87,6 +87,18 @@ public class SearchTests
     }
 
     [Test]
+    public async Task Near_spellings_are_found_only_when_the_words_match_nothing()
+    {
+        var (space, garage, _, _) = await ShedAsync();
+        await space.Items.QuickAddAsync(space.Owen, space.SpaceId, new QuickAddRequest("Drill bits, Driill press", garage.Id), default);
+
+        // "drll" matches nothing as typed, so near spellings count. "drill" does match, so the near "Driill press" is left out.
+        await Assert.That(await FindAsync(space, "drll")).IsEqualTo("Drill, Drill bits");
+        await Assert.That(await FindAsync(space, "drill")).IsEqualTo("Drill, Drill bits");
+        await Assert.That(await FindAsync(space, "driill")).IsEqualTo("Driill press");
+    }
+
+    [Test]
     public async Task A_search_that_cannot_be_read_says_how_to_write_it()
     {
         var (space, _, _, _) = await ShedAsync();

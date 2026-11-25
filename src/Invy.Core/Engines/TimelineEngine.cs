@@ -79,8 +79,31 @@ internal sealed class TimelineEngine
     }
 
     /// <summary>Where the item's last move at or before <paramref name="at"/> put it; null at the top or when unknown.</summary>
-    private static Guid? ParentAt(Guid itemId, DateTimeOffset at, Dictionary<Guid, List<ItemEvent>> byItem) =>
-        byItem.TryGetValue(itemId, out var list) ? list.LastOrDefault(move => move.At <= at)?.ToParent : null;
+    /// <remarks>Each list is oldest first, so this is a binary search: an item that moved thousands of times stays quick.</remarks>
+    private static Guid? ParentAt(Guid itemId, DateTimeOffset at, Dictionary<Guid, List<ItemEvent>> byItem)
+    {
+        if (!byItem.TryGetValue(itemId, out var list))
+        {
+            return null;
+        }
+
+        // The first move after `at`; the one before it is the last at or before `at`.
+        int low = 0, high = list.Count;
+        while (low < high)
+        {
+            var middle = (low + high) / 2;
+            if (list[middle].At <= at)
+            {
+                low = middle + 1;
+            }
+            else
+            {
+                high = middle;
+            }
+        }
+
+        return low == 0 ? null : list[low - 1].ToParent;
+    }
 
     /// <summary>A time spent inside one chain of containers (ids, top first).</summary>
     internal sealed record Stay(DateTimeOffset From, DateTimeOffset? Until, IReadOnlyList<Guid> Chain);

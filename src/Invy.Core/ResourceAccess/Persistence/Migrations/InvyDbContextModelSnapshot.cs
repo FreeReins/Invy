@@ -361,9 +361,6 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Depth")
-                        .HasColumnType("integer");
-
                     b.Property<Guid?>("DestinationId")
                         .HasColumnType("uuid");
 
@@ -410,10 +407,6 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
 
                     b.Property<Guid?>("ParentId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Path")
-                        .IsRequired()
-                        .HasColumnType("ltree");
 
                     b.Property<decimal?>("Quantity")
                         .HasPrecision(12, 3)
@@ -465,10 +458,6 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                         .HasFilter("\"LabelCode\" IS NOT NULL");
 
                     b.HasIndex("ParentId");
-
-                    b.HasIndex("Path");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Path"), "gist");
 
                     b.HasIndex("TypeId");
 
@@ -578,6 +567,27 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                     b.HasIndex("ToParent", "At");
 
                     b.ToTable("ItemEvents", (string)null);
+                });
+
+            modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.ItemPathEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Depth")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasColumnType("ltree");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Path");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Path"), "gist");
+
+                    b.ToTable("ItemPaths", (string)null);
                 });
 
             modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.ItemTypeEntity", b =>
@@ -993,6 +1003,15 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.ItemPathEntity", b =>
+                {
+                    b.HasOne("Invy.Core.ResourceAccess.Persistence.ItemEntity", null)
+                        .WithOne("Place")
+                        .HasForeignKey("Invy.Core.ResourceAccess.Persistence.ItemPathEntity", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.ItemTypeEntity", b =>
                 {
                     b.HasOne("Invy.Core.ResourceAccess.Persistence.SpaceEntity", null)
@@ -1076,6 +1095,12 @@ namespace Invy.Core.ResourceAccess.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("SpaceId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Invy.Core.ResourceAccess.Persistence.ItemEntity", b =>
+                {
+                    b.Navigation("Place")
                         .IsRequired();
                 });
 

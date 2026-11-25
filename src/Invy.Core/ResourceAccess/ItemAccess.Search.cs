@@ -13,7 +13,9 @@ internal sealed partial class ItemAccess
     {
         var sql = new SearchSql(spaceId);
         var where = sql.Where(query);
-        var rank = sql.Rank(query);
+
+        // Only a relevance order needs each match scored; the others are kept by an index and stop at the limit.
+        var rank = query.Sort == SearchOrder.Relevance ? sql.Rank(query) : "0::real";
 
         // Keyset paging: each order has a key that ends in the id, and the next page starts after the last row's key.
         var (order, next) = query.Sort switch
@@ -46,6 +48,13 @@ internal sealed partial class ItemAccess
 
     public async Task<SearchCount> CountAsync(Guid spaceId, ItemQuery query, int cap, CancellationToken cancellationToken)
     {
+        // Far above the cap, the estimate is shown without counting: counting reads every matching row up to the cap.
+        var estimate = await EstimateAsync(spaceId, query, cancellationToken);
+        if (estimate > 4L * cap)
+        {
+            return new SearchCount((int)Math.Min(int.MaxValue, estimate), true);
+        }
+
         var counting = new SearchSql(spaceId);
         var count = 0;
         await ReadAsync(
@@ -53,14 +62,16 @@ internal sealed partial class ItemAccess
             counting,
             async reader => count = await reader.ReadAsync(cancellationToken) ? reader.GetInt32(0) : 0,
             cancellationToken);
-        if (count <= cap)
-        {
-            return new SearchCount(count, false);
-        }
+        return count <= cap
+            ? new SearchCount(count, false)
+            : new SearchCount((int)Math.Min(int.MaxValue, Math.Max(cap + 1, estimate)), true);
+    }
 
-        // Above the cap, counting every row costs too much: the planner's estimate is shown instead.
+    /// <summary>The database's estimate of how many items match, read from its plan without running it.</summary>
+    private async Task<long> EstimateAsync(Guid spaceId, ItemQuery query, CancellationToken cancellationToken)
+    {
         var estimating = new SearchSql(spaceId);
-        var estimate = count;
+        long estimate = 0;
         await ReadAsync(
             $"EXPLAIN (FORMAT JSON) SELECT 1 FROM \"Items\" i WHERE {estimating.Where(query)}",
             estimating,
@@ -69,30 +80,47 @@ internal sealed partial class ItemAccess
                 if (await reader.ReadAsync(cancellationToken))
                 {
                     using var plan = JsonDocument.Parse(reader.GetString(0));
-                    estimate = (int)Math.Min(int.MaxValue, Math.Max(cap + 1, plan.RootElement[0].GetProperty("Plan").GetProperty("Plan Rows").GetDouble()));
+                    estimate = (long)plan.RootElement[0].GetProperty("Plan").GetProperty("Plan Rows").GetDouble();
                 }
             },
             cancellationToken);
-        return new SearchCount(estimate, true);
+        return estimate;
     }
 
-    public Task RecountAsync(Guid spaceId, IReadOnlyCollection<Guid> containerIds, CancellationToken cancellationToken)
+    public async Task RecountAsync(Guid spaceId, IReadOnlyCollection<Guid> containerIds, CancellationToken cancellationToken)
     {
+        if (containerIds.Count == 0)
+        {
+            return;
+        }
+
+        // Each container adds up its direct children (their own count and value, plus what their rollups hold), deepest
+        // first, so the children it reads are already right. That reads only direct children, however many things
+        // are further down. The containers named are all of the changed things' ancestors, so the rest are up to date.
         var ids = containerIds.ToArray();
-        return db.Database.ExecuteSqlAsync(
-            $"""
-            UPDATE "Items" AS c
-            SET "ContentCount" = t.n, "ContentValue" = t.v
-            FROM (
-                SELECT c2."Id", count(d."Id")::int AS n, coalesce(sum(d."Value"), 0) AS v
-                FROM "Items" c2
-                LEFT JOIN "Items" d ON d."SpaceId" = c2."SpaceId" AND d."Path" <@ c2."Path" AND d."Id" <> c2."Id"
-                    AND d."Status" NOT IN ('Disposed', 'Archived')
-                WHERE c2."SpaceId" = {spaceId} AND c2."Id" = ANY({ids})
-                GROUP BY c2."Id") t
-            WHERE c."Id" = t."Id" AND (c."ContentCount" <> t.n OR c."ContentValue" <> t.v)
-            """,
-            cancellationToken);
+        var levels = await db.ItemPaths.AsNoTracking()
+            .Where(path => ids.Contains(path.Id))
+            .GroupBy(path => path.Depth)
+            .Select(level => new { Depth = level.Key, Ids = level.Select(path => path.Id).ToList() })
+            .ToListAsync(cancellationToken);
+        foreach (var level in levels.OrderByDescending(level => level.Depth))
+        {
+            var levelIds = level.Ids.ToArray();
+            await db.Database.ExecuteSqlAsync(
+                $"""
+                UPDATE "Items" AS c
+                SET "ContentCount" = t.n, "ContentValue" = t.v
+                FROM (
+                    SELECT p."Id",
+                        coalesce(sum(CASE WHEN ch."Status" IN ('Disposed', 'Archived') THEN 0 ELSE 1 END + ch."ContentCount"), 0)::int AS n,
+                        coalesce(sum(CASE WHEN ch."Status" IN ('Disposed', 'Archived') THEN 0 ELSE coalesce(ch."Value", 0) END + ch."ContentValue"), 0) AS v
+                    FROM unnest({levelIds}) AS p("Id")
+                    LEFT JOIN "Items" ch ON ch."SpaceId" = {spaceId} AND ch."ParentId" = p."Id"
+                    GROUP BY p."Id") t
+                WHERE c."Id" = t."Id" AND c."SpaceId" = {spaceId} AND (c."ContentCount" <> t.n OR c."ContentValue" <> t.v)
+                """,
+                cancellationToken);
+        }
     }
 
     /// <summary>Runs a query built by <see cref="SearchSql"/> on the context's connection and hands its reader to <paramref name="read"/>.</summary>

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Dev only, never shipped: fills a throwaway database with 5 million items and 50 million events through COPY, for
+    the scale benchmark (tools/Invy.Bench). See docs/reference/limits.md.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Invy.Core/Invy.Core.csproj" />
+  </ItemGroup>
+</Project>

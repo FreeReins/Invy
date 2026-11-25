@@ -18,5 +18,8 @@
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Invy.Core.Tests" />
+    <!-- Dev-only scale tools in tools/: they seed and time the real accessors and managers. -->
+    <InternalsVisibleTo Include="Invy.Seed" />
+    <InternalsVisibleTo Include="Invy.Bench" />
   </ItemGroup>
 </Project>

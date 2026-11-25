@@ -254,6 +254,41 @@ into `src/Invy.Web/shots/` (`tests/screenshot.spec.js`, which normal runs skip).
   source folder may come from the Alpine Node container, so the tests keep their own copy in the
   `invy-web-test-modules` volume. `podman volume rm invy-web-test-modules` starts it afresh.
 
+## Releases
+
+Every merge to `main` can release. Pull requests are squash merged, and the title becomes the commit message, so a
+title must be a [Conventional Commit](https://www.conventionalcommits.org); the **PR title** check says how when one
+isn't. The release workflow reads the messages since the last tag and picks the version:
+
+| Title starts with | Release |
+|---|---|
+| `fix:`, `perf:` (`fix(web): ...` with a scope) | patch, 1.4.2 → 1.4.3 |
+| `feat:` | minor, 1.4.2 → 1.5.0 |
+| `feat!:` or any type with `!`, or a `BREAKING CHANGE:` line in the description | major, 1.4.2 → 2.0.0 (minor below 1.0.0) |
+| `docs:`, `test:`, `refactor:`, `build:`, `ci:`, `chore:`, `style:`, `revert:` | none; they ship with the next release |
+
+`.github/scripts/next-version.sh` prints what the next release would be. The workflow builds and checks everything,
+then publishes the image to GHCR and an immutable GitHub release with that tag. A published release, its files and its
+tag can never change, so a mistake is fixed by a new release. If a build fails, nothing is published and the next
+merge tries that version again.
+
+Dependabot opens weekly updates, with minor and patch updates grouped into one pull request per ecosystem. Those turn
+on auto-merge, merge when **CI** and **PR title** pass, and, as `fix(deps):`, release a patch. Major updates and
+GitHub Actions updates (`ci(deps):`, no release) wait for a person.
+
+One-time setup on GitHub (the same in every repo using these workflows):
+
+1. **Settings → General**: under **Pull Requests**, allow only **squash merging**, with **Default commit message**
+   set to **Pull request title and description**; tick **Allow auto-merge** and **Automatically delete head
+   branches**. Under **Releases**, tick **Enable release immutability**.
+2. **Settings → Rules → Rulesets → New branch ruleset** for the default branch: **Restrict deletions**, **Block force
+   pushes**, **Require a pull request before merging** (0 approvals, so Dependabot's updates can merge) and **Require
+   status checks to pass** with `checks` and `title`.
+3. A fine-grained personal access token with access to this repository and **Contents** and **Pull requests**
+   read and write, saved under **Settings → Secrets and variables → Dependabot** as `AUTOMERGE_TOKEN`. A merge made
+   with the workflow's own token wouldn't start the release workflow.
+4. After the first release, make the image public: the package's **Package settings → Change visibility**.
+
 ## Documentation
 
 User and developer documentation lives in `docs/` as Markdown, and is published to the

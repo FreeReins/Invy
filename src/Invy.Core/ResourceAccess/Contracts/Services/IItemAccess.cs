@@ -56,8 +56,9 @@ internal interface IItemAccess
     Task<SearchCount> CountAsync(Guid spaceId, ItemQuery query, int cap, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Recounts how many current items are inside each of these containers at any depth, and their total value, in one
-    /// statement. Running it again gives the same result.
+    /// Recounts how many current items are inside each of these containers at any depth, and their total value, from
+    /// their direct children's values and rollups, deepest first: one statement per depth. Name every container whose
+    /// contents changed (all of the changed items' ancestors). Running it again gives the same result.
     /// </summary>
     Task RecountAsync(Guid spaceId, IReadOnlyCollection<Guid> containerIds, CancellationToken cancellationToken);
 
@@ -120,7 +121,7 @@ internal interface IItemAccess
     Task<Item?> FindContainerAsync(Guid spaceId, Guid? parentId, string name, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Adds many new items with their events and sortable values in three COPY statements, in the request's
+    /// Adds many new items with their paths, events and sortable values in four COPY statements, in the request's
     /// transaction. For imports: nothing is checked against what is stored.
     /// </summary>
     Task InsertManyAsync(IReadOnlyList<Item> items, IReadOnlyList<ItemEvent> events, IReadOnlyList<ItemValue> values, CancellationToken cancellationToken);
