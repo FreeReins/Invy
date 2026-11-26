@@ -1,7 +1,7 @@
 # Contributing to Invy
 
 Thanks for helping. This page covers how the code is organized and what a change needs. The
-[developer guide](docs/developers/index.md) explains the design behind it: the layers, messaging, the data model and
+[design](docs/developers/design.md) explains what's behind it: the layers, messaging, the data model and
 security.
 
 ## Build and test
@@ -14,7 +14,7 @@ deploy/podman/install.sh --build  # build the image and run it as a Quadlet serv
 deploy/podman/uninstall.sh        # stop and remove it again, keeping the data (--delete-data removes it)
 ```
 
-Invy ships as one container, running its own PostgreSQL ([the bundled database](docs/developers/building-and-releasing.md#the-bundled-database)),
+Invy ships as one container, running its own PostgreSQL ([the bundled database](docs/developers/design.md#what-carries-over-from-chefbot)),
 and as a Windows installer and portable exe built by `deploy/windows/build.ps1`. A new setting that people should
 be able to change goes in `invy.env.example` and the [settings reference](docs/admin/settings.md); a new port
 goes in the unit `install.sh` writes, `deploy/compose/compose.yaml` and `deploy/windows/Package.wxs` (its firewall
