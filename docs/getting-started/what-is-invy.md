@@ -4,12 +4,7 @@ Invy keeps track of what you own and where it is: the drill in the blue box on t
 spare HDMI cables, the warranty for the dishwasher, the 40 jars of screws in the workshop. It runs on your own
 computer or home server, so your list of belongings stays with you.
 
-> [!NOTE]
-> Invy is at an early stage. This version installs, signs people in, and has its settings, backups, HTTPS and AI
-> model setup in place. Items, search and labels come next. This page describes where it's going;
-> [the design](../developers/design.md) has the detail.
-
-## The problems it will solve
+## The problems it solves
 
 - **"Where did I put it?"** Search finds anything by name, type, field or place as you type, and shows its whole
   location: *Shed › Shelf 2 › Box ABC*.
@@ -31,7 +26,7 @@ computer or home server, so your list of belongings stays with you.
 
 ## What it is not
 
-- Not a cloud service. Nothing is sent anywhere unless you set it up: a webhook or an AI model.
+- Not a cloud service. Nothing is sent anywhere unless you set it up: barcode lookups, a webhook or an AI model.
 - Not accounting or point-of-sale software.
 
 ## Next

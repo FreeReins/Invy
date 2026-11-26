@@ -4,10 +4,6 @@ Invy is a self-hosted home inventory: everything you own, where it is, and how t
 on a computer in your home, keeps your data there, and works for one person, a household or a small business. This is
 the place to learn how to install it, keep it running and fix it when something goes wrong.
 
-> [!NOTE]
-> Invy is at an early stage. It has spaces, item types, items nested in containers with their history, and search.
-> Labels, scanning, AI and the rest arrive over the next versions; [the design](developers/design.md) describes them.
-
 These pages are plain Markdown in the [`docs/` folder](https://github.com/FreeReins/invy/tree/main/docs)
 of the repository. Read them on GitHub, on the [documentation site](https://freereins.github.io/invy/),
 in any text editor, or inside Invy itself: press the **?** button at the top of any screen.

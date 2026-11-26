@@ -1,6 +1,7 @@
 // The screenshots the docs show, answered from the test stubs. Runs only through ./dev.sh docs-shots (DOCS_SHOTS
 // set; playwright.config.js skips it otherwise), in light mode on a wide screen, and saves each into docs-shots/,
 // which dev.sh moves to docs/images/. A page that shows one links it as ../images/<name>.png.
+import { devices } from '@playwright/test';
 import { test, expect, open } from './fixtures.js';
 import * as data from './data.js';
 
@@ -60,4 +61,40 @@ test('types: add from another pack', async ({ page }) => {
   await open(page, '/types');
   await page.getByRole('button', { name: 'Add from another pack' }).click();
   await shoot(page, page.getByRole('dialog', { name: 'Add from another pack' }).locator('.box'), 'add-from-another-pack');
+});
+
+// The README's screenshots: Find in light and dark on a desktop, then the main tabs on a phone.
+test.describe('readme', () => {
+  test.use({ viewport: { width: 1280, height: 600 } });
+
+  for (const scheme of ['light', 'dark']) {
+    test(`find on a desktop, ${scheme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await open(page, '/find?q=baseball');
+      await expect(page.getByText('2 items found')).toBeVisible();
+      await shoot(page, page.locator('body'), `find-desktop-${scheme}`);
+    });
+  }
+});
+
+test.describe('readme on a phone', () => {
+  // Pixel 7, without its browser type, which a describe block can't change.
+  const { defaultBrowserType, ...pixel } = devices['Pixel 7'];
+  test.use(pixel);
+
+  const screens = [
+    { name: 'find-phone', path: '/find?q=baseball', ready: (page) => page.getByText('2 items found') },
+    { name: 'browse-phone', path: `/browse/${data.itemIds.f}`, ready: (page) => page.getByText('Inside Box F') },
+    { name: 'scan-phone', path: '/scan', ready: (page) => page.getByRole('button', { name: 'Start the camera' }) },
+    { name: 'views-phone', path: '/views', ready: (page) => page.getByRole('link', { name: 'Not seen in a year' }) },
+  ];
+  for (const screen of screens) {
+    test(screen.name, async ({ page }) => {
+      await open(page, screen.path);
+      await expect(screen.ready(page)).toBeVisible();
+      await page.mouse.move(0, 0);
+      await page.waitForFunction(() => document.getAnimations().every((animation) => animation.playState !== 'running'));
+      await page.screenshot({ path: `docs-shots/${screen.name}.png`, animations: 'disabled' });
+    });
+  }
 });
