@@ -54,7 +54,7 @@ RUN dotnet publish src/Invy.Api/Invy.Api.csproj --configuration Release --no-bui
 # and systemd for the cluster tools) would double the image's size, and Invy uses none of them. The package's
 # contrib extensions stay, since Invy's Baseline migration turns on ltree (item paths) and pg_trgm (search); the
 # last line fails the build if either is missing.
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS postgres
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS postgres
 ARG POSTGRES_MAJOR=17
 ADD --checksum=sha256:0144068502a1eddd2a0280ede10ef607d1ec592ce819940991203941564e8e76 \
     https://www.postgresql.org/media/keys/ACCC4CF8.asc /usr/share/keyrings/postgresql.asc
@@ -74,7 +74,7 @@ RUN chmod 644 /usr/share/keyrings/postgresql.asc \
         && test -f "/usr/lib/postgresql/${POSTGRES_MAJOR}/lib/${extension}.so" || exit 1; \
     done
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS final
 # Links the published image to its repository on the GitHub Container Registry.
 LABEL org.opencontainers.image.source="https://github.com/FreeReins/invy" \
       org.opencontainers.image.title="Invy" \
