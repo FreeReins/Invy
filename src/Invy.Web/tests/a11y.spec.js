@@ -263,7 +263,7 @@ const VIEWS = [
   { name: 'item: lending', path: `/browse/${data.itemIds.drill}`, answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures) },
     act: (page) => page.getByRole('button', { name: 'Lend' }).click() },
   { name: 'item: setting aside for a project', path: `/browse/${data.itemIds.screws}`, answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures) },
-    act: async (page) => { await page.getByRole('button', { name: 'Set aside for a project' }).click(); await page.getByLabel('Project').waitFor(); } },
+    act: async (page) => { await page.getByRole('button', { name: 'Set aside for a project' }).click(); await page.getByRole('dialog').getByLabel('Project').waitFor(); } },
   { name: 'item: a packed box', path: `/browse/${data.itemIds.f}`,
     answers: { 'GET /api/spaces': data.spacesWith(data.allFeatures), 'GET /api/spaces/*/items/*': (request) => (request.url().endsWith(data.itemIds.f) ? data.packedBox() : data.itemDetail(data.itemIds.f)),
       'POST /api/spaces/*/items/*/seen': data.packedBox().item },
