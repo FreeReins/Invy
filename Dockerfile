@@ -3,7 +3,7 @@
 
 # The web page (src/Invy.Web, Svelte) is built here into dist/. Only this stage needs Node, and nothing but the
 # final image uses it, so the page and the .NET build run side by side.
-FROM docker.io/library/node:24-alpine AS web
+FROM docker.io/library/node:26-alpine AS web
 WORKDIR /source/src/Invy.Web
 COPY src/Invy.Web/package.json src/Invy.Web/package-lock.json ./
 RUN npm ci --no-audit --no-fund
