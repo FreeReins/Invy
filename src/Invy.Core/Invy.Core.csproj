@@ -4,6 +4,7 @@
     accessors and utilities behind them. Only Contracts/ and CoreRegistration are public.
   -->
   <ItemGroup>
+    <PackageReference Include="WolverineFx" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <!-- Talks to Claude for the AI features, when an admin sets up an Anthropic model. -->
     <PackageReference Include="Anthropic" />
