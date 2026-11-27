@@ -1,10 +1,10 @@
 blank_issues_enabled: false
 contact_links:
   - name: Read the documentation
-    url: https://freereins.github.io/invy/
+    url: https://freereins.github.io/Invy/
     about: Install guides, settings, and how to use every part of Invy.
   - name: Troubleshooting
-    url: https://freereins.github.io/invy/troubleshooting/
+    url: https://freereins.github.io/Invy/troubleshooting/
     about: Common problems and how to fix them. Most questions are answered here.
   - name: Report a security problem privately
     url: https://github.com/FreeReins/invy/security/advisories/new

@@ -82,7 +82,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 LABEL org.opencontainers.image.source="https://github.com/FreeReins/invy" \
       org.opencontainers.image.title="Invy" \
       org.opencontainers.image.description="Self-hosted home inventory: everything you own, where it is, found in a moment." \
-      org.opencontainers.image.documentation="https://freereins.github.io/invy/" \
+      org.opencontainers.image.documentation="https://freereins.github.io/Invy/" \
       org.opencontainers.image.url="https://github.com/FreeReins/invy" \
       org.opencontainers.image.licenses="GPL-3.0-only"
 

@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Thanks for taking the time. Many problems have a quick fix in
-        [Troubleshooting](https://freereins.github.io/invy/troubleshooting/).
+        [Troubleshooting](https://freereins.github.io/Invy/troubleshooting/).
   - type: checkboxes
     id: checked
     attributes:

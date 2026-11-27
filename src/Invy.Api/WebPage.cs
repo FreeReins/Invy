@@ -13,7 +13,7 @@ public static class WebPage
 
     private const string HelpNotBuilt =
         "The help pages aren't built into this copy of Invy. Read them in the docs folder of the repository, or at " +
-        "https://freereins.github.io/invy/.";
+        "https://freereins.github.io/Invy/.";
 
     /// <summary>
     /// Only the page's own files are compressed. API answers are left alone: compressing them over HTTPS next to

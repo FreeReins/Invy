@@ -5,7 +5,7 @@ on a computer in your home, keeps your data there, and works for one person, a h
 the place to learn how to install it, keep it running and fix it when something goes wrong.
 
 These pages are plain Markdown in the [`docs/` folder](https://github.com/FreeReins/invy/tree/main/docs)
-of the repository. Read them on GitHub, on the [documentation site](https://freereins.github.io/invy/),
+of the repository. Read them on GitHub, on the [documentation site](https://freereins.github.io/Invy/),
 in any text editor, or inside Invy itself: press the **?** button at the top of any screen.
 
 ## I want to…
