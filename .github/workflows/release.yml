@@ -11,6 +11,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Release this version (such as 1.0.0) instead of the one the commits call for. Leave empty for the usual choice."
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -37,6 +42,8 @@ jobs:
       - id: next
         name: Choose the version
         run: .github/scripts/next-version.sh
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
 
   image:
     needs: version
