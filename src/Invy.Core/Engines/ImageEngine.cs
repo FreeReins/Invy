@@ -60,7 +60,7 @@ internal sealed class ImageEngine
                     break;
             }
 
-            canvas.DrawBitmap(small, 0, 0);
+            canvas.DrawBitmap(small, 0, 0, SKSamplingOptions.Default);
         }
 
         using var picture = SKImage.FromBitmap(turned);

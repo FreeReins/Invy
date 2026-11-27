@@ -41,6 +41,8 @@ test('low stock, a loan, upkeep and a destination show on an item only while the
   await page.getByRole('button', { name: 'Arrived' }).click();
   await expect.poll(() => sent(api, 'POST', '/arrived')).toHaveLength(1);
 
+  // Arrived loads the box again, projects and all: let that finish before counting.
+  await page.waitForLoadState('networkidle');
   api.set({ 'GET /api/spaces': allOff });
   const projectCallsBefore = sent(api, 'GET', '/projects').length;
   await open(page, `/browse/${data.itemIds.screws}`);

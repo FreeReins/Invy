@@ -30,6 +30,9 @@ COPY Directory.Build.props Directory.Packages.props Invy.slnx global.json ./
 COPY src/Invy.Core/Invy.Core.csproj src/Invy.Core/
 COPY src/Invy.Api/Invy.Api.csproj src/Invy.Api/
 COPY tests/Invy.Core.Tests/Invy.Core.Tests.csproj tests/Invy.Core.Tests/
+# Every project in Invy.slnx, or the restore fails: the dev-only scale tools too, though the image never ships them.
+COPY tools/Invy.Bench/Invy.Bench.csproj tools/Invy.Bench/
+COPY tools/Invy.Seed/Invy.Seed.csproj tools/Invy.Seed/
 RUN dotnet restore Invy.slnx -p:Configuration=Debug && dotnet restore Invy.slnx -p:Configuration=Release
 
 COPY . .

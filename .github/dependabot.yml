@@ -14,8 +14,28 @@ updates:
       prefix: fix
       include: scope
     groups:
+      # Packages that must stay on the same version as each other come in one pull request, majors included. A
+      # package goes to the first group it matches, so these come before the catch-all group.
+      skiasharp:
+        patterns: ["SkiaSharp*"]
+      wolverine:
+        patterns: ["WolverineFx*"]
       nuget:
         update-types: [minor, patch]
+    # ChefBot skips .NET 11 (STS) and moves to .NET 12 (LTS). These packages' major versions follow .NET's, so 11.x
+    # needs net11.0; 12.0 still opens a pull request. Remove this and the docker ignore after the upgrade.
+    ignore:
+      - dependency-name: "Microsoft.AspNetCore.*"
+        versions: [">= 11.0, < 12.0"]
+      - dependency-name: "Microsoft.EntityFrameworkCore*"
+        versions: [">= 11.0, < 12.0"]
+      - dependency-name: "Microsoft.Extensions.*"
+        versions: [">= 11.0, < 12.0"]
+      - dependency-name: "Npgsql.EntityFrameworkCore.PostgreSQL"
+        versions: [">= 11.0, < 12.0"]
+      # The EF Core tools in dotnet-tools.json have to match Microsoft.EntityFrameworkCore.Design.
+      - dependency-name: "dotnet-ef"
+        versions: [">= 11.0, < 12.0"]
 
   - package-ecosystem: npm
     directory: /src/Invy.Web
@@ -50,6 +70,13 @@ updates:
     groups:
       docker:
         update-types: [minor, patch]
+    # Skips the .NET 11 images until the move to .NET 12 (see the nuget ignore above), and Node's odd-numbered
+    # releases, which are never LTS: the web page builds on Node 24 until Node 26 is LTS.
+    ignore:
+      - dependency-name: "dotnet/*"
+        versions: [">= 11.0, < 12.0"]
+      - dependency-name: "node"
+        versions: [">= 25, < 26"]
 
   - package-ecosystem: github-actions
     directory: /

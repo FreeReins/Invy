@@ -14,7 +14,6 @@ Only the latest release gets security fixes. [Upgrading](docs/admin/upgrading.md
 
 ## Scope
 
-Invy is built for a home network. [Security](docs/developers/security.md) describes how it protects passwords,
-sessions and the requests it makes, and [Limits worth knowing](docs/reference/limits.md) what it doesn't do, such as
-two-step sign-in. Reports about running Invy exposed to the internet without a reverse proxy are still welcome, but
-the advice will be to use one.
+Invy is built for a home network. [Security hardening](docs/developers/design.md#security-hardening) describes how
+it protects passwords, sessions and the requests it makes. It doesn't offer two-step sign-in. Reports about running
+Invy exposed to the internet without a reverse proxy are still welcome, but the advice will be to use one.
