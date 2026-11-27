@@ -1,6 +1,6 @@
 # Checks the links in every Markdown file. On pull requests: links and anchors inside the repository only, so the check
-# is fast and never fails because another site is down. Weekly: outside links too, opening an issue when one breaks.
-# Both read lychee.toml, as ./dev.sh links does.
+# is fast and never fails because another site is down. Weekly: outside links too, opening an issue when one breaks
+# (or updating the open one) and closing it once they all work again. Both read lychee.toml, as ./dev.sh links does.
 name: Links
 
 on:
@@ -37,9 +37,24 @@ jobs:
         with:
           args: --config lychee.toml --include-fragments './**/*.md'
           fail: false
+      # One issue at a time: a new failure updates the open issue, a clean run closes it.
+      - id: issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --author app/github-actions \
+            --search 'in:title "Broken links in the documentation"' --json number --jq '.[0].number // empty')
+          echo "number=$number" >> "$GITHUB_OUTPUT"
       - if: steps.lychee.outputs.exit_code != 0
         uses: peter-evans/create-issue-from-file@v6
         with:
           title: Broken links in the documentation
           content-filepath: ./lychee/out.md
           labels: documentation
+          issue-number: ${{ steps.issue.outputs.number }}
+      - if: steps.lychee.outputs.exit_code == 0 && steps.issue.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue close "${{ steps.issue.outputs.number }}" --repo "$GITHUB_REPOSITORY" \
+            --comment "All links work again as of run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID."
