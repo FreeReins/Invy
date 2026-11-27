@@ -253,6 +253,12 @@ into `src/Invy.Web/shots/` (`tests/screenshot.spec.js`, which normal runs skip).
   version pinned in `package.json`. Bump both together. The container is Ubuntu, and `node_modules` in the
   source folder may come from the Alpine Node container, so the tests keep their own copy in the
   `invy-web-test-modules` volume. `podman volume rm invy-web-test-modules` starts it afresh.
+- The tests open a production build of the page (built into `node_modules/.cache/playwright-web` and served by
+  `vite preview`), not Vite's dev server, so each page load is a few files. The service worker is blocked, so the
+  stubs answer every request.
+- In CI (`.github/workflows/ci.yml`), `dorny/paths-filter` picks the checks a pull request needs: the web tests
+  (split across three runners) only when `src/Invy.Web/` or `ci.yml` changes, and the image build unless the only
+  changes are Markdown outside `docs/`, workflows or agent files. A skipped check counts as passed for `checks`.
 
 ## Releases
 
