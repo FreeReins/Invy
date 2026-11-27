@@ -296,6 +296,11 @@ User and developer documentation lives in `docs/` as Markdown, and is published 
 change people will notice needs a docs change in the same pull request. [docs/AGENTS.md](docs/AGENTS.md) has the
 writing rules and says which page covers what.
 
+`./dev.sh links` checks the links in every Markdown file with [lychee](https://lychee.cli.rs/): first the links and
+anchors inside the repository, as pull requests do, then outside links too, as the weekly check does. It uses this
+machine's `lychee` (`brew install lychee`) when there is one, otherwise a lychee container. Its settings are in
+`lychee.toml`, which the Links workflow reads too.
+
 ## Style
 
 - File-scoped namespaces, nullable reference types on, `var` where the type is obvious.
