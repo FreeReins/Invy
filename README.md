@@ -11,7 +11,7 @@ Windows. Free and open source.
 [![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
 [![Latest release](https://img.shields.io/github/v/release/freereins/invy?sort=semver)](https://github.com/FreeReins/invy/releases)
 [![Container image](https://img.shields.io/badge/image-ghcr.io-2496ED?logo=docker&logoColor=white)](https://github.com/FreeReins/invy/pkgs/container/invy)
-[![Documentation](https://img.shields.io/badge/docs-read-success)](https://freereins.github.io/invy/)
+[![Documentation](https://img.shields.io/badge/docs-read-success)](https://freereins.github.io/Invy/)
 [![Buy Me a Coffee](https://img.shields.io/badge/support-Buy%20Me%20a%20Coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/strifer.btw)
 
 [**Get started**](#get-started-in-two-minutes) · [**Features**](#features) · [**Documentation**](docs/index.md) · [**Screenshots**](#screenshots)
@@ -122,7 +122,7 @@ tick the rooms you have, and start adding things.
 ## Documentation
 
 Everything you need to run Invy is in [the documentation](docs/index.md). It's plain Markdown that you can read
-here, on the [documentation site](https://freereins.github.io/invy/), or inside Invy itself by pressing **?**.
+here, on the [documentation site](https://freereins.github.io/Invy/), or inside Invy itself by pressing **?**.
 
 | I want to… | Start here |
 |---|---|

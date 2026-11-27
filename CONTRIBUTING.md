@@ -292,9 +292,14 @@ One-time setup on GitHub (the same in every repo using these workflows):
 ## Documentation
 
 User and developer documentation lives in `docs/` as Markdown, and is published to the
-[documentation site](https://freereins.github.io/invy/) and built into the image at `/help`. A
+[documentation site](https://freereins.github.io/Invy/) and built into the image at `/help`. A
 change people will notice needs a docs change in the same pull request. [docs/AGENTS.md](docs/AGENTS.md) has the
 writing rules and says which page covers what.
+
+`./dev.sh links` checks the links in every Markdown file with [lychee](https://lychee.cli.rs/): first the links and
+anchors inside the repository, as pull requests do, then outside links too, as the weekly check does. It uses this
+machine's `lychee` (`brew install lychee`) when there is one, otherwise a lychee container. Its settings are in
+`lychee.toml`, which the Links workflow reads too.
 
 ## Style
 

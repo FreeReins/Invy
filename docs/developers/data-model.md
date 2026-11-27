@@ -4,7 +4,7 @@ This page is for developers and for admins who want to know what an upgrade does
 themselves are described in [the design](design.md#data-model).
 
 Invy's schema comes from EF Core migrations in
-[`src/Invy.Core/ResourceAccess/Persistence/Migrations/`](https://github.com/FreeReins/invy/blob/main/src/Invy.Core/ResourceAccess/Persistence/Migrations),
+[`src/Invy.Core/ResourceAccess/Persistence/Migrations/`](https://github.com/FreeReins/invy/tree/main/src/Invy.Core/ResourceAccess/Persistence/Migrations),
 applied when Invy starts. A released migration is never changed; each change is a new one.
 [Upgrading](../admin/upgrading.md) says what an admin does, which is usually nothing.
 

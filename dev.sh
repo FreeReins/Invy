@@ -13,6 +13,8 @@
 #   ./dev.sh docs-shots
 #                     retake the screenshots the docs show (tests/docs-shots.spec.js) into docs/images/, then exit
 #   ./dev.sh test     run the tests again on every save
+#   ./dev.sh links    check the links in every Markdown file, first inside the repository (as pull requests do),
+#                     then outside links too (as the weekly check does), then exit
 #   ./dev.sh db       start the dev database only
 #   ./dev.sh psql     open a SQL prompt on the dev database
 #   ./dev.sh stop     stop the dev database
@@ -37,6 +39,7 @@ web_output=src/Invy.Web/dist
 web_container=invy-dev-web
 web_test_modules=invy-web-test-modules
 node_image=docker.io/library/node:24-alpine
+lychee_image=docker.io/lycheeverse/lychee:latest
 
 port_in_use() {
     ss -Hltn "( sport = :$1 )" 2>/dev/null | grep -q .
@@ -126,6 +129,30 @@ web_test() {
         sh -c 'npm install --no-audit --no-fund --loglevel=error && exec npx playwright test "$@"' web-test "$@"
 }
 
+# Runs lychee with lychee.toml: this machine's when there is one, otherwise in a container.
+run_lychee() {
+    if command -v lychee >/dev/null 2>&1; then
+        lychee --config lychee.toml --include-fragments "$@"
+    else
+        podman run --rm --init --volume "$PWD:/input:z" --workdir /input "$lychee_image" --config lychee.toml --include-fragments "$@"
+    fi
+}
+
+# Both checks always run, so one report shows every broken link. Fails when either finds one.
+check_links() {
+    local failed=0
+    echo "Checking links inside the repository..."
+    run_lychee --offline './**/*.md' || failed=1
+    echo
+    echo "Checking outside links too..."
+    run_lychee './**/*.md' || failed=1
+    if ((failed)); then
+        echo "Some links are broken: fix the ones listed above, then run ./dev.sh links again." >&2
+        exit 1
+    fi
+    echo "Every link works."
+}
+
 run_app() {
     start_db
 
@@ -208,6 +235,9 @@ case "${1:-run}" in
     test)
         exec dotnet watch --project tests/Invy.Core.Tests run
         ;;
+    links)
+        check_links
+        ;;
     db)
         start_db
         echo "Database__Mode=External ConnectionStrings__Invy=\"$dev_connection\""
@@ -233,7 +263,7 @@ case "${1:-run}" in
         run_app
         ;;
     *)
-        sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
         exit 1
         ;;
 esac
