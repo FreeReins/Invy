@@ -273,7 +273,9 @@ isn't. The release workflow reads the messages since the last tag and picks the 
 | `feat!:` or any type with `!`, or a `BREAKING CHANGE:` line in the description | major, 1.4.2 → 2.0.0 (minor below 1.0.0) |
 | `docs:`, `test:`, `refactor:`, `build:`, `ci:`, `chore:`, `style:`, `revert:` | none; they ship with the next release |
 
-`.github/scripts/next-version.sh` prints what the next release would be. The workflow builds and checks everything,
+`.github/scripts/next-version.sh` prints what the next release would be. To release a version the commits can't
+reach, such as 1.0.0 (below 1.0.0 a `!` is only a minor release), open **Actions → Release → Run workflow** and enter
+it as **version**; it must be newer than the last release. The workflow builds and checks everything,
 then publishes the image to GHCR and an immutable GitHub release with that tag. A published release, its files and its
 tag can never change, so a mistake is fixed by a new release. If a build fails, nothing is published and the next
 merge tries that version again.

@@ -6,6 +6,8 @@
 #   type!: ... or a "BREAKING CHANGE:" footer   a major release (a minor one while the version is below 1.0.0)
 #   anything else (docs:, chore:, ci:, ...)     no release
 # With no tag yet, the first release is INITIAL_VERSION (default 0.1.0).
+# RELEASE_VERSION (such as 1.0.0, from the Release workflow's "Run workflow" input) skips the commits and releases that
+# version, which must be newer than the last tag. It is the only way to go from 0.x to 1.0.0.
 # Prints the lines below, and adds them to $GITHUB_OUTPUT when run in GitHub Actions:
 #   release=true|false  version=1.2.3  tag=v1.2.3  previous=v1.2.2
 # Run it locally to see what the next release would be: .github/scripts/next-version.sh
@@ -32,7 +34,18 @@ while IFS= read -r -d $'\x1e' message; do
     (( level > bump )) && bump=$level
 done < <(git log --format='%B%x1e' "$range")
 
-if (( bump == 0 )); then
+if [[ -n "${RELEASE_VERSION:-}" ]]; then
+    version="${RELEASE_VERSION#v}"
+    if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "The version '$RELEASE_VERSION' isn't in the form 1.2.3. Run the release again with a version such as 1.0.0." >&2
+        exit 1
+    fi
+    if [[ -n "$previous" && "$(printf '%s\n' "${previous#v}" "$version" | sort -V | tail -n 1)" != "$version" ]] \
+        || [[ "v$version" == "$previous" ]]; then
+        echo "The version $version isn't newer than the last release, $previous. Run the release again with a higher version." >&2
+        exit 1
+    fi
+elif (( bump == 0 )); then
     version=""
 elif [[ -z "$previous" ]]; then
     version="$initial"
